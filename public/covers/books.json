@@ -1,0 +1,826 @@
+[
+  {
+    "id": "after-the-fall",
+    "title": "After the Fall",
+    "subtitle": "How Humpty Dumpty Got Back Up Again",
+    "author": "Dan Santat",
+    "illustrator": "Dan Santat",
+    "cover": "/covers/after-the-fall.jpg",
+    "ageMin": 4,
+    "ageMax": 8,
+    "ageLabel": "4–8 years",
+    "format": "Picture book",
+    "pages": 40,
+    "publishedYear": 2017,
+    "description": "A thoughtful, beautifully illustrated story about what happens after a famous fall—and finding the courage to try again.",
+    "themes": ["courage", "resilience", "curiosity", "empathy"],
+    "interests": ["adventure", "feelings"],
+    "about": "Humpty Dumpty is famous for getting broken, but this profound Caldecott Medal-winner tells what happened next. Now terrified of heights, Humpty misses watching the birds from atop the city wall. A gentle yet empowering exploration of anxiety, healing, and the bravery it takes to face what hurt you.",
+    "storyPlot": {
+      "setup": "After his terrible fall from the wall, Humpty is pieced back together at the hospital—but carries deep anxiety.",
+      "turningPoint": "He misses his passion for bird-watching and builds a paper airplane that accidentally lands back on top of the high wall.",
+      "resolution": "Step by step, he climbs the terrifying ladder, overcomes his fear, and undergoes an astonishing transformation into something that can truly fly."
+    },
+    "portraits": [
+      {
+        "name": "Humpty Dumpty",
+        "role": "The Determined Healer",
+        "traits": "Cautious, observant, quietly courageous",
+        "avatar": "🥚"
+      },
+      {
+        "name": "The City Birds",
+        "role": "Inspiration & Freedom",
+        "traits": "Soaring, gentle, unrestrained",
+        "avatar": "🕊️"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Paper Bird Aerodynamics",
+        "description": "Fold a paper airplane or paper bird together. Test how small folds change how high and smoothly it glides across the room."
+      },
+      {
+        "title": "The Courage Ladder",
+        "description": "Draw a ladder on paper. Put a small worry at the bottom rung and a brave goal at the top. Brainstorm one tiny step to take today."
+      }
+    ],
+    "cues": [
+      "Why do you think Humpty felt nervous even after his shell was glued back together?",
+      "What helps you feel brave when your tummy feels fluttery?",
+      "Notice Humpty's face when he climbs the ladder—what do you think he was telling himself?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#f26b4f",
+    "availability": "catalogue"
+  },
+  {
+    "id": "i-am-human",
+    "title": "I Am Human",
+    "subtitle": "A Book of Empathy",
+    "author": "Susan Verde",
+    "illustrator": "Peter H. Reynolds",
+    "cover": "/covers/i-am-human.jpg",
+    "ageMin": 3,
+    "ageMax": 7,
+    "ageLabel": "3–7 years",
+    "format": "Picture book",
+    "pages": 40,
+    "publishedYear": 2018,
+    "description": "A gentle reminder that every person has the power to choose kindness, empathy and connection.",
+    "themes": ["empathy", "compassion", "kindness", "mindfulness"],
+    "interests": ["feelings"],
+    "about": "A celebrated celebration of empathy and human connection. It teaches that being human means having big dreams, making mistakes, feeling imperfect, and choosing compassion and kindness each day.",
+    "storyPlot": {
+      "setup": "A child marvels at being born into the world with curiosity, wonder, and limitless possibilities.",
+      "turningPoint": "Mistakes happen, words slip out that hurt others, and feelings of regret and smallness take over.",
+      "resolution": "Recognizing that making amends, offering a hug, and practicing compassion makes us resilient and deeply connected."
+    },
+    "portraits": [
+      {
+        "name": "The Young Explorer",
+        "role": "Every Child",
+        "traits": "Curious, imperfect, capable of great love",
+        "avatar": "🌱"
+      },
+      {
+        "name": "The Companion",
+        "role": "A Mirror of Empathy",
+        "traits": "Welcoming, forgiving, ready to hold hands",
+        "avatar": "🤝"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Kindness Postcards",
+        "description": "Write or draw a secret note of appreciation for someone in your family or school."
+      },
+      {
+        "title": "Grounding Breath",
+        "description": "Sit cross-legged, place a hand on your heart, and breathe in kindness, breathe out worry."
+      }
+    ],
+    "cues": [
+      "What do you do when you make a mistake or hurt a friend's feelings?",
+      "How does your body feel when someone shows you unexpected kindness?",
+      "What is one kind thing we can do for someone in our neighborhood tomorrow?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#f6c453",
+    "availability": "catalogue"
+  },
+  {
+    "id": "jabari-jumps",
+    "title": "Jabari Jumps",
+    "author": "Gaia Cornwall",
+    "illustrator": "Gaia Cornwall",
+    "cover": "/covers/jabari-jumps.jpg",
+    "ageMin": 4,
+    "ageMax": 8,
+    "ageLabel": "4–8 years",
+    "format": "Picture book",
+    "pages": 32,
+    "publishedYear": 2017,
+    "description": "Jabari is ready to jump off the diving board. Almost. A warm story about nerves, patience and taking a brave leap.",
+    "themes": ["courage", "resilience", "family", "helpfulness"],
+    "interests": ["sports", "adventure", "feelings"],
+    "about": "Jabari has finished his swim lessons and is totally ready to jump off the diving board—almost. A tender father-son story about the patience, encouragement, and emotional safety it takes to be brave.",
+    "storyPlot": {
+      "setup": "Jabari declares he is ready for the tall diving board, but lets other kids go first while doing stretches.",
+      "turningPoint": "His dad gently squeezes his hand and explains that feeling scared is just feeling ready for a surprise.",
+      "resolution": "Jabari whispers to himself, climbs up, looks at the sky, and leaps with pure joy."
+    },
+    "portraits": [
+      {
+        "name": "Jabari",
+        "role": "The Brave Leap-Taker",
+        "traits": "Enthusiastic, cautious, triumphant",
+        "avatar": "🏊"
+      },
+      {
+        "name": "Dad",
+        "role": "The Patient Anchor",
+        "traits": "Loving, unhurried, reassuring",
+        "avatar": "🫂"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Surprise Breath Routine",
+        "description": "Practice Dad's tip: take a deep breath and tell your body 'I'm ready for a surprise!'"
+      },
+      {
+        "title": "Splash Painting",
+        "description": "Use blue watercolor washes and white crayon wax-resist to paint Jabari's giant splash."
+      }
+    ],
+    "cues": [
+      "Have you ever said you were ready for something when inside you felt a little butterfly in your tummy?",
+      "How did Dad help Jabari without pushing him or making him feel bad?",
+      "What is something that felt scary before you did it, but fun afterwards?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#9fcbf2",
+    "availability": "catalogue"
+  },
+  {
+    "id": "lost-and-found",
+    "title": "Lost and Found",
+    "author": "Oliver Jeffers",
+    "illustrator": "Oliver Jeffers",
+    "cover": "/covers/lost-and-found.jpg",
+    "ageMin": 3,
+    "ageMax": 7,
+    "ageLabel": "3–7 years",
+    "format": "Picture book",
+    "pages": 32,
+    "publishedYear": 2005,
+    "description": "A boy finds a penguin at his door and sets out across the sea to help it find its way home.",
+    "themes": ["helpfulness", "compassion", "friendship", "local culture"],
+    "interests": ["animals", "adventure", "feelings"],
+    "about": "When a sad-looking penguin appears on a boy's doorstep, the boy assumes it is lost and rows all the way to the South Pole to return it—only to discover that what the penguin truly needed was companionship.",
+    "storyPlot": {
+      "setup": "A boy finds a silent penguin at his front door and tries everything to find out where it belongs.",
+      "turningPoint": "They pack supplies, push a rowboat into the ocean, and brave stormy waves together sharing stories.",
+      "resolution": "After leaving the penguin at the South Pole, the boy realizes the penguin wasn't lost—it was just lonely—and rows back to find his friend."
+    },
+    "portraits": [
+      {
+        "name": "The Boy",
+        "role": "The Helpful Problem Solver",
+        "traits": "Resourceful, earnest, generous",
+        "avatar": "👦"
+      },
+      {
+        "name": "The Penguin",
+        "role": "The Quiet Companion",
+        "traits": "Loyal, silent, longing for connection",
+        "avatar": "🐧"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Rowboat Storytelling",
+        "description": "Build a cozy blanket-fort 'rowboat' and tell each other stories under flashlight."
+      },
+      {
+        "title": "Packing for an Expedition",
+        "description": "Draw 5 essential items you would pack to help a friend in need across the ocean."
+      }
+    ],
+    "cues": [
+      "Why do you think the penguin was quiet for the whole journey?",
+      "What is the difference between being lost and feeling lonely?",
+      "How do you let your friends know that you care about them?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#d8e88a",
+    "availability": "catalogue"
+  },
+  {
+    "id": "the-color-monster",
+    "title": "The Color Monster",
+    "subtitle": "A Pop-Up Book of Feelings",
+    "author": "Anna Llenas",
+    "illustrator": "Anna Llenas",
+    "cover": "/covers/the-color-monster.jpg",
+    "ageMin": 3,
+    "ageMax": 6,
+    "ageLabel": "3–6 years",
+    "format": "Picture book",
+    "pages": 40,
+    "publishedYear": 2015,
+    "description": "A colorful introduction to naming and sorting big feelings, from happiness and sadness to calm and anger.",
+    "themes": ["emotional literacy", "feelings", "empathy", "curiosity"],
+    "interests": ["feelings"],
+    "about": "The Color Monster wakes up feeling confused, with his emotions tangled into a jumbled mess of colors. A young friend helps him untangle and sort each feeling into its own colorful jar, creating calm and clarity.",
+    "storyPlot": {
+      "setup": "The Color Monster is all mixed up with yellow, blue, red, grey, and green swirled together.",
+      "turningPoint": "A little girl guides him to examine each feeling separately: yellow is joy, blue is sadness, red is anger.",
+      "resolution": "With all feelings peacefully sorted into jars, the monster turns a rosy, gentle pink—full of love."
+    },
+    "portraits": [
+      {
+        "name": "The Color Monster",
+        "role": "The Honest Learner",
+        "traits": "Big-hearted, expressive, overwhelmed",
+        "avatar": "👾"
+      },
+      {
+        "name": "The Little Girl",
+        "role": "The Empathic Guide",
+        "traits": "Calm, organized, supportive",
+        "avatar": "👧"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Emotion Jars",
+        "description": "Collect clear glasses or jars. Drop yellow, blue, red, and green paper slips inside as you name your feelings today."
+      },
+      {
+        "title": "Feeling Swatch Dance",
+        "description": "Put on upbeat music for yellow joy, slow piano for blue sadness, and stomp your feet for red anger!"
+      }
+    ],
+    "cues": [
+      "What color do you feel like right now?",
+      "Can you feel two different colors at the very same time? When did that happen to you?",
+      "What is something that helps you move from red (angry) back to green (calm)?"
+    ],
+    "priceInr": 499,
+    "coverTone": "#f7ab95",
+    "availability": "catalogue"
+  },
+  {
+    "id": "the-dot",
+    "title": "The Dot",
+    "author": "Peter H. Reynolds",
+    "illustrator": "Peter H. Reynolds",
+    "cover": "/covers/the-dot.jpg",
+    "ageMin": 4,
+    "ageMax": 8,
+    "ageLabel": "4–8 years",
+    "format": "Picture book",
+    "pages": 32,
+    "publishedYear": 2003,
+    "description": "Vashti thinks she cannot draw, until one small mark helps her discover where creativity can begin.",
+    "themes": ["curiosity", "helpfulness", "kindness", "creativity"],
+    "interests": ["nature", "adventure"],
+    "about": "Vashti sits with an empty paper in art class, convinced she cannot draw. Her teacher gently challenges her to 'just make a mark and see where it takes you'—sparking a transformative journey of boundless self-belief that Vashti later pays forward.",
+    "storyPlot": {
+      "setup": "Vashti glares at her blank paper in frustration, insisting she isn't an artist.",
+      "turningPoint": "Her teacher asks her to make a mark and sign it, then frames it in a golden frame on the classroom wall.",
+      "resolution": "Spurred by the framed dot, Vashti paints hundreds of colorful dots—and later encourages a younger boy who doubts his own abilities."
+    },
+    "portraits": [
+      {
+        "name": "Vashti",
+        "role": "The Disbeliever Turned Creator",
+        "traits": "Feisty, creative, encouraging mentor",
+        "avatar": "🎨"
+      },
+      {
+        "name": "The Art Teacher",
+        "role": "The Champion",
+        "traits": "Patient, perceptive, visionary",
+        "avatar": "👩‍🏫"
+      },
+      {
+        "name": "The Younger Boy",
+        "role": "The Next Artist",
+        "traits": "Shy, hesitant, sparked with hope",
+        "avatar": "✏️"
+      }
+    ],
+    "activities": [
+      {
+        "title": "One-Dot Masterpiece",
+        "description": "Take a sheet of paper, draw a single circle anywhere, and transform it into anything you imagine."
+      },
+      {
+        "title": "Gallery Frame Signing",
+        "description": "Put a gold border around your child's favorite doodle and ask them to sign their artist signature."
+      }
+    ],
+    "cues": [
+      "Why did the teacher frame Vashti's simple dot instead of telling her to draw something else?",
+      "How did Vashti treat the younger boy at the end of the story?",
+      "What is something creative you would love to try making this week?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#f6c453",
+    "availability": "catalogue"
+  },
+  {
+    "id": "the-heart-and-the-bottle",
+    "title": "The Heart and the Bottle",
+    "author": "Oliver Jeffers",
+    "illustrator": "Oliver Jeffers",
+    "cover": "/covers/the-heart-and-the-bottle.jpg",
+    "ageMin": 4,
+    "ageMax": 8,
+    "ageLabel": "4–8 years",
+    "format": "Picture book",
+    "pages": 32,
+    "publishedYear": 2010,
+    "description": "A poignant story about love, loss and learning that protecting your heart also means staying open to wonder.",
+    "themes": ["curiosity", "compassion", "empathy", "local culture"],
+    "interests": ["feelings", "adventure"],
+    "about": "A curious young girl who loved exploring the stars and the world is heartbroken by loss, so she puts her heart in a bottle to protect it. Years later, she discovers that to feel wonder and joy again, she must break it out.",
+    "storyPlot": {
+      "setup": "A girl and an older mentor explore questions about the ocean, stars, and curiosities of the world.",
+      "turningPoint": "When the mentor's chair is empty, she puts her heart inside a glass bottle to stop feeling hurt, becoming dull and uninterested.",
+      "resolution": "Meeting a little child full of questions reminds her of her lost wonder, and with the child's small hands, she frees her heart."
+    },
+    "portraits": [
+      {
+        "name": "The Curious Girl",
+        "role": "The Healed Wonderer",
+        "traits": "Inquisitive, protective, reborn with curiosity",
+        "avatar": "⭐"
+      },
+      {
+        "name": "The Mentor",
+        "role": "The Storyteller",
+        "traits": "Wise, warm, encouraging of wild questions",
+        "avatar": "🪑"
+      },
+      {
+        "name": "The Little Girl on the Beach",
+        "role": "The Spark",
+        "traits": "Playful, full of innocent curiosity",
+        "avatar": "🐚"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Wonder Journal",
+        "description": "Keep a notebook of 3 questions about nature or the sky that no one knows the answer to yet."
+      },
+      {
+        "title": "Heart of Clay",
+        "description": "Shape a heart out of modeling clay and talk about what makes it feel soft and warm."
+      }
+    ],
+    "cues": [
+      "Why did the girl think keeping her heart in a bottle would keep it safe?",
+      "What does your heart feel like when you discover something exciting outside?",
+      "Who is someone in your life who loves answering your big questions?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#9fcbf2",
+    "availability": "catalogue"
+  },
+  {
+    "id": "the-invisible-boy",
+    "title": "The Invisible Boy",
+    "author": "Trudy Ludwig",
+    "illustrator": "Patrice Barton",
+    "cover": "/covers/the-invisible-boy.jpg",
+    "ageMin": 6,
+    "ageMax": 9,
+    "ageLabel": "6–9 years",
+    "format": "Picture book",
+    "pages": 32,
+    "publishedYear": 2013,
+    "description": "When a quiet boy is overlooked at school, one small act of friendship helps him feel seen.",
+    "themes": ["kindness", "empathy", "inclusion", "compassion"],
+    "interests": ["feelings"],
+    "about": "Brian never gets picked for kickball, invited to birthday parties, or noticed by the teacher. When a new boy named Justin joins the class and gets teased, Brian reaches out with a kind drawing, opening the door to true belonging.",
+    "storyPlot": {
+      "setup": "Brian is drawn in black and white, unnoticed amidst the bustling, colorful classroom.",
+      "turningPoint": "When Justin is teased for eating Korean bulgogi for lunch, Brian slips a drawing into Justin's cubby saying the food looks delicious.",
+      "resolution": "Justin invites Brian to be his project partner; as friendship blossoms, color gradually washes over Brian until he is fully radiant."
+    },
+    "portraits": [
+      {
+        "name": "Brian",
+        "role": "The Invisible Artist",
+        "traits": "Gentle, observant, profoundly thoughtful",
+        "avatar": "🖍️"
+      },
+      {
+        "name": "Justin",
+        "role": "The New Kid",
+        "traits": "Brave, appreciative, a welcoming bridge",
+        "avatar": "🍱"
+      }
+    ],
+    "activities": [
+      {
+        "title": "The Inclusion Radar",
+        "description": "Notice one person at the playground or park who is sitting alone, and invite them to play tag or share a smile."
+      },
+      {
+        "title": "Black & White to Color Sketch",
+        "description": "Draw someone in pencil, then add bursts of vibrant color when they feel happy and included."
+      }
+    ],
+    "cues": [
+      "Have you ever felt like Brian, where you felt quiet or left out?",
+      "How did Brian's small drawing change Justin's whole day—and his own?",
+      "What is something welcoming we can say to someone new in class?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#c9b7f1",
+    "availability": "catalogue"
+  },
+  {
+    "id": "the-magical-yet",
+    "title": "The Magical Yet",
+    "author": "Angela DiTerlizzi",
+    "illustrator": "Lorena Alvarez",
+    "cover": "/covers/the-magical-yet.jpg",
+    "ageMin": 4,
+    "ageMax": 8,
+    "ageLabel": "4–8 years",
+    "format": "Picture book",
+    "pages": 40,
+    "publishedYear": 2020,
+    "description": "A lyrical celebration of the little word that keeps us learning: yet.",
+    "themes": ["curiosity", "growth mindset", "helpfulness", "resilience"],
+    "interests": ["adventure", "nature"],
+    "about": "When learning to ride a bike ends in a scrape and tears, a glowing magical creature called 'The Yet' appears to show that not being able to do something is just a temporary state on the road to mastery.",
+    "storyPlot": {
+      "setup": "A child falls off a bike and wants to throw it away forever in frustration.",
+      "turningPoint": "The Magical Yet appears, showing flashbacks of when the child couldn't walk, babble, or tie shoes either.",
+      "resolution": "With practice, laughter, and patience, the child learns that mistakes are stepping stones to mastering any skill."
+    },
+    "portraits": [
+      {
+        "name": "The Child",
+        "role": "The Growing Learner",
+        "traits": "Determined, easily frustrated, resilient"
+      },
+      {
+        "name": "The Magical Yet",
+        "role": "The Inner Guide",
+        "traits": "Sparkling, playful, ever-optimistic",
+        "avatar": "✨"
+      }
+    ],
+    "activities": [
+      {
+        "title": "The 'Not Yet' Jar",
+        "description": "Write down 3 things you can't do yet (e.g. whistle, cartwheel) and tape the word YET in big gold letters."
+      },
+      {
+        "title": "Practice Chart",
+        "description": "Choose one tiny skill and practice for 3 minutes a day for a week."
+      }
+    ],
+    "cues": [
+      "What is something you couldn't do last year that you can easily do now?",
+      "What can you say to yourself the next time something feels too hard to finish?",
+      "How does the word 'yet' change the way a sentence feels?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#a9dfc0",
+    "availability": "catalogue"
+  },
+  {
+    "id": "the-rabbit-listened",
+    "title": "The Rabbit Listened",
+    "author": "Cori Doerrfeld",
+    "illustrator": "Cori Doerrfeld",
+    "cover": "/covers/the-rabbit-listened.jpg",
+    "ageMin": 3,
+    "ageMax": 5,
+    "ageLabel": "3–5 years",
+    "format": "Picture book",
+    "pages": 40,
+    "publishedYear": 2018,
+    "description": "When Taylor is upset, the animals offer advice—but the rabbit knows that sometimes the best help is simply listening.",
+    "themes": ["compassion", "empathy", "helpfulness", "kindness"],
+    "interests": ["feelings"],
+    "about": "When Taylor's magnificent block tower crashes, different animal friends rush in telling Taylor how to react. Only the rabbit sits quietly, leans in, and offers the warm gift of presence.",
+    "storyPlot": {
+      "setup": "Taylor builds a majestic block tower, but a flock of birds knocks it down into ruins.",
+      "turningPoint": "The chicken squawks to talk, the bear wants to roar, the snake wants to knock down other towers—none of which helps.",
+      "resolution": "The rabbit inches closer, sits silently until Taylor is ready to cry, talk, roar, and finally rebuild together."
+    },
+    "portraits": [
+      {
+        "name": "Taylor",
+        "role": "The Hurting Builder",
+        "traits": "Imaginative, vulnerable, ready to rebuild",
+        "avatar": "🧱"
+      },
+      {
+        "name": "The Rabbit",
+        "role": "The True Comforter",
+        "traits": "Silent, warm, infinitely patient",
+        "avatar": "🐰"
+      }
+    ],
+    "activities": [
+      {
+        "title": "The Rabbit Blanket Hug",
+        "description": "Wrap up in a cozy blanket and practice 'listening like a rabbit' without giving any advice for 2 whole minutes."
+      },
+      {
+        "title": "Block Tower Challenge",
+        "description": "Build the tallest tower you can, take a photo, and gently knock it down with a laugh."
+      }
+    ],
+    "cues": [
+      "When you are upset, do you prefer people to talk a lot, or do you prefer a quiet hug like the rabbit?",
+      "How can you be a 'rabbit' for your friend when they are having a rough day?",
+      "Why didn't the other animals' advice help Taylor right away?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#f6c453",
+    "availability": "catalogue"
+  },
+  {
+    "id": "the-wonderful-things-you-will-be",
+    "title": "The Wonderful Things You Will Be",
+    "author": "Emily Winfield Martin",
+    "illustrator": "Emily Winfield Martin",
+    "cover": "/covers/the-wonderful-things-you-will-be.jpg",
+    "ageMin": 2,
+    "ageMax": 5,
+    "ageLabel": "2–5 years",
+    "format": "Picture book",
+    "pages": 36,
+    "publishedYear": 2015,
+    "description": "A warm, rhyming celebration of the many wonderful ways a child can grow into themselves.",
+    "themes": ["kindness", "curiosity", "compassion", "local culture"],
+    "interests": ["feelings", "funny"],
+    "about": "A rhythmic, poetic ode to the boundless kindness, curiosity, and creativity that children carry inside them as they grow up into who they are meant to be.",
+    "storyPlot": {
+      "setup": "A parent looks at their child and wonders who this small, bright person will become.",
+      "turningPoint": "Exploring possibilities not just of careers, but of character: being kind, helping someone in the rain, being brave in dark forests.",
+      "resolution": "The promise that whatever path they take, their goodness, curiosity, and love will always be cherished."
+    },
+    "portraits": [
+      {
+        "name": "The Young Dreamer",
+        "role": "The Infinite Future",
+        "traits": "Adventurous, gentle-hearted, inventive",
+        "avatar": "🎈"
+      },
+      {
+        "name": "The Caring Guardian",
+        "role": "The Steady Beacon",
+        "traits": "Unconditional in love and pride",
+        "avatar": "🌟"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Time Capsule Wish",
+        "description": "Draw a picture of your dream treehouse, animal friend, or future self, and seal it in an envelope to open next birthday."
+      },
+      {
+        "title": "Tree of Kindness",
+        "description": "Cut out paper leaves and write on each leaf one kind thing your child did this week."
+      }
+    ],
+    "cues": [
+      "What is something you love doing that makes you feel most like yourself?",
+      "What kind of helper do you want to be in our neighborhood?",
+      "What is your favorite way to make someone smile?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#f7ab95",
+    "availability": "catalogue"
+  },
+  {
+    "id": "when-sadness-is-at-your-door",
+    "title": "When Sadness Is at Your Door",
+    "author": "Eva Eland",
+    "illustrator": "Eva Eland",
+    "cover": "/covers/when-sadness-is-at-your-door.jpg",
+    "ageMin": 3,
+    "ageMax": 6,
+    "ageLabel": "3–6 years",
+    "format": "Picture book",
+    "pages": 32,
+    "publishedYear": 2019,
+    "description": "A quiet, reassuring book that gives sadness a shape—and shows children how to make room for it.",
+    "themes": ["empathy", "compassion", "emotional literacy", "helpfulness"],
+    "interests": ["feelings"],
+    "about": "Sadness often arrives uninvited and feels overwhelming. This soothing guide personifies Sadness as a gentle visitor to sit with, drink tea with, and take on a quiet walk until it is ready to move on.",
+    "storyPlot": {
+      "setup": "Sadness knocks on the door looking like a heavy, gentle grey cloud that won't go away.",
+      "turningPoint": "Instead of pushing it into a closet or running away, you give it a name, sit beside it, and draw together.",
+      "resolution": "After sharing cocoa, listening to music, and going for a quiet walk, Sadness gently packs its bags and moves along."
+    },
+    "portraits": [
+      {
+        "name": "The Host",
+        "role": "The Mindful Child",
+        "traits": "Brave enough to welcome tough feelings",
+        "avatar": "🫖"
+      },
+      {
+        "name": "Sadness",
+        "role": "The Heavy Visitor",
+        "traits": "Slow-moving, quiet, needing acknowledgment",
+        "avatar": "☁️"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Tea Party with Sadness",
+        "description": "Pour two imaginary cups of warm tea. Ask: 'What are you trying to tell me today?'"
+      },
+      {
+        "title": "Quiet Nature Walk",
+        "description": "Walk outside without talking, collecting 3 smooth stones or autumn leaves."
+      }
+    ],
+    "cues": [
+      "What does sadness look or feel like in your chest or tummy?",
+      "Why does trying to hide sadness make it feel heavier instead of lighter?",
+      "What helps you feel cozy and supported when you are having a down day?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#9fcbf2",
+    "availability": "catalogue"
+  },
+  {
+    "id": "you-choose",
+    "title": "You Choose",
+    "author": "Pippa Goodhart",
+    "illustrator": "Nick Sharratt",
+    "cover": "/covers/you-choose.jpg",
+    "ageMin": 2,
+    "ageMax": 5,
+    "ageLabel": "2–5 years",
+    "format": "Picture book",
+    "pages": 32,
+    "publishedYear": 2003,
+    "description": "A playful picture book full of possibilities, inviting children to imagine the people, places and lives they might choose.",
+    "themes": ["curiosity", "local culture", "imagination", "helpfulness"],
+    "interests": ["funny", "adventure", "myths"],
+    "about": "An endlessly re-readable picture book where every page offers dozens of delightful choices: where to live, what to eat, what to travel in, and who to bring along on adventures.",
+    "storyPlot": {
+      "setup": "Open the cover to enter an imaginative sandbox where you decide every detail of your universe.",
+      "turningPoint": "Comparing wild choices—from living in a treehouse to sailing in a submarine, eating spicy curry or moon cake.",
+      "resolution": "Discovering that your friend's choices are completely different from yours, making conversation and sharing rich."
+    },
+    "portraits": [
+      {
+        "name": "The Chooser",
+        "role": "The Creative Director",
+        "traits": "Opinionated, playful, inventive",
+        "avatar": "🧭"
+      },
+      {
+        "name": "The Co-Pilot",
+        "role": "The Traveling Companion",
+        "traits": "Ready for the wildest adventures",
+        "avatar": "🚀"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Dream House Blueprint",
+        "description": "Grab a big sheet of paper and draw your ultimate room with slides, book nooks, and secret tunnels."
+      },
+      {
+        "title": "'Would You Rather' Dinner Game",
+        "description": "Take turns asking silly questions around the dinner table."
+      }
+    ],
+    "cues": [
+      "If you could pick any vehicle on this page to take us to school tomorrow, which would you pick and why?",
+      "If your best friend picked a completely different bed than you, how could you compromise?",
+      "Which meal on the food spread would you cook for our family tonight?"
+    ],
+    "priceInr": 349,
+    "coverTone": "#d8e88a",
+    "availability": "catalogue"
+  },
+  {
+    "id": "the-most-magnificent-thing",
+    "title": "The Most Magnificent Thing",
+    "author": "Ashley Spires",
+    "illustrator": "Ashley Spires",
+    "cover": "/covers/the-most-magnificent-thing.jpg",
+    "ageMin": 4,
+    "ageMax": 8,
+    "ageLabel": "4–8 years",
+    "format": "Picture book",
+    "pages": 32,
+    "publishedYear": 2014,
+    "description": "A girl and her dog discover that making something magnificent takes patience, perspective and room for a few wrong turns.",
+    "themes": ["curiosity", "helpfulness", "perseverance", "empathy"],
+    "interests": ["nature", "adventure", "dinosaurs"],
+    "about": "A girl knows exactly how her magnificent invention will look and work. But making it proves frustrating, and she gets mad—until a walk with her dog clears her head and helps her see mistakes as clues.",
+    "storyPlot": {
+      "setup": "The girl gathers scrap parts, cardboard, and tools to build something magnificent for her dog.",
+      "turningPoint": "Every prototype is wrong, crooked, or broken; she gets furious, smashes parts, and wants to quit.",
+      "resolution": "Her dog insists on a walk. Breathing in fresh air, she spots good parts on previous failures and assembles the true magnificent scooter."
+    },
+    "portraits": [
+      {
+        "name": "The Little Inventor",
+        "role": "The Persistent Maker",
+        "traits": "Ambitious, passionate, learning emotional regulation",
+        "avatar": "🔧"
+      },
+      {
+        "name": "The Canine Assistant",
+        "role": "The Loyal Grounder",
+        "traits": "Enthusiastic, patient, always up for a walk",
+        "avatar": "🐕"
+      }
+    ],
+    "activities": [
+      {
+        "title": "The Junk Drawer Challenge",
+        "description": "Collect cardboard rolls, bottle caps, and tape. Build a prototype of an imaginary machine!"
+      },
+      {
+        "title": "The Frustration Reset Walk",
+        "description": "Practice stepping outside and naming 5 things you can see, 4 you can touch, and 3 you can hear."
+      }
+    ],
+    "cues": [
+      "What happened to the girl's hands and face when she got super angry?",
+      "How did going for a walk help her brain come up with better ideas?",
+      "What is something you worked hard on that didn't work the first time?"
+    ],
+    "priceInr": 449,
+    "coverTone": "#a9dfc0",
+    "availability": "catalogue"
+  },
+  {
+    "id": "the-bad-seed",
+    "title": "The Bad Seed",
+    "author": "Jory John",
+    "illustrator": "Pete Oswald",
+    "cover": "/covers/the-bad-seed.jpg",
+    "ageMin": 4,
+    "ageMax": 8,
+    "ageLabel": "4–8 years",
+    "format": "Picture book",
+    "pages": 40,
+    "publishedYear": 2017,
+    "description": "A sunflower seed with a bad reputation decides to change, one honest and hopeful step at a time.",
+    "themes": ["kindness", "compassion", "empathy", "local culture"],
+    "interests": ["funny", "feelings"],
+    "about": "A sunflower seed with a notorious reputation for bad manners and grumpy faces decides it's tired of being bad, showing that anyone can choose to start fresh with kindness, gratitude, and second chances.",
+    "storyPlot": {
+      "setup": "The Bad Seed boasts about cutting in line, never washing his hands, and glaring at everyone.",
+      "turningPoint": "He shares his backstory—he was part of a happy sunflower family until getting harvested, bagged, and nearly eaten at a baseball game.",
+      "resolution": "He takes a deep breath and decides that even though it's hard, he will say please, smile, and try to be good."
+    },
+    "portraits": [
+      {
+        "name": "The Bad Seed",
+        "role": "The Transforming Hero",
+        "traits": "Snarky, wounded, earnestly choosing kindness",
+        "avatar": "🌻"
+      },
+      {
+        "name": "The Sunflower Family",
+        "role": "The Warm Beginning",
+        "traits": "Bright, nurturing, joyful",
+        "avatar": "☀️"
+      }
+    ],
+    "activities": [
+      {
+        "title": "Seed of Kindness Badge",
+        "description": "Draw a little seed badge with a smiley face and wear it whenever you do a good deed."
+      },
+      {
+        "title": "Second Chances Roleplay",
+        "description": "Practice what to say when you feel like being grumpy vs choosing a polite word."
+      }
+    ],
+    "cues": [
+      "Why did the Bad Seed start acting so grumpy in the first place?",
+      "Does deciding to be kind mean you will never have a bad day again?",
+      "How does it feel when someone gives you a second chance after a mistake?"
+    ],
+    "priceInr": 399,
+    "coverTone": "#f26b4f",
+    "availability": "catalogue"
+  }
+]

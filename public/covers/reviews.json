@@ -1,0 +1,47 @@
+[
+  {
+    "id": "review-rabbit-listened-01",
+    "bookId": "the-rabbit-listened",
+    "quote": "A quiet little book with a huge heart. It gave us a new way to talk about being there for someone without trying to fix everything.",
+    "attribution": "Meera's mum, Bengaluru",
+    "role": "Parent review",
+    "tone": "yellow",
+    "rotation": "-rotate-2"
+  },
+  {
+    "id": "review-most-magnificent-thing-01",
+    "bookId": "the-most-magnificent-thing",
+    "quote": "My daughter saw herself in every failed attempt—and then got up to try again. It made perseverance feel funny, warm and completely possible.",
+    "attribution": "Rohan's dad, Mumbai",
+    "role": "Parent review",
+    "tone": "pink",
+    "rotation": "rotate-1"
+  },
+  {
+    "id": "review-dot-01",
+    "bookId": "the-dot",
+    "quote": "The perfect antidote to ‘I can't’. We read it before art time and suddenly one tiny mark feels like an invitation instead of a test.",
+    "attribution": "Anika's teacher, Kochi",
+    "role": "Teacher review",
+    "tone": "aqua",
+    "rotation": "rotate-2"
+  },
+  {
+    "id": "review-invisible-boy-01",
+    "bookId": "the-invisible-boy",
+    "quote": "A tender, accessible story about noticing who is left out. It opened up a lovely conversation about small acts that make someone feel seen.",
+    "attribution": "Kabir's mum, Delhi",
+    "role": "Parent review",
+    "tone": "lavender",
+    "rotation": "-rotate-1"
+  },
+  {
+    "id": "review-color-monster-01",
+    "bookId": "the-color-monster",
+    "quote": "The colors gave my three-year-old a vocabulary for feelings before she had the words herself. It is now a regular bedtime favorite.",
+    "attribution": "Ira's dad, Chennai",
+    "role": "Parent review",
+    "tone": "peach",
+    "rotation": "rotate-2"
+  }
+]

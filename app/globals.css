@@ -1,26 +1,637 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/*
+  KutuBooku brand tokens (proposed direction — no existing brand guide).
+  Warm "paper" base, deep ink text, marigold as the primary action colour.
+*/
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-paper: #fbf6ec;
+  --color-paper-deep: #f3e9d4;
+  --color-card: #fffdf8;
+  --color-ink: #1d2838;
+  --color-ink-soft: #4b5567;
+  --color-line: #e5d9c3;
+  --color-marigold: #f4a836;
+  --color-marigold-deep: #d98512;
+  --color-leaf: #2e7a58;
+  --color-leaf-soft: #dcefe4;
+  --color-coral: #e5634a;
+  --color-sky: #5687d1;
+  --color-plum: #76508a;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-q-sans);
+  --font-anton: var(--font-anton-src);
+  --font-script: var(--font-caveat);
+
+  /* Questionnaire: content enters with a short rise + fade */
+  --animate-q-in: q-in 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  @keyframes q-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
 
+/* Intro preloader: waves rise, books tumble in, wordmark pops */
+@keyframes pre-wave {
+  from {
+    transform: translateY(70%);
+  }
+}
+@keyframes pre-book {
+  from {
+    opacity: 0;
+    transform: translateY(-110vh) rotate(var(--r0, -40deg));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(var(--r1, 0deg));
+  }
+}
+@keyframes pre-mark {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-6deg);
+  }
+}
+
+/* Playful book swap: old card flips away, new one flips in with a spring,
+   confetti bursts out from behind the cover. */
+@keyframes card-flip-out {
+  to {
+    opacity: 0.5;
+    transform: rotateY(90deg) scale(0.92) translateY(-6px);
+  }
+}
+@keyframes card-flip-in {
+  0% {
+    opacity: 0.5;
+    transform: rotateY(-90deg) scale(0.92) translateY(-6px);
+  }
+  60% {
+    opacity: 1;
+    transform: rotateY(10deg) scale(1.03) translateY(-8px);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes confetti {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--r));
+  }
+}
+
+/* Regenerate: cards shuffle away, then the new set is dealt in card by card. */
+@keyframes deal-out {
+  to {
+    opacity: 0;
+    transform: translateY(-48px) rotate(var(--deal-r, -8deg)) scale(0.9);
+  }
+}
+@keyframes deal-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-80px) rotate(var(--deal-r, -8deg)) scale(0.9);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(8px) rotate(calc(var(--deal-r, -8deg) * -0.25)) scale(1.02);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* AI badge sheen and typed-reason caret */
+@keyframes ai-sheen {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Home hero: 3D books float slowly from their resting angle, and fly in on load. */
+/* Hero "Ask KutuBooku AI" (app/_components/HeroAsk.tsx) */
+/* reply card grows up out of the ask box, and shrinks back into it */
+@keyframes ask-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.94);
+    filter: blur(6px);
+  }
+}
+@keyframes ask-pop-out {
+  to {
+    opacity: 0;
+    transform: translateY(18px) scale(0.94);
+    filter: blur(6px);
+  }
+}
+/* chat bubble pops in from the right */
+@keyframes ask-bubble-in {
+  from {
+    opacity: 0;
+    transform: translate(16px, 10px) scale(0.85);
+  }
+  70% {
+    transform: translate(0, -2px) scale(1.02);
+  }
+}
+/* book picks are dealt in with a tilt (uses --r) */
+@keyframes ask-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) rotate(calc(var(--r) * 4)) scale(0.88);
+  }
+}
+/* thinking dots */
+@keyframes ask-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+/* cycling placeholder */
+@keyframes ask-ph-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[ask-"] {
+    animation: none !important;
+  }
+}
+
+/* AI "thinking" shimmer: a light band slides across (used with background-size: 250%). */
+@keyframes ai-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+@keyframes book-float {
+  0%,
+  100% {
+    transform: translateY(0) rotateX(var(--rx0)) rotateY(var(--ry0)) rotateZ(var(--rz0));
+  }
+  50% {
+    transform: translateY(-16px) rotateX(calc(var(--rx0) + 6deg)) rotateY(calc(var(--ry0) + 14deg))
+      rotateZ(calc(var(--rz0) - 2deg));
+  }
+}
+/* Hero carousel: the book track (rendered twice) drifts left one full set, then loops. */
+@keyframes hero-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes book-in {
+  from {
+    opacity: 0;
+    transform: translateZ(-420px) translateY(40px) scale(0.85);
+  }
+}
+
+/* Left-panel answer illustration pop-in */
+@keyframes art-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.6);
+  }
+}
+
+/* Review wall (book page, ReviewWall.tsx): a small stack of printed recommendation
+   cards. Entry runs once the section is in view ([data-in]): the heading lines rise
+   out of a mask, then the cards are dealt in one by one and settle onto their tilt
+   with a little overshoot. The entry animates `transform`; the resting tilt and the
+   hover use the separate `rotate` / `translate` / `scale` properties, so they never
+   fight each other. */
+.review-wall {
+  --review-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.review-line {
+  display: block;
+  overflow: hidden;
+  /* room for ascenders/descenders at leading 0.8, without moving the text */
+  padding-block: 0.1em;
+  margin-block: -0.1em;
+}
+.review-line > span {
+  display: block;
+}
+.review-wall:not([data-in]) .review-line > span,
+.review-wall:not([data-in]) .review-card {
+  opacity: 0;
+}
+.review-wall[data-in] .review-line > span {
+  animation: review-line 800ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--i) * 90ms) both;
+}
+.review-wall[data-in] .review-card {
+  animation: review-deal 900ms var(--review-spring) calc(260ms + var(--i) * 130ms) both;
+}
+@keyframes review-line {
+  from {
+    transform: translateY(105%);
+  }
+}
+@keyframes review-deal {
+  from {
+    opacity: 0;
+    transform: translateY(110px) rotate(var(--from-r, 8deg)) scale(0.9);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Hover: the card lifts, straightens and comes forward with a soft shadow; the
+   cards beside it slide apart to show what they were covering. Only where the
+   cards overlap (sm+) and the pointer can hover. */
+.review-card {
+  transition:
+    translate 550ms var(--review-spring),
+    rotate 550ms var(--review-spring),
+    scale 550ms var(--review-spring),
+    box-shadow 400ms ease;
+}
+@media (hover: hover) and (width >= 40rem) {
+  .review-card:hover {
+    z-index: 10;
+    translate: 0 -16px;
+    rotate: 0deg;
+    scale: 1.04;
+    box-shadow: 0 34px 50px -26px rgb(29 40 56 / 0.5);
+  }
+  .review-card:hover ~ .review-card {
+    translate: 56px 6px;
+  }
+  .review-card:has(~ .review-card:hover) {
+    translate: -56px 6px;
+  }
+}
+
+@keyframes like-pop {
+  0% { transform: scale(0.75) rotate(-12deg); }
+  55% { transform: scale(1.18) rotate(6deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes like-ring {
+  0% { opacity: 0.5; transform: scale(0.7); }
+  100% { opacity: 0; transform: scale(1.45); }
+}
+
+/* Questionnaire step transitions (React <ViewTransition share/enter/exit="q-swap">).
+   Old question lifts and fades out quickly; new one rises in; the panel group
+   morphs its size in between, so height changes don't jump. */
+::view-transition-group(.q-swap) {
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(.q-swap) {
+  animation: q-vt-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(.q-swap) {
+  animation: q-vt-in 420ms cubic-bezier(0.22, 1, 0.36, 1) 110ms both;
+}
+@keyframes q-vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+@keyframes q-vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+/* Only the question content animates; the rest of the page stays still. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+/* Page-to-page (PageTransition: name="page", share="page-swap", enter="page-in").
+   The new page rises in over the old one; the old one stays put underneath (only
+   dimming), so different page backgrounds never flash through.
+   (A comic "ribbon wipe" was tried here on 2026-11-03 and removed the same day.) */
+::view-transition-group(.page-swap) {
+  animation: none; /* no size morph between pages of different heights */
+}
+::view-transition-image-pair(.page-swap) {
+  isolation: auto;
+}
+::view-transition-old(.page-swap) {
+  mix-blend-mode: normal;
+  animation: page-out 420ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+::view-transition-new(.page-swap),
+::view-transition-new(.page-in) {
+  mix-blend-mode: normal;
+  animation:
+    page-fade-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both,
+    page-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes page-out {
+  to {
+    filter: brightness(0.9);
+  }
+}
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes page-rise {
+  from {
+    transform: translateY(40px);
+  }
+}
+/* Hero book → book page (BookHero + BookCover3D share name="book-<id>", share="book-morph"):
+   the clicked book flies from the carousel to the cover slot and grows, above the page
+   swap (z-index), while its two snapshots (carousel tilt → page tilt) crossfade. */
+::view-transition-group(.book-morph) {
+  z-index: 50;
+  animation-duration: 700ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(.book-morph) {
+  animation: 300ms cubic-bezier(0.4, 0, 1, 1) both page-fade-in reverse;
+}
+::view-transition-new(.book-morph) {
+  animation: 420ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both page-fade-in;
+}
+
+/* Clicks during a transition reach the live page. */
+::view-transition {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-q-in {
+    animation: none;
+  }
+  .review-wall .review-line > span,
+  .review-wall .review-card {
+    opacity: 1 !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  [class*="deal-in"],
+  [class*="deal-out"],
+  [class*="card-flip"],
+  [class*="confetti"],
+  [class*="like-pop"],
+  [class*="like-ring"] {
+    animation: none !important;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Typography scale (2026-11-02). One family (Inter Tight); every text style   */
+/* in the app uses one of these. Breakpoints: sm = 40rem, lg = 64rem.          */
+/* Colour is applied separately (text-[#1d2838], /70 etc.).                    */
+/* ------------------------------------------------------------------------- */
+@utility type-display {
+  font-size: 40px;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  font-weight: 400;
+  @media (width >= 40rem) {
+    font-size: 56px;
+  }
+  @media (width >= 64rem) {
+    font-size: 64px;
+  }
+}
+@utility type-display-sm {
+  font-size: 34px;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  font-weight: 400;
+  @media (width >= 40rem) {
+    font-size: 48px;
+  }
+}
+@utility type-heading {
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  font-weight: 400;
+  @media (width >= 40rem) {
+    font-size: 36px;
+  }
+}
+@utility type-quote {
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-weight: 300;
+  @media (width >= 40rem) {
+    font-size: 36px;
+  }
+}
+@utility type-lead {
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 300;
+  @media (width >= 40rem) {
+    font-size: 34px;
+    line-height: 1.15;
+  }
+}
+@utility type-value {
+  font-size: 24px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 300;
+  @media (width >= 40rem) {
+    font-size: 30px;
+  }
+}
+@utility type-title {
+  font-size: 26px;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+}
+@utility type-title-sm {
+  font-size: 18px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  @media (width >= 40rem) {
+    font-size: 20px;
+  }
+}
+@utility type-option {
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+@utility type-body {
+  font-size: 17px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  @media (width >= 40rem) {
+    font-size: 18px;
+  }
+}
+@utility type-stat {
+  font-size: 20px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  @media (width >= 40rem) {
+    font-size: 24px;
+  }
+}
+@utility type-body-lg {
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 300;
+}
+@utility type-body-sm {
+  font-size: 15px;
+  line-height: 1.4;
+}
+@utility type-label {
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 500;
+  @media (width >= 40rem) {
+    font-size: 15px;
+  }
+}
+@utility type-caption {
+  font-size: 13px;
+  line-height: 1.4;
+}
+@utility type-caption-strong {
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+@utility type-button {
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+@utility type-button-sm {
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 600;
+}
+@utility type-tile {
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+
+/* Scrollbars match the design language: a thin navy pill on a transparent
+   track (cream shows through), fully navy on hover/drag. Applies to the page,
+   panels, dialogs and menus. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(29 40 56 / 0.35) transparent;
+}
+*:hover {
+  scrollbar-color: rgb(29 40 56 / 0.6) transparent;
+}
+/* Safari / older WebKit */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: rgb(29 40 56 / 0.35) padding-box;
+}
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
+  background: rgb(29 40 56 / 0.75) padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* Opt out (elements that draw their own bar, e.g. the hero chat's ChatScrollArea).
+   Must be unlayered like the rules above: unlayered CSS beats Tailwind's layered
+   utilities whatever the selector, so a `[scrollbar-width:none]` class can't win. */
+.no-scrollbar,
+.no-scrollbar:hover {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Native <details> disclosure: hide default marker, rotate our chevron */
+summary {
+  list-style: none;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+details[open] .chevron {
+  transform: rotate(180deg);
 }
