@@ -8,7 +8,7 @@
 // cut then sits right on the edge the page lifts off the footer from, so it looks like
 // the mascot is peeking over the footer. `className` sets the strip's background so it
 // matches the section above.
-// Idle life (breathing, a peek when you stop scrolling, a wiggle on hover): FooterMascotMotion.
+// Calm idle life (slow breathing and sway, a gentle perk-up on hover): FooterMascotMotion.
 
 import Image from "next/image";
 import { FooterMascotMotion } from "./FooterMascotMotion";

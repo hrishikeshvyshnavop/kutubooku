@@ -228,7 +228,11 @@ export function BookPdp({ book }: { book: MockBook }) {
 
           {/* Reviews */}
           {reviews.length > 0 && (
-            <div className={LAZY_LAYOUT}>
+            // Full width (no max width): breaks out of the body's 1312/1248px columns to the screen
+            // edges so the four overlapping cards (~1360px) fit; ReviewWall puts its heading back in
+            // the same column as the other section headings. (main's overflow-clip absorbs the
+            // scrollbar width that 100vw includes.)
+            <div className={`mx-[calc(50%-50vw)] w-screen ${LAZY_LAYOUT}`}>
               <ReviewWall reviews={reviews} />
             </div>
           )}
