@@ -11,7 +11,20 @@
 //   them for the lid and to hold the count until the book lands).
 // - "Reduce motion": no flight, just the catch.
 
+import { getImageProps } from "next/image";
+
 const DURATION = 820;
+
+/**
+ * The picture for the flying copy. Performance: never the original cover file (some are
+ * 4000×5000 px and would be decoded on the spot, freezing the first frames). Prefer the exact
+ * image the tapped card is showing (already loaded and decoded), else a small optimised one.
+ */
+function flightImage(source: Element | null, cover: string): string {
+  const shown = source?.querySelector?.("img") as HTMLImageElement | null;
+  if (shown?.currentSrc && shown.complete) return shown.currentSrc;
+  return getImageProps({ src: cover, alt: "", width: 180, height: 240 }).props.src;
+}
 
 const visible = (el: Element) => {
   const r = el.getBoundingClientRect();
@@ -92,7 +105,7 @@ export function flyToBox({
     zIndex: "2147483000",
     pointerEvents: "none",
     borderRadius: "4px 10px 10px 4px",
-    backgroundImage: `url("${cover}")`,
+    backgroundImage: `url("${flightImage(cover_, cover)}")`,
     backgroundSize: "cover",
     backgroundPosition: "center",
     boxShadow: "0 18px 30px -12px rgba(29,40,56,0.55)",

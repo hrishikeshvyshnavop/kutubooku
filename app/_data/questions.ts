@@ -173,18 +173,23 @@ function bornOn(v: unknown): Date | null {
 }
 
 /** Whole years between the date of birth and today (null when not a usable date). */
-export function ageFromDob(v: unknown, today = new Date()): number | null {
+// "today" is only read once there's a date to compare: a missing birthday never touches the
+// clock, so server prerenders (no answers yet) stay deterministic (Next's cacheComponents).
+export function ageFromDob(v: unknown, now?: Date): number | null {
   const born = bornOn(v);
-  if (!born || born > today) return null;
+  if (!born) return null;
+  const today = now ?? new Date();
+  if (born > today) return null;
   let years = today.getFullYear() - born.getFullYear();
   if (today.getMonth() < born.getMonth() || (today.getMonth() === born.getMonth() && today.getDate() < born.getDate())) years -= 1;
   return years;
 }
 
 /** Why a date of birth can't be used yet, for the message under the pickers (null = fine or not finished). */
-export function dobProblem(v: unknown, today = new Date()): string | null {
+export function dobProblem(v: unknown, now?: Date): string | null {
   const { y, m, d } = dobParts(v);
   if (!y || !m) return null;
+  const today = now ?? new Date();
   if (d && !bornOn(v)) return `${MONTHS[Number(m) - 1]} doesn't have ${d} days.`;
   const born = bornOn(v);
   if (born && born > today) return "That date hasn't happened yet.";
@@ -194,10 +199,12 @@ export function dobProblem(v: unknown, today = new Date()): string | null {
 }
 
 /** "4 years and 2 months", "8 months", for the line under the pickers. */
-export function ageInWords(v: unknown, today = new Date()): string | null {
+export function ageInWords(v: unknown, now?: Date): string | null {
   const born = bornOn(v);
+  if (!born) return null;
+  const today = now ?? new Date();
   const years = ageFromDob(v, today);
-  if (!born || years === null) return null;
+  if (years === null) return null;
   let months = (today.getMonth() - born.getMonth() + 12) % 12;
   if (today.getDate() < born.getDate()) months = (months + 11) % 12;
   const y = years ? `${years} ${years === 1 ? "year" : "years"}` : "";
@@ -226,9 +233,10 @@ export function ageOf(a: Record<string, unknown> | null | undefined): number | n
 }
 
 /** Age today, counting up from the age given on `askedAt`. */
-export function currentAge(ageGiven: number, askedAt: string, today = new Date()): number {
+export function currentAge(ageGiven: number, askedAt: string, now?: Date): number {
   const asked = new Date(askedAt);
   if (Number.isNaN(asked.getTime())) return ageGiven;
+  const today = now ?? new Date();
   let years = today.getFullYear() - asked.getFullYear();
   const beforeAnniversary =
     today.getMonth() < asked.getMonth() ||

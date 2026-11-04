@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Caveat } from "next/font/google";
+import { getImageProps } from "next/image";
 import { notFound } from "next/navigation";
+import { abs, jsonLd } from "../../_lib/site";
 import { GlobalFooter } from "../../_components/GlobalFooter";
 import { GlobalHeader } from "../../_components/GlobalHeader";
 import { PageTransition } from "../../_components/PageTransition";
@@ -22,11 +24,49 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const book = findBook((await params).id);
-  if (!book) return { title: "Book not found — KutuBooku" };
+  if (!book) return { title: "Book not found — KutuBooku", robots: { index: false } };
+  const title = `${book.title} by ${book.author} — KutuBooku`;
   return {
-    title: `${book.title} by ${book.author} — KutuBooku`,
+    title,
     description: book.description,
+    alternates: { canonical: `/books/${book.id}` },
+    // Share card: the cover, resized (some originals are 4000×5000 px).
+    openGraph: { type: "book", url: `/books/${book.id}`, title, description: book.description, images: [{ url: coverFor(book.cover), width: 1200, alt: `Cover of ${book.title}` }] },
   };
+}
+
+// width 600 → the 2× file is 1200 px wide: the size share cards use, without the 4000 px original.
+const coverFor = (src: string) => getImageProps({ src, alt: "", width: 600, height: 600 }).props.src;
+
+/** What the book is, for search engines. No ratings or prices: ours are samples / approximate. */
+function bookData(book: NonNullable<ReturnType<typeof findBook>>) {
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "Book",
+      name: book.title,
+      ...(book.subtitle ? { alternateName: book.subtitle } : {}),
+      url: abs(`/books/${book.id}`),
+      image: abs(book.cover),
+      description: book.description,
+      author: { "@type": "Person", name: book.author },
+      ...(book.illustrator ? { illustrator: { "@type": "Person", name: book.illustrator } } : {}),
+      ...(book.pages ? { numberOfPages: book.pages } : {}),
+      inLanguage: "en",
+      typicalAgeRange: `${book.ageMin}-${book.ageMax}`,
+      audience: { "@type": "PeopleAudience", suggestedMinAge: book.ageMin, suggestedMaxAge: book.ageMax },
+      ...(book.themes?.length ? { keywords: book.themes.join(", ") } : {}),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: abs("/") },
+        { "@type": "ListItem", position: 2, name: "All books", item: abs("/books") },
+        { "@type": "ListItem", position: 3, name: book.title, item: abs(`/books/${book.id}`) },
+      ],
+    },
+  ];
 }
 
 export default async function BookPage({ params }: Props) {
@@ -43,6 +83,7 @@ export default async function BookPage({ params }: Props) {
   return (
     <PageTransition>
       <div style={theme} className={`${caveat.variable} flex min-h-dvh flex-1 flex-col overflow-x-clip bg-white font-[family-name:var(--font-q-sans)] text-black`}>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(bookData(book)) }} />
         <GlobalHeader background="bg-[var(--book-tint)]" />
         <BookPdp book={book} />
         {/* pb on phones: room for the fixed Buy button */}

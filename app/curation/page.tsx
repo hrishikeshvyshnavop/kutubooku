@@ -10,6 +10,8 @@ const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Your child's books — KutuBooku",
   description: "Books curated for your child, ready to add to your box and send to Amazon.",
+  // Personal page: kept out of search.
+  robots: { index: false, follow: true },
 };
 
 export default function CurationPage() {

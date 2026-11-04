@@ -357,3 +357,13 @@ A family-wide cart on the site. Parents collect books, then send them all to Ama
 > - Signed out, the box is one plain list: each book once, no child groups, no "Move to…", no "both have this"; Remove takes the book out for every child; the header badge counts each book once.
 > - Home book row and `/books` cards: "Add to {child}'s box" (shared `app/_components/useCardBox.tsx`).
 > - Cursor everywhere (desktop): our own chunky rounded arrow with a white outline, in the style of agentcard.com's (their image isn't used). Ink #1d2838 by default; on links, buttons, chips, tiles and cards only the fill changes, to coral #f26b4f. Disabled controls keep the ink arrow, text fields keep the text cursor, touch screens are unaffected. In `app/globals.css` (`--cursor-default`, `--cursor-action`).
+
+> **Performance pass (2026-11-04, production build, phone = 4× slower CPU + fast 4G).**
+> - Fixed: the build failed on `/curation` (the birthday maths read the clock during prerender; now only when there's a date).
+> - Add to box: the flying copy reuses the card's already-loaded image instead of the original cover (some are 4000×5000 px): worst frame 167 → ~84 ms on the phone.
+> - Home hero covers get size hints matching how big they really show: phone images 588 → 310 kB.
+> - `/books` chip rows scroll sideways on phones, so the page no longer jumps when the child's age fills in: layout shift 0.097 → 0.007.
+> - Desktop: scrolling, sheet, filters and box animations hold 60 fps.
+> - Still open: opening the book sheet as a modal restyles the whole page (one ~170 ms frame on a slow phone; fine on desktop); `/books` cards paint after the child's age is known (~1.6 s on a slow phone, within "good").
+>
+> **SEO (2026-11-04).** Site address from `app/_lib/site.ts` (`NEXT_PUBLIC_SITE_URL`, default https://www.kutubooku.com). `app/sitemap.ts` (home, /books, every book, the questions), `app/robots.ts` (blocks /box, /sign-in, /children, /curation, which are also noindex). Canonical addresses on public pages (`/home` → `/`; `/books` filters and `?book=` → `/books`). Share cards: `app/opengraph-image.tsx` (generated KutuBooku card); book pages use the cover at 1200 px. Structured data (JSON-LD): Organization + WebSite with search (home), ItemList (/books), Book + BreadcrumbList (book pages); no ratings or prices, since ours are samples / approximate. App icons from the mascot (`app/icon.png`, `app/apple-icon.png`). ⚠️ The header links to /curators, /gifting, /blog and /faq, which are still 404s: crawlers will find those dead links until the pages exist.

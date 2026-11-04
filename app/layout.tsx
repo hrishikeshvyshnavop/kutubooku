@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./_lib/site";
 import { Inter_Tight } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
@@ -11,10 +12,20 @@ import { SmoothScroll } from "./_components/SmoothScroll";
 // Caveat is loaded only by the book page; the parked /editions page loads its own fonts.
 const grotesk = Inter_Tight({ variable: "--font-q-sans", subsets: ["latin"] });
 
+// Site-wide SEO defaults. Pages set their own title, description and canonical address;
+// share cards fall back to app/opengraph-image.tsx.
 export const metadata: Metadata = {
-  title: "KutuBooku — New books for every young reader, every month",
-  description:
-    "Monthly book Editions for children aged 0–17. Get a curation made for your child and add it to your Amazon cart in one click.",
+  metadataBase: new URL(SITE_URL),
+  title: "KutuBooku — Books picked for your child",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  openGraph: { type: "website", siteName: SITE_NAME, locale: "en_IN" },
+  twitter: { card: "summary_large_image" },
+  formatDetection: { telephone: false, email: false, address: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FDDAA6",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

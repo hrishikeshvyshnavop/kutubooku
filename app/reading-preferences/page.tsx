@@ -8,6 +8,7 @@ import { PageTransition } from "../_components/PageTransition";
 export const metadata: Metadata = {
   title: "Tell us about your child — KutuBooku",
   description: "A few quick questions so we can curate books for your child.",
+  alternates: { canonical: "/reading-preferences" },
 };
 
 export default function ReadingPreferencesPage() {

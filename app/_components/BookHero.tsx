@@ -21,6 +21,11 @@ import { HeroAsk } from "./HeroAsk";
 import { HERO_GLOW } from "./hero-bg";
 
 const H = 440; // book height (px) at full size; scaled per breakpoint below
+// Image size hint matching how wide a cover really shows: H × cover ratio (up to ~1) × the row's
+// scale at each breakpoint below (0.42 phones … 1.0 from 1800px). Without it, 3× phones fetched
+// 1080px files for books shown ~185px wide.
+const HERO_SIZES =
+  "(min-width: 1800px) 440px, (min-width: 1536px) 405px, (min-width: 1280px) 352px, (min-width: 1024px) 317px, (min-width: 640px) 264px, 185px";
 const GAP = 150; // space between books along the track
 
 const INFO = new Map<string, MockBook>(MOCK_BOOKS.map((b) => [b.cover, b]));
@@ -403,7 +408,7 @@ export function BookHero() {
                       }`}
                     >
                       {/* The clicked book flies from here into the book sheet's cover (app/_lib/book-sheet.ts). */}
-                      <Book3D b={b} i={i % BOOKS.length} height={H} eager={i < 3} focused={focusKey === b.src && !selKey} />
+                      <Book3D b={b} i={i % BOOKS.length} height={H} eager={i < 3} focused={focusKey === b.src && !selKey} sizes={HERO_SIZES} />
                     </span>
                     <span
                       aria-hidden

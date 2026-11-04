@@ -10,7 +10,7 @@ const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Your box — KutuBooku",
   description: "Your family's books, ready to send to your Amazon.in cart.",
-  robots: { index: false },
+  robots: { index: false, follow: true },
 };
 
 export default function BoxPage() {

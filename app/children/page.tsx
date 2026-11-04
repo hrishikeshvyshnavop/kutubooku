@@ -6,6 +6,8 @@ import { ChildPicker } from "./ChildPicker";
 export const metadata: Metadata = {
   title: "Who's choosing books today? — KutuBooku",
   description: "Pick a reader to see their books, add another child, or change a child's answers.",
+  // Personal page: kept out of search.
+  robots: { index: false, follow: true },
 };
 
 export default function ChildrenPage() {

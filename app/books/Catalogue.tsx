@@ -136,7 +136,9 @@ export function Catalogue() {
           />
         </label>
 
-        <div role="radiogroup" aria-label="Age" className="flex flex-wrap items-center gap-2">
+        {/* Phones: each chip row is one line that scrolls sideways, so its height never changes when
+            the child's age chip fills in after loading (no layout shift). Wider screens wrap. */}
+        <div role="radiogroup" aria-label="Age" className="-mx-5 flex items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&>*]:shrink-0">
           <span className="mr-1 text-[15px] font-semibold text-[#1d2838]/60">Age</span>
           {[null, ...BANDS.map((b) => b.id)].map((id) => {
             const on = f.age === id;
@@ -160,7 +162,7 @@ export function Catalogue() {
           })}
         </div>
 
-        <div role="group" aria-label="Interests" className="flex flex-wrap items-center gap-2">
+        <div role="group" aria-label="Interests" className="-mx-5 flex items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&>*]:shrink-0">
           <span className="mr-1 text-[15px] font-semibold text-[#1d2838]/60">Into</span>
           {INTERESTS.map((t) => {
             const on = f.into.includes(t);
