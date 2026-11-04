@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter_Tight } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
+import { BookSheetHost } from "./_components/BookSheetHost";
 import { SmoothScroll } from "./_components/SmoothScroll";
 
 // One typeface for the whole site, loaded once here (it used to be declared on
@@ -21,6 +23,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans">
         <SmoothScroll />
         {children}
+        {/* Book page as a slide-up sheet over any screen (?book=<id>). Suspense: it reads the URL. */}
+        <Suspense fallback={null}>
+          <BookSheetHost />
+        </Suspense>
       </body>
     </html>
   );

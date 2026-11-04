@@ -6,6 +6,7 @@
 
 import Image from "next/image";
 import type { MockBook } from "../../_data/curation-mock";
+import { activeChild, displayName } from "../../_lib/children";
 
 export const INK = "#1d2838";
 export const CORAL = "#f26b4f";
@@ -32,7 +33,10 @@ export type Answers = Record<string, string | string[]>;
 export const ANSWERS_KEY = "kb:reading-preferences";
 export const SIGNED_IN_KEY = "kb:signed-in";
 
+/** The active child's answers once signed in (app/_lib/children.ts), else the questionnaire's draft. */
 export function readAnswers(): Answers | null {
+  const active = activeChild();
+  if (active) return active.answers;
   try {
     const raw = sessionStorage.getItem(ANSWERS_KEY);
     if (!raw) return null;
@@ -43,11 +47,7 @@ export function readAnswers(): Answers | null {
   }
 }
 
-export function childNameOf(a: Answers | null): string {
-  const n = a?.name;
-  // Capitalised for display; the saved answer stays exactly as typed.
-  return typeof n === "string" && n.trim() ? n.trim().replace(/(^|[\s'-])([a-z])/g, (_m: string, p: string, c: string) => p + c.toUpperCase()) : "";
-}
+export const childNameOf = (a: Answers | null): string => displayName(a?.name);
 
 /* ------------------------------ Book cover ------------------------------- */
 

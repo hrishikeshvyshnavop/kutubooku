@@ -9,14 +9,14 @@
 // because we can't reproduce real books' text.
 
 import reviewsJson from "../../../public/covers/reviews.json";
-import { SplitCta } from "../../_components/HomeHeader";
 import { THEME_LABEL, TOPIC_LABEL, detailsFor, similarTo } from "../../_data/book-details";
 import type { MockBook } from "../../_data/curation-mock";
-import { amazonCartUrl, rupees } from "../../_lib/amazon";
 import { AiSummary, type AiBlock } from "./AiSummary";
 import { BookCard } from "../../curation/BookCard";
 import { BookCover3D } from "./BookCover3D";
+import { book3DFor } from "../../_components/Book3D";
 import { ReviewWall } from "./ReviewWall";
+import { BuyTray } from "./BuyTray";
 import { SectionTitle } from "../../_components/SectionTitle";
 import { REVEAL_ABOVE } from "../../_components/GlobalFooter";
 import { FooterMascot } from "../../_components/FooterMascot";
@@ -58,7 +58,30 @@ const LAZY_LAYOUT = "[content-visibility:auto] [contain-intrinsic-size:auto_900p
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export function BookPdp({ book }: { book: MockBook }) {
+/** The book's colours, from the spine colour of its 3D book (picked from the real cover). Text stays black, so tints are light. */
+export function bookTheme(book: MockBook) {
+  const color = book3DFor(book.cover, book.title, book.tone).spine;
+  return {
+    "--book": color,
+    "--book-tint": `color-mix(in oklab, ${color} 28%, white)`, // hero, header, "Read it together"
+    "--book-soft": `color-mix(in oklab, ${color} 50%, white)`, // waves and pattern
+  } as React.CSSProperties;
+}
+
+/**
+ * The book page. `sheet` = shown inside a slide-up sheet (the listing's, or the route modal on any
+ * screen): a <div> not <main>, no footer mascot, and the buy tray sticks to the bottom of the sheet
+ * instead of the window. "Read more like this" opens in the same sheet: through `onOpenBook`
+ * (listing), or as a /books link, which the route modal catches.
+ */
+export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
+    onOpenBook?: (id: string) => void;
+    child?: string | null;
+    /** First pass in the sheet: only the top (title, cover, tray), so it opens without a stall. */
+    lite?: boolean;
+  };
+}) {
+  const Root = sheet ? "div" : "main";
   const d = detailsFor(book);
   const topics = book.tags.slice(0, 3);
   const ages = book.ageMin === book.ageMax ? `Age ${book.ageMin}` : `Ages ${book.ageMin}–${book.ageMax}`;
@@ -89,13 +112,12 @@ export function BookPdp({ book }: { book: MockBook }) {
     : [];
   // "Read it together": activities, written out by the AI card. (Cues have their own section.)
   const aiBlocks: AiBlock[] = d.activities.map((a) => ({ kind: "activity" as const, title: a.title, text: a.description }));
-  const buyUrl = amazonCartUrl([book], `${book.title} ${book.author}`);
   // "Read more like this": books sharing a topic, in a nearby age range.
   const similar = similarTo(book, 4);
 
   return (
     // REVEAL_ABOVE: rounded bottom corners; slides up off the sticky footer. bg-white so the footer never shows through.
-    <main className={`flex-1 bg-white ${REVEAL_ABOVE}`}>
+    <Root className={sheet ? "relative bg-white" : `flex-1 bg-white ${REVEAL_ABOVE}`}>
       {/* ------------------------------- Hero ------------------------------- */}
       <section aria-labelledby="book-title" className="relative overflow-hidden bg-[var(--book-tint)]">
         <HeroWaves />
@@ -132,6 +154,8 @@ export function BookPdp({ book }: { book: MockBook }) {
         <BookCover3D book={book} />
       </div>
 
+      {!sheet?.lite && (
+      <>
       {/* ------------------------------- Body ------------------------------- */}
       <div className="mx-auto w-full max-w-[1312px] px-5 sm:px-10 lg:px-8">
         {/* At a glance */}
@@ -294,21 +318,26 @@ export function BookPdp({ book }: { book: MockBook }) {
           >
             {similar.map((s, i) => (
               <li key={s.id} className="w-[min(78vw,320px)] shrink-0 snap-start lg:w-auto [perspective:1400px]">
-                <BookCard book={s} index={i + 1} titleAs="h3" href={`/books/${s.id}`} />
+                {sheet?.onOpenBook ? (
+                  <BookCard book={s} index={i + 1} titleAs="h3" onOpen={() => sheet.onOpenBook?.(s.id)} />
+                ) : (
+                  <BookCard book={s} index={i + 1} titleAs="h3" href={`/books/${s.id}`} />
+                )}
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      {/* Last in main: the mascot peeks over the footer */}
-      <FooterMascot className="pt-10 sm:pt-16" />
+      </>
+      )}
 
-      {/* Floating buy button (design: grey tray, bottom-right) */}
-      <div className="fixed inset-x-4 bottom-4 z-30 rounded-xl bg-[#f2f2f2] p-3 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.35)] sm:inset-x-auto sm:bottom-8 sm:right-8 sm:p-4">
-        <SplitCta href={buyUrl} newTab tone="violet" label={`Buy on Amazon · ${rupees(book.price)}`} className="w-full" />
-      </div>
-    </main>
+      {/* Last in main: the mascot peeks over the footer */}
+      {!sheet && <FooterMascot className="pt-10 sm:pt-16" />}
+
+      {/* Floating Add to box + Buy tray (design: grey tray, bottom-right) */}
+      <BuyTray book={book} placement={sheet ? "sticky" : "fixed"} child={sheet?.child} />
+    </Root>
   );
 }
 

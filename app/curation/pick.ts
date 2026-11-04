@@ -3,6 +3,7 @@
 // answers; the real recommendations will come from the AI team.
 
 import { INTEREST_LABELS, MOCK_BOOKS, type ContentFlag, type MockBook } from "../_data/curation-mock";
+import { ageOf } from "../_data/questions";
 
 type Answers = Record<string, string | string[]>;
 
@@ -17,10 +18,10 @@ function seeded(seed: number) {
 }
 
 export function profileOf(a: Answers) {
-  const ageNum = Number(a.age);
   return {
     name: typeof a.name === "string" && a.name.trim() ? a.name.trim() : "",
-    age: Number.isFinite(ageNum) ? Math.min(Math.max(ageNum, 0), 14) : null,
+    // From the date of birth (or, in older answers, the age in years), counted to today.
+    age: ageOf(a),
     stage: typeof a.stage === "string" ? a.stage : "",
     interests: list(a.interests),
     avoid: list(a.avoid).filter((x) => x !== "other") as ContentFlag[],

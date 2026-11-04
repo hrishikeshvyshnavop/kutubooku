@@ -7,8 +7,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { NAV, PILL } from "../_data/nav";
+import { BoxLink } from "./BoxLink";
+import { AccountMenu } from "./AccountMenu";
+import { useSession } from "../_lib/session";
 
 
 function Logo() {
@@ -61,6 +65,10 @@ export function SplitCta({
 
 export function HomeHeader() {
   const [open, setOpen] = useState(false);
+  const session = useSession(); // undefined until hydrated: the slot is kept but hidden, so nothing jumps
+  const pathname = usePathname();
+  // Come back to this page after signing in.
+  const signInHref = pathname && pathname !== "/" && !pathname.startsWith("/sign-in") ? `/sign-in?next=${encodeURIComponent(pathname)}` : "/sign-in";
 
   useEffect(() => {
     if (!open) return;
@@ -87,27 +95,36 @@ export function HomeHeader() {
           </ul>
         </nav>
 
-        <div className="hidden justify-end xl:flex">
-          <SplitCta href="/sign-in" label="Log-in / Sign-up" />
+        <div className="hidden items-center justify-end gap-2 xl:flex">
+          <BoxLink />
+          {session ? (
+            <AccountMenu session={session} />
+          ) : (
+            <SplitCta href={signInHref} label="Log-in / Sign-up" className={session === undefined ? "invisible" : ""} />
+          )}
         </div>
 
-        {/* Mobile: split Menu button */}
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          aria-expanded={open}
-          aria-controls="home-mobile-menu"
-          className="group flex h-12 items-stretch gap-0.5 xl:hidden"
-        >
-          <span className="flex items-center rounded-lg bg-[#f9a220] px-4 text-lg font-bold leading-none tracking-[-0.4px] text-black">
-            {open ? "Close" : "Menu"}
-          </span>
-          <span className="grid w-12 place-items-center rounded-lg bg-[#f9a220] text-black">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
-              {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-            </svg>
-          </span>
-        </button>
+        {/* Mobile: box icon, profile (signed in) + split Menu button */}
+        <div className="flex items-center gap-2 xl:hidden">
+          <BoxLink />
+          {session ? <AccountMenu session={session} /> : null}
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-controls="home-mobile-menu"
+            className="group flex h-12 items-stretch gap-0.5 xl:hidden"
+          >
+            <span className="flex items-center rounded-lg bg-[#f9a220] px-4 text-lg font-bold leading-none tracking-[-0.4px] text-black">
+              {open ? "Close" : "Menu"}
+            </span>
+            <span className="grid w-12 place-items-center rounded-lg bg-[#f9a220] text-black">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+                {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+              </svg>
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu panel */}
@@ -127,7 +144,8 @@ export function HomeHeader() {
             ))}
           </ul>
         </nav>
-        <SplitCta href="/sign-in" label="Log-in / Sign-up" className="mt-2 w-full" />
+        {/* Signed in: account and children live in the profile button next to the box. */}
+        {session ? null : <SplitCta href={signInHref} label="Log-in / Sign-up" className="mt-2 w-full" />}
       </div>
     </header>
   );

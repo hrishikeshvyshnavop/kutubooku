@@ -5,6 +5,7 @@
 // `live: false` = page not built yet: links to it don't prefetch (it would only fetch the 404).
 export const NAV = [
   { href: "/reading-preferences", label: "Find books for my child", live: true },
+  { href: "/books", label: "All books", live: true },
   { href: "/curators", label: "Our curators", live: false },
   { href: "/gifting", label: "Gifting", live: false },
   { href: "/blog", label: "Blog", live: false },

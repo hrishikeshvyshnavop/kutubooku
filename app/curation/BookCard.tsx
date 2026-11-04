@@ -8,7 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { MockBook } from "../_data/curation-mock";
-import { amazonCartUrl } from "../_lib/amazon";
+import { buyLabel, buyNow, useBox } from "../_lib/box";
+import { bookIdFromHref, openBook, rememberMorph } from "../_lib/book-sheet";
 import { BookCover, rupeesFmt } from "../_components/curation/ui";
 import { CARD_TILTS, PILL_COLOURS, TAG_SHORT, cardColourFor } from "./card-style";
 
@@ -32,7 +33,10 @@ export function BookCard({
   onRead,
   onReport,
   titleAs: Title = "h2",
+  boxChild = null,
 }: {
+  /** Child the book goes into the box for when bought from this card (curation: the child's name). */
+  boxChild?: string | null;
   /** `reason` shows the "Why we picked it" line (curation only). */
   book: MockBook & { reason?: string };
   index: number;
@@ -65,13 +69,24 @@ export function BookCard({
   // Entrance plays once. Without this, switching from the deal/flip animation
   // back to the default class restarted the entrance (cards "loaded again").
   const router = useRouter();
-  const open = () => (href ? router.push(href) : onOpen?.());
+  const box = useBox();
+  // Book links open the book sheet over the current screen (app/_lib/book-sheet.ts).
+  const open = (e?: React.SyntheticEvent) => {
+    const id = href ? bookIdFromHref(href) : null;
+    if (id) openBook(id, e?.currentTarget as Element | undefined);
+    else if (href) router.push(href);
+    else {
+      rememberMorph(book.id, e?.currentTarget as Element | undefined); // the listing's sheet plays the flight too
+      onOpen?.();
+    }
+  };
   const [settled, setSettled] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setSettled(true), 900);
     return () => clearTimeout(t);
   }, []);
   const card = cardColourFor(book.tone, index);
+  const whoseBox = boxChild ? `${boxChild}'s box` : "your box";
   const tilt = CARD_TILTS[index % CARD_TILTS.length];
   const pills = [...book.tags.map((t) => TAG_SHORT[t] ?? t), ages];
   const pillColours = PILL_COLOURS.filter((c) => c.bg !== card.bg);
@@ -89,7 +104,7 @@ export function BookCard({
       onClick={(e) => {
         // Controls inside the card keep their own behaviour.
         if ((e.target as HTMLElement).closest("button, a, input, label, [role=menu]")) return;
-        open();
+        open(e);
       }}
       style={{
         backgroundColor: card.bg,
@@ -97,28 +112,13 @@ export function BookCard({
         ...(deal ? { animationDelay: `${index * (deal === "out" ? 40 : 70)}ms`, "--deal-r": index % 2 ? "9deg" : "-10deg" } : {}),
       } as React.CSSProperties}
       className={`group/card relative flex h-full cursor-pointer flex-col ${deal === "out" ? "pointer-events-none animate-[deal-out_420ms_cubic-bezier(0.5,0,0.75,0)_both]" : deal === "in" ? "animate-[deal-in_750ms_cubic-bezier(0.34,1.35,0.64,1)_both]" : fresh ? "animate-[card-flip-in_700ms_cubic-bezier(0.34,1.35,0.64,1)_both]" : swappingOut ? "pointer-events-none animate-[card-flip-out_300ms_cubic-bezier(0.5,0,0.75,0)_forwards]" : settled ? "" : "animate-q-in"} rounded-[30px] p-3 shadow-[0_18px_30px_-22px_rgba(29,40,56,0.7)] transition-[rotate,translate,opacity,filter] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1.5 motion-reduce:transition-none ${tilt} ${
-        onToggle && !selected ? "opacity-60 saturate-[0.6]" : ""
+        ""
       }`}
     >
       {fresh ? <SwapConfetti /> : null}
-      {/* cover + select tick */}
-      <div className="relative overflow-hidden rounded-[20px]">
+      {/* cover */}
+      <div data-book-cover={book.id} className="relative overflow-hidden rounded-[20px]">
         <BookCover book={book} />
-        {onToggle ? (
-        <label className="absolute right-2 top-2 grid size-11 cursor-pointer place-items-center">
-          <input type="checkbox" checked={selected} onChange={onToggle} className="peer sr-only" aria-label={`Include “${book.title}” in cart`} />
-          <span
-            aria-hidden
-            className={`grid size-8 place-items-center rounded-[10px] shadow-md transition-[background-color,color] duration-200 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#1d2838] ${
-              selected ? "bg-[#1d2838] text-white" : "bg-white/90 text-transparent"
-            }`}
-          >
-            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12l5 5L20 7" />
-            </svg>
-          </span>
-        </label>
-        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col px-1.5 pb-1 pt-3">
@@ -223,18 +223,59 @@ export function BookCard({
           ) : null}
         </div>
 
+        {/* Curation: the main button puts the book in this child's box (C1); Amazon is reached from the box.
+            Pressed again, it takes it out. */}
+        {onToggle ? (
+          <button
+            type="button"
+            aria-pressed={!!selected}
+            aria-label={selected ? `“${book.title}” is in ${whoseBox}. Take it out` : `Add “${book.title}” to ${whoseBox}`}
+            onClick={(e) => {
+              e.stopPropagation(); // the card itself opens the book
+              onToggle();
+            }}
+            className="group/buy mt-2 flex h-12 w-full items-stretch gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+          >
+            <span
+              className={`flex flex-1 items-center justify-center gap-2 rounded-[14px] type-button-sm transition-[border-radius,background-color,color] duration-300 group-hover/buy:rounded-[24px] ${selected ? "border-2 border-current" : ""}`}
+              style={selected ? { backgroundColor: "transparent", color: "inherit" } : { backgroundColor: card.dark ? "#fffdf8" : "#1d2838", color: card.dark ? "#1d2838" : "#fffdf8" }}
+            >
+              {selected ? (
+                <>
+                  <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M5 12l5 5L20 7" />
+                  </svg>
+                  <span className="group-hover/buy:hidden">In {whoseBox}</span>
+                  <span className="hidden group-hover/buy:inline">Take it out</span>
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M3.5 8.5 12 4l8.5 4.5v9L12 22l-8.5-4.5z" />
+                    <path d="M3.5 8.5 12 13l8.5-4.5M12 13v9" />
+                  </svg>
+                  Add to {whoseBox}
+                </>
+              )}
+            </span>
+          </button>
+        ) : (
+        <>
         {/* split CTA: label + arrow chip */}
-        <a
-          href={amazonCartUrl([book], `${book.title} ${book.author}`)}
-          target="_blank"
-          rel="sponsored noopener noreferrer"
-          className="group/buy mt-2 flex h-12 items-stretch gap-1"
+        {/* C3/C4: adds the book to the box, then sends the whole box to Amazon. */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation(); // the card itself opens the book
+            if (buyNow(book, boxChild, href ? "book" : "curation") === "box") router.push("/box?checkout=1");
+          }}
+          className="group/buy mt-2 flex h-12 w-full items-stretch gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
         >
           <span
             className="flex flex-1 items-center justify-center rounded-[14px] type-button-sm transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]"
             style={{ backgroundColor: card.dark ? "#fffdf8" : "#1d2838", color: card.dark ? "#1d2838" : "#fffdf8" }}
           >
-            Buy on Amazon
+            {buyLabel(box, book.id)}
           </span>
           <span
             className="grid w-12 place-items-center rounded-[14px] transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]"
@@ -244,7 +285,9 @@ export function BookCard({
               <path d="M4 12h16M14 6l6 6-6 6" />
             </svg>
           </span>
-        </a>
+        </button>
+        </>
+        )}
       </div>
     </article>
   );

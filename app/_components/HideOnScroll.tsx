@@ -25,10 +25,14 @@ export function HideOnScroll({ children, className = "" }: { children: React.Rea
         if (Math.abs(dy) > 6 || y < 80) last.current = y;
       });
     };
+    // Something wants the header in view (a book flying into the header's box: app/_lib/fly.ts).
+    const reveal = () => setHidden(false);
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("kb:reveal-header", reveal);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("kb:reveal-header", reveal);
     };
   }, []);
 

@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { INTEREST_LABELS, MOCK_BOOKS } from "../_data/curation-mock";
-import { amazonCartUrl } from "../_lib/amazon";
+import { dropFromBox, toggleInBox, useBox } from "../_lib/box";
+import { isSignedIn } from "../_lib/session";
+import { MAX_CHILDREN, activeOf, commitDraft, displayName, switchChild, useChildren, type ChildProfile } from "../_lib/children";
+import { ReaderAvatar } from "../_components/ReaderAvatar";
+import { flyToBox } from "../_lib/fly";
 import {
   ArrowIcon,
   BTN_PRIMARY,
   Button,
   OutlineButton,
-  SIGNED_IN_KEY,
   childNameOf,
   readAnswers,
   rupeesFmt,
@@ -19,6 +22,7 @@ import {
 import { BookCard } from "./BookCard";
 import { BookDetails } from "./BookDetails";
 import { CURATION_SIZE, profileOf, rankBooks, type Pick } from "./pick";
+import { ageOf } from "../_data/questions";
 import { KutuAvatar } from "../_components/KutuAvatar";
 
 type Phase = "init" | "empty" | "loading" | "slow" | "results";
@@ -43,7 +47,6 @@ export function Curation() {
   // Playful swap: card flipping out, and the freshly swapped-in card (flips in + confetti).
   const [swappingOut, setSwappingOut] = useState<string | null>(null);
   const [freshId, setFreshId] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [ratings, setRatings] = useState<Record<string, "up" | "down">>({});
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -55,6 +58,20 @@ export function Curation() {
 
   const name = childNameOf(answers);
   const who = name || "your child";
+
+  // Readers (C8): the curation follows the active child; switching reloads it.
+  const kids = useChildren();
+  const activeKid = activeOf(kids);
+  const activeKey = kids ? activeKid?.id ?? "" : null; // null until hydrated
+
+  // The box drives the ticks (C1): a ticked book is in the family box for this child.
+  // Nothing is added on its own: the parent ticks what they want.
+  const box = useBox();
+  const child = name || null;
+  const selected = useMemo(
+    () => new Set((box?.items ?? []).filter((i) => i.child === child).map((i) => i.bookId)),
+    [box, child],
+  );
 
   const fill = useCallback(
     (a: Answers, ex: Set<string>, s: number) => {
@@ -68,29 +85,27 @@ export function Curation() {
       }
       const next = ranked.slice(0, CURATION_SIZE);
       setPicks(next);
-      setSelected(new Set(next.map((p) => p.id)));
     },
     [],
   );
 
-  // Boot: needs answers + a (simulated) signed-in session, then "curates".
+  // Boot: needs answers + a (simulated) signed-in session, then "curates". Again for another child.
   useEffect(() => {
+    if (activeKey === null) return;
+    if (isSignedIn()) commitDraft(); // answers given before signing in become a reader (then active)
     const a = readAnswers();
-    if (!a || !a.age) {
+    if (!a || ageOf(a) === null) {
       setPhase("empty"); // eslint-disable-line react-hooks/set-state-in-effect
       return;
     }
-    let signedIn = false;
-    try {
-      signedIn = sessionStorage.getItem(SIGNED_IN_KEY) === "1";
-    } catch {
-      /* ignore */
-    }
-    if (!signedIn) {
+    if (!isSignedIn()) {
       router.replace("/sign-in?next=/curation");
       return;
     }
     setAnswers(a);
+    setExcluded(new Set());
+    setSeed(1);
+    setOpenId(null);
     setPhase("loading");
     const slow = new URLSearchParams(window.location.search).get("slow") === "1";
     const t = setTimeout(() => {
@@ -98,7 +113,7 @@ export function Curation() {
       setPhase(slow ? "slow" : "results");
     }, LOADING_MS);
     return () => clearTimeout(t);
-  }, [router, fill]);
+  }, [router, fill, activeKey]);
 
   // Close the ⋯ menu on outside click / Escape.
   useEffect(() => {
@@ -131,11 +146,7 @@ export function Curation() {
     const ex = new Set(excluded).add(id);
     setExcluded(ex);
     setPicks((cur) => cur.filter((p) => p.id !== id));
-    setSelected((cur) => {
-      const n = new Set(cur);
-      n.delete(id);
-      return n;
-    });
+    dropFromBox(id, child);
     setMenuFor(null);
     say(msg);
   };
@@ -153,12 +164,11 @@ export function Curation() {
     }
     const apply = () => {
       setPicks((cur) => cur.map((p) => (p.id === id ? replacement : p)));
-      setSelected((cur) => {
-        const n = new Set(cur);
-        n.delete(id);
-        n.add(replacement.id);
-        return n;
-      });
+      // The new pick takes the old one's place in the box, if it was there.
+      if (selected.has(id)) {
+        dropFromBox(id, child);
+        toggleInBox(replacement.id, child, "curation");
+      }
       const lines = [`Ta-da! Meet “${replacement.title}”.`, `Fresh pick: “${replacement.title}”.`, `Swapped! Say hi to “${replacement.title}”.`];
       say(lines[Math.floor(Math.random() * lines.length)]);
     };
@@ -205,13 +215,13 @@ export function Curation() {
     }, Math.max(outMs, REGEN_MS / 2));
   };
 
-  const toggle = (id: string) =>
-    setSelected((cur) => {
-      const n = new Set(cur);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
+  const toggle = (id: string) => {
+    const added = toggleInBox(id, child, "curation");
+    const book = picks.find((p) => p.id === id) ?? MOCK_BOOKS.find((m) => m.id === id);
+    if (added && book) flyToBox({ bookId: id, cover: book.cover });
+    const whose = name ? `${name}'s box` : "your box";
+    if (book) say(added ? `Added “${book.title}” to ${whose}.` : `Took “${book.title}” out of ${whose}.`);
+  };
 
   const rate = (id: string, r: "up" | "down") => {
     const book = picks.find((p) => p.id === id);
@@ -231,8 +241,8 @@ export function Curation() {
     if (!book || picks.some((p) => p.id === id)) return;
     const reason = rankBooks(answers, new Set(), seed).find((p) => p.id === id)?.reason ?? "Added by you.";
     setPicks((cur) => [...cur, { ...book, reason }]);
-    setSelected((cur) => new Set(cur).add(id));
-    say(`Added “${book.title}” to your list.`);
+    if (!selected.has(id)) toggleInBox(id, child, "curation");
+    say(`Added “${book.title}” to your list and your box.`);
   };
 
   const openPick = picks.find((p) => p.id === openId);
@@ -240,7 +250,8 @@ export function Curation() {
 
   const chosen = picks.filter((p) => selected.has(p.id));
   const total = chosen.reduce((s, p) => s + p.price, 0);
-  const cartUrl = amazonCartUrl(chosen, `${chosen.map((p) => p.title).slice(0, 3).join(" ")} children's books`);
+  // Everything in the family box (all children), for "View box".
+  const boxCount = box?.items.length ?? 0;
 
   const prof = profileOf(answers);
   const interestText = prof.interests.map((i) => INTEREST_LABELS[i] ?? i);
@@ -276,8 +287,11 @@ export function Curation() {
         {prof.stage ? <Row k="Reading" v={STAGE_LABELS[prof.stage] ?? prof.stage} /> : null}
         {interestText.length ? <Row k="Into" v={interestText.join(", ")} /> : null}
       </dl>
-      <Link href="/" className="mt-5 inline-block type-label underline underline-offset-4 sm:mt-8">
-        Edit answers
+      <Link
+        href={activeKid ? `/reading-preferences?child=${activeKid.id}` : "/"}
+        className="mt-5 inline-block type-label underline underline-offset-4 sm:mt-8"
+      >
+        Edit {name ? `${name}'s` : ""} answers
       </Link>
     </>
   );
@@ -285,6 +299,7 @@ export function Curation() {
   if (phase === "loading") {
     return (
       <Frame panel="#f6c453" side={side}>
+        <ReaderSwitch kids={kids?.list ?? []} activeId={activeKid?.id} />
         <div className="flex flex-1 flex-col items-center justify-center py-10 text-center" role="status" aria-live="polite">
           <ShelfLoader />
           <h1 className="mt-10 type-display-sm">
@@ -323,6 +338,7 @@ export function Curation() {
   // results
   return (
     <Frame panel="#f6c453" side={side}>
+      <ReaderSwitch kids={kids?.list ?? []} activeId={activeKid?.id} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="type-display">
@@ -344,6 +360,7 @@ export function Curation() {
               swappingOut={swappingOut === p.id}
               fresh={freshId === p.id}
               deal={deal}
+              boxChild={child}
               selected={selected.has(p.id)}
               rating={ratings[p.id]}
               menuOpen={menuFor === p.id}
@@ -374,8 +391,7 @@ export function Curation() {
         book={openBook}
         reason={openPick?.reason}
         inList={!!openPick}
-        selected={!!openId && selected.has(openId)}
-        onToggle={() => openId && toggle(openId)}
+        child={child}
         onAdd={() => openId && addBook(openId)}
         onOpen={setOpenId}
         onClose={() => setOpenId(null)}
@@ -391,8 +407,13 @@ export function Curation() {
       {/* Sticky action bar — always in view */}
       <div className="sticky bottom-0 z-10 -mx-2 mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-t-[24px] bg-[#fffdf8]/90 px-2 pb-3 pt-3 backdrop-blur">
         <p className="type-body tabular-nums">
-          <span className="font-semibold">{chosen.length} selected</span>
+          <span className="font-semibold">
+            {chosen.length} in {name ? `${name}'s` : "your"} box
+          </span>
           <span className="text-[#1d2838]/60"> · approx {rupeesFmt(total)}</span>
+          {boxCount > chosen.length ? (
+            <span className="block text-sm text-[#1d2838]/55">{boxCount} books in the family box</span>
+          ) : null}
         </p>
         <div className="flex flex-1 justify-end gap-1.5 sm:flex-none">
           <OutlineButton onClick={regenerate} label="Regenerate the whole list" disabled={regenerating}>
@@ -401,22 +422,14 @@ export function Curation() {
             </svg>
             <span className="hidden sm:inline">{regenerating ? "Shuffling…" : "Regenerate"}</span>
           </OutlineButton>
-          {chosen.length ? (
-            <Button
-              variant="primary"
-              href={cartUrl}
-              target="_blank"
-              rel="sponsored noopener noreferrer"
-              arrow="right"
-              className="flex-1 sm:flex-none"
-            >
-              <span>
-                Add {chosen.length} to <span className="hidden sm:inline">Amazon </span>cart
-              </span>
+          {/* C1: the box replaces "Add N to Amazon cart"; Amazon is reached from the box. */}
+          {boxCount ? (
+            <Button variant="primary" href="/box" arrow="right" className="flex-1 sm:flex-none">
+              View box ({boxCount})
             </Button>
           ) : (
             <Button variant="primary" disabled className="flex-1 sm:flex-none">
-              Add to cart
+              Add books to your box
             </Button>
           )}
         </div>
@@ -426,6 +439,38 @@ export function Curation() {
 }
 
 /* -------------------------------------------------------------------------- */
+
+/** Readers above the title: switch child, or add another (C8). Only once signed in with a profile. */
+function ReaderSwitch({ kids, activeId }: { kids: ChildProfile[]; activeId?: string }) {
+  if (!kids.length) return null;
+  const chip =
+    "flex h-11 items-center gap-2 rounded-full pl-1.5 pr-4 type-label transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]";
+  return (
+    <nav aria-label="Readers" className="-mt-2 mb-6 flex flex-wrap gap-2 sm:-mt-4 sm:mb-8">
+      {kids.map((c, i) => {
+        const on = c.id === activeId;
+        return (
+          <button
+            key={c.id}
+            type="button"
+            aria-current={on || undefined}
+            onClick={() => switchChild(c.id)}
+            className={`${chip} ${on ? "bg-[#1d2838] text-white" : "bg-[#f4eee3] hover:bg-[#ece3d3]"}`}
+          >
+            <ReaderAvatar child={c} index={i} size={32} round />
+            {displayName(c.name)}
+          </button>
+        );
+      })}
+      {kids.length < MAX_CHILDREN ? (
+        <Link href="/reading-preferences?new=1&next=/curation" className={`${chip} border-2 border-dashed border-[#1d2838]/25 pl-3 hover:border-[#1d2838]`}>
+          <span aria-hidden className="text-xl leading-none">+</span>
+          Add another child
+        </Link>
+      ) : null}
+    </nav>
+  );
+}
 
 function Row({ k, v }: { k: string; v: string }) {
   return (
@@ -491,7 +536,7 @@ function AiLine({ who, thinking, count }: { who: string; thinking: boolean; coun
         <span key={step} className="animate-q-in">{THINKING_STEPS[step](who)}</span>
       ) : (
         <span>
-          {count} {count === 1 ? "book" : "books"} picked by KutuBooku AI from {who}&apos;s answers. Untick any you don&apos;t want.
+          {count} {count === 1 ? "book" : "books"} picked by KutuBooku AI from {who}&apos;s answers. Add the ones you want to your box.
         </span>
       )}
     </p>

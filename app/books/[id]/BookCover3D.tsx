@@ -4,7 +4,7 @@
 // one larger book. It also turns a little toward the mouse (like the hero's parallax).
 // Reduced motion: no float, no tilt.
 
-import { useEffect, useRef, ViewTransition } from "react";
+import { useEffect, useRef } from "react";
 import { Book3D, book3DFor } from "../../_components/Book3D";
 import type { MockBook } from "../../_data/curation-mock";
 
@@ -48,9 +48,8 @@ export function BookCover3D({ book }: { book: MockBook }) {
       {/* soft shadow on the ground */}
       <div aria-hidden className="absolute bottom-[4%] left-1/2 h-[7%] w-[46%] max-w-[420px] -translate-x-1/2 rounded-[50%] bg-[#1d2838]/25 blur-2xl" />
       {/* Book drawn at full size and scaled per breakpoint (3D maths stays in px). */}
-      {/* Same view-transition name as the book clicked in the home hero: it morphs into this one. */}
-      <ViewTransition name={`book-${book.id}`} share="book-morph" default="none">
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.5] [transform-style:preserve-3d] sm:scale-[0.7] lg:scale-100">
+      {/* data-book-cover: in the book sheet, the clicked book flies into this spot (app/_lib/book-sheet.ts). */}
+      <div data-book-cover={book.id} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.5] [transform-style:preserve-3d] sm:scale-[0.7] lg:scale-100">
         <div
           className="[transform-style:preserve-3d] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
           style={{ transform: "rotateY(calc(var(--mx) * 16deg)) rotateX(calc(var(--my) * -10deg))" }}
@@ -58,7 +57,6 @@ export function BookCover3D({ book }: { book: MockBook }) {
           <Book3D b={b} i={0} height={H} depth={44} tilt={{ rx: 8, ry: 18, rz: 3 }} eager sizes="(min-width: 1024px) 600px, 420px" />
         </div>
       </div>
-      </ViewTransition>
     </div>
   );
 }

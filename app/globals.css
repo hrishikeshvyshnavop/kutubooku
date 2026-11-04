@@ -192,6 +192,13 @@
   }
 }
 
+/* Box count pops when a book lands in the box (BoxLink). */
+@keyframes badge-pop {
+  0% { transform: scale(0.4); }
+  60% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
 /* AI "thinking" shimmer: a light band slides across (used with background-size: 250%). */
 @keyframes ai-shimmer {
   from {
@@ -634,4 +641,88 @@ summary::-webkit-details-marker {
 }
 details[open] .chevron {
   transform: rotate(180deg);
+}
+
+/* Box total: the number nudges when it changes ("Buy 1 to share" ↔ "Buy 2"), and the
+   difference floats up beside it. */
+@keyframes total-nudge {
+  0% { transform: translateY(0); }
+  35% { transform: translateY(-3px) scale(1.06); }
+  100% { transform: none; }
+}
+@keyframes delta-float {
+  0% { opacity: 0; transform: translateY(6px); }
+  20% { opacity: 1; transform: translateY(0); }
+  75% { opacity: 1; transform: translateY(-10px); }
+  100% { opacity: 0; transform: translateY(-16px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .total-anim, .delta-anim { animation: none !important; }
+  .delta-anim { display: none; }
+}
+
+/* Box: Remove / Move to… run as a View Transition (app/box/Box.tsx, animateBox).
+   Rows glide to their new place, group cards resize, a removed row fades and drops back. */
+::view-transition-group(*.box-row),
+::view-transition-group(*.box-group) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(*.box-row):only-child {
+  animation: box-row-out 260ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+@keyframes box-row-out {
+  to { opacity: 0; transform: translateX(-24px) scale(0.96); }
+}
+/* A moved row lands, then glows warm for a moment. */
+@keyframes row-arrive {
+  0% { background-color: transparent; }
+  25% { background-color: #fff3d6; }
+  100% { background-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="row-arrive"] { animation: none !important; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cursor (2026-11-04): a chunky rounded arrow with a white outline, our own   */
+/* drawing in the style of agentcard.com's. Ink by default; on anything you    */
+/* can act on only the fill changes, to coral. Text fields keep the text       */
+/* cursor; touch screens are unaffected. Unlayered, so it beats utilities like */
+/* cursor-pointer. Hotspot = the arrow's tip (4, 3).                           */
+/* -------------------------------------------------------------------------- */
+:root {
+  --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='24' viewBox='0 0 20 24'%3E%3Cpath d='M3.2 2.6c0-.9 1-1.4 1.7-.9l11.3 8.6c.8.6.4 1.8-.6 1.9l-5.2.4c-.4 0-.7.2-.9.5l-3.1 4.6c-.6.8-1.8.5-1.9-.5Z' fill='%231d2838' stroke='white' stroke-width='2' stroke-linejoin='round' paint-order='stroke'/%3E%3C/svg%3E") 4 3, auto;
+  --cursor-action: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='24' viewBox='0 0 20 24'%3E%3Cpath d='M3.2 2.6c0-.9 1-1.4 1.7-.9l11.3 8.6c.8.6.4 1.8-.6 1.9l-5.2.4c-.4 0-.7.2-.9.5l-3.1 4.6c-.6.8-1.8.5-1.9-.5Z' fill='%23f26b4f' stroke='white' stroke-width='2' stroke-linejoin='round' paint-order='stroke'/%3E%3C/svg%3E") 4 3, pointer;
+}
+@media (pointer: fine) {
+  html,
+  body {
+    cursor: var(--cursor-default);
+  }
+  a[href],
+  button:not(:disabled),
+  summary,
+  select:not(:disabled),
+  label:has(> input[type="checkbox"], > input[type="radio"]),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="button"]:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="radio"]:not(:disabled),
+  [role="checkbox"]:not(:disabled),
+  [role="tab"],
+  [role="menuitem"],
+  [role="option"],
+  .cursor-pointer,
+  [data-cursor="action"] {
+    cursor: var(--cursor-action);
+  }
+  :disabled,
+  [aria-disabled="true"],
+  .cursor-default,
+  .cursor-not-allowed {
+    cursor: var(--cursor-default);
+  }
 }

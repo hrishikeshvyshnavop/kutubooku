@@ -11,7 +11,7 @@ const ASSOCIATE_TAG = process.env.NEXT_PUBLIC_AMAZON_TAG ?? "";
  *
  * Check Amazon.in Associates' current rules before launch (see docs/CONTEXT.md §12).
  */
-export function amazonCartUrl(books: { asin?: string }[], fallbackQuery: string) {
+export function amazonCartUrl(books: { asin?: string; qty?: number }[], fallbackQuery: string) {
   const withAsin = books.filter((b) => b.asin);
   if (withAsin.length === 0) {
     const q = new URLSearchParams({ k: fallbackQuery, i: "stripbooks" });
@@ -21,7 +21,7 @@ export function amazonCartUrl(books: { asin?: string }[], fallbackQuery: string)
   const q = new URLSearchParams();
   withAsin.forEach((b, i) => {
     q.set(`ASIN.${i + 1}`, b.asin!);
-    q.set(`Quantity.${i + 1}`, "1");
+    q.set(`Quantity.${i + 1}`, String(b.qty ?? 1));
   });
   if (ASSOCIATE_TAG) q.set("AssociateTag", ASSOCIATE_TAG);
   return `https://www.amazon.in/gp/aws/cart/add.html?${q}`;

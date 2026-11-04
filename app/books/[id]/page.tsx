@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { Caveat } from "next/font/google";
 import { notFound } from "next/navigation";
-import { book3DFor } from "../../_components/Book3D";
 import { GlobalFooter } from "../../_components/GlobalFooter";
 import { GlobalHeader } from "../../_components/GlobalHeader";
 import { PageTransition } from "../../_components/PageTransition";
 import { MOCK_BOOKS } from "../../_data/curation-mock";
-import { BookPdp } from "./BookPdp";
+import { BookPdp, bookTheme } from "./BookPdp";
 
 // Book product page (PDP), /books/[id]. Layout from Figma node 1431:6 (Hrishi's Workspace).
 
@@ -39,12 +38,7 @@ export default async function BookPage({ params }: Props) {
 
   // The page takes its colours from the book: the spine colour of its 3D book,
   // which was picked from the real cover. Text stays black, so the tints are kept light.
-  const color = book3DFor(book.cover, book.title, book.tone).spine;
-  const theme = {
-    "--book": color,
-    "--book-tint": `color-mix(in oklab, ${color} 28%, white)`, // hero, header, "Read it together"
-    "--book-soft": `color-mix(in oklab, ${color} 50%, white)`, // waves and pattern
-  } as React.CSSProperties;
+  const theme = bookTheme(book);
 
   return (
     <PageTransition>

@@ -14,6 +14,7 @@ import { BookCard } from "../curation/BookCard";
 import { MOCK_BOOKS } from "../_data/curation-mock";
 import { Button } from "./Button";
 import { SectionTitle } from "./SectionTitle";
+import { useCardBox } from "./useCardBox";
 
 const SHOWN = 10;
 
@@ -29,6 +30,8 @@ const RESTING = [
 
 export function HomeBookList() {
   const books = MOCK_BOOKS.slice(0, SHOWN);
+  // Each card's main button adds the book to the box (for the child in the header).
+  const { cardProps, toastEl } = useCardBox();
 
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
@@ -107,6 +110,9 @@ export function HomeBookList() {
             <Button href="/reading-preferences" variant="primary" arrow="right" className="mt-8">
               Find books for my child
             </Button>
+            <Button href="/books" variant="secondary" className="mt-3">
+              See all books
+            </Button>
           </li>
 
           {/* Cards: each rests at its own height and tilt, like books set out on a table. */}
@@ -118,13 +124,14 @@ export function HomeBookList() {
                 className={`${cardW} shrink-0 [perspective:1400px]`}
                 style={{ transform: `translateY(${rest.y}px) rotate(${rest.r}deg)` }}
               >
-                <BookCard book={b} index={i} titleAs="h3" href={`/books/${b.id}`} />
+                <BookCard book={b} index={i} titleAs="h3" href={`/books/${b.id}`} {...cardProps(b.id)} />
               </li>
             );
           })}
         </ul>
       </div>
 
+      {toastEl}
     </section>
   );
 }

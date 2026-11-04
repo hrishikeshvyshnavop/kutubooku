@@ -13,9 +13,8 @@
 // Performance: the loop and the float animations pause while the hero is off screen,
 // covered by the next section, or the tab is hidden.
 
-import { getImageProps } from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, ViewTransition } from "react";
+import { useEffect, useRef, useState } from "react";
+import { openBook, preloadCover, preloadSheet } from "../_lib/book-sheet";
 import { MOCK_BOOKS, type MockBook } from "../_data/curation-mock";
 import { BOOKS, Book3D } from "./Book3D";
 import { HeroAsk } from "./HeroAsk";
@@ -25,23 +24,9 @@ const H = 440; // book height (px) at full size; scaled per breakpoint below
 const GAP = 150; // space between books along the track
 
 const INFO = new Map<string, MockBook>(MOCK_BOOKS.map((b) => [b.cover, b]));
-// ms before going to the book page: long enough to see the book start to lift; the
-// hero → page morph (ViewTransition) carries the motion from there. Was 450 (dead time).
+// ms before opening the book sheet: long enough to see the book start to lift; the
+// book then flies from the carousel into the sheet (app/_lib/book-sheet.ts).
 const OPEN_DELAY = 120;
-// Book page cover size (BookCover3D `sizes`): preloading exactly this file means the morph
-// lands on an image that is already downloaded and decoded.
-const PAGE_COVER_SIZES = "(min-width: 1024px) 600px, 420px";
-const preloaded = new Set<string>();
-function preloadPageCover(src: string) {
-  if (preloaded.has(src)) return;
-  preloaded.add(src);
-  const { props } = getImageProps({ src, alt: "", fill: true, sizes: PAGE_COVER_SIZES });
-  const img = new window.Image();
-  img.sizes = props.sizes ?? "";
-  if (props.srcSet) img.srcset = props.srcSet;
-  img.src = props.src;
-  img.decode?.().catch(() => {});
-}
 
 const AUTO_SPEED = -42; // px/s (unscaled): drift to the left (was -26, sped up 2026-11-03)
 const DRAG_THRESHOLD = 6; // px moved before a press counts as a drag, not a click
@@ -50,9 +35,7 @@ export function BookHero() {
   const sceneRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLDivElement>(null); // scaled row (parallax + scale)
   const trackRef = useRef<HTMLDivElement>(null); // translated track
-  const router = useRouter();
   const [selKey, setSelKey] = useState<string | null>(null); // book (by cover) lifted in the centre
-  const [selIdx, setSelIdx] = useState<number | null>(null); // the exact loop copy that was clicked (it morphs into the book page)
   const [askOpen, setAskOpen] = useState(false); // "Ask KutuBooku AI" chat open: carousel pauses and dims
   const openTimer = useRef<number | undefined>(undefined);
   const [focusKey, setFocusKey] = useState<string | null>(null); // book (by cover) with keyboard focus
@@ -62,13 +45,28 @@ export function BookHero() {
     () => () => {
       window.clearTimeout(openTimer.current);
       setSelKey(null);
-      setSelIdx(null);
     },
     [],
   );
 
   // Live motion state (refs: no re-render per frame)
   const m = useRef({ x: 0, v: AUTO_SPEED, hover: false, focus: false, dragging: false, moved: 0, lastX: 0, lastT: 0, target: null as number | null, reduced: false, modal: false });
+
+  // The book sheet closed (the page stays put now, so the unmount reset above doesn't run):
+  // put the lifted book down, un-dim the others, and let go of the focus the sheet hands back
+  // to the clicked book (it would otherwise keep the drift paused).
+  useEffect(() => {
+    const reset = () => {
+      window.clearTimeout(openTimer.current);
+      setSelKey(null);
+      setFocusKey(null);
+      const a = document.activeElement as HTMLElement | null;
+      if (a && sceneRef.current?.contains(a) && !a.matches(":focus-visible")) a.blur();
+      m.current.focus = false;
+    };
+    window.addEventListener("kb:book-sheet-closed", reset);
+    return () => window.removeEventListener("kb:book-sheet-closed", reset);
+  }, []);
 
   useEffect(() => {
     m.current.modal = !!selKey || askOpen; // hold the drift while a book is lifted or the chat is open
@@ -185,17 +183,38 @@ export function BookHero() {
     setRunning();
 
     // pointer parallax (mouse only)
+    // Coalesced to one update per frame (fast mice send up to 1000 events a second, and each
+    // --mx/--my change restyles all 30 books), and frozen while dragging: the tilt swings the
+    // 3D row against the drag direction (with its 700ms ease), which made books shake back
+    // and forth under the cursor.
+    let parallaxRaf = 0;
+    let px = 0;
+    let py = 0;
     const onMoveParallax = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse" || st.reduced) return;
-      const r = scene.getBoundingClientRect();
-      scene.style.setProperty("--mx", (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
-      scene.style.setProperty("--my", (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
+      if (e.pointerType !== "mouse" || st.reduced || st.dragging) return;
+      px = e.clientX;
+      py = e.clientY;
+      if (parallaxRaf) return;
+      parallaxRaf = requestAnimationFrame(() => {
+        parallaxRaf = 0;
+        if (st.dragging) return;
+        const r = scene.getBoundingClientRect();
+        scene.style.setProperty("--mx", (((px - r.left) / r.width) * 2 - 1).toFixed(3));
+        scene.style.setProperty("--my", (((py - r.top) / r.height) * 2 - 1).toFixed(3));
+      });
     };
 
     // drag / swipe with momentum
+    let dragScale = 1; // row scale, measured once per drag (not on every move: that forced a layout per event)
+    let grabbed: HTMLElement | null = null;
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
       st.dragging = true;
+      dragScale = scale();
+      // Keep the grabbed book lifted for the whole drag: once the scene captures the pointer,
+      // the book loses :hover and its hover lift used to spring back down mid-drag.
+      grabbed = (e.target as HTMLElement).closest<HTMLElement>("button[data-book]");
+      grabbed?.setAttribute("data-grabbed", "");
       st.moved = 0;
       st.lastX = e.clientX;
       st.lastT = performance.now();
@@ -206,7 +225,7 @@ export function BookHero() {
       if (!st.dragging) return;
       const now = performance.now();
       const dx = e.clientX - st.lastX;
-      const k = scale();
+      const k = dragScale;
       st.moved += Math.abs(dx);
       // capture only once it is a real drag, so a plain click still reaches the book
       if (st.moved > DRAG_THRESHOLD && !scene.hasPointerCapture(e.pointerId)) scene.setPointerCapture(e.pointerId);
@@ -219,6 +238,8 @@ export function BookHero() {
     const onUp = (e: PointerEvent) => {
       if (!st.dragging) return;
       st.dragging = false;
+      grabbed?.removeAttribute("data-grabbed");
+      grabbed = null;
       st.v = Math.max(-2400, Math.min(2400, st.v)); // throw, then eases back to the drift
       if (scene.hasPointerCapture(e.pointerId)) scene.releasePointerCapture(e.pointerId);
     };
@@ -259,6 +280,7 @@ export function BookHero() {
     scene.addEventListener("pointerleave", onLeave);
     return () => {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(parallaxRaf);
       seen.disconnect();
       covering.disconnect();
       bookSeen.disconnect();
@@ -301,7 +323,10 @@ export function BookHero() {
   return (
     <section
       aria-labelledby="hero-title"
-      className="relative flex w-full flex-col overflow-hidden sm:h-[min(940px,calc(100dvh-88px))] sm:min-h-[620px]"
+      // Exactly one screen tall below the header (80px tall, 88px from xl where the pill nav
+      // shows), at every size: no max cap (it left a gap on 1080p+ screens) and phones too.
+      // min-h keeps short windows usable.
+      className="relative flex h-[calc(100dvh-80px)] min-h-[560px] w-full flex-col overflow-hidden sm:min-h-[620px] xl:h-[calc(100dvh-88px)]"
     >
       <div aria-hidden className={HERO_GLOW} />
 
@@ -317,7 +342,7 @@ export function BookHero() {
           if (!e.currentTarget.contains(e.relatedTarget as Node)) m.current.focus = false;
         }}
         inert={askOpen || undefined}
-        className={`relative flex h-[420px] flex-none touch-pan-y select-none items-center transition-[opacity,filter] duration-500 ${askOpen ? "opacity-35 blur-[3px]" : ""} [perspective:1700px] [perspective-origin:50%_45%] data-[paused]:**:[animation-play-state:paused] sm:h-auto sm:flex-1`}
+        className={`relative flex min-h-[420px] flex-1 touch-pan-y select-none items-center transition-[opacity,filter] duration-500 ${askOpen ? "opacity-35 blur-[3px]" : ""} [perspective:1700px] [perspective-origin:50%_45%] data-[paused]:**:[animation-play-state:paused]`}
         style={{ "--mx": 0, "--my": 0 } as React.CSSProperties}
       >
         <div
@@ -345,25 +370,25 @@ export function BookHero() {
                     onClick={(e) => {
                       centerBook(e.currentTarget);
                       setSelKey(b.src); // by cover, so whichever loop copy lands centre is the one lifted
-                      setSelIdx(i);
                       window.clearTimeout(openTimer.current);
                       if (info) {
-                        // Prefetch now too (touch has no hover): the morph only plays if the book page is ready.
-                        router.prefetch(`/books/${info.id}`);
-                        preloadPageCover(b.src);
-                        openTimer.current = window.setTimeout(() => router.push(`/books/${info.id}`), OPEN_DELAY);
+                        // Warm now too (touch has no hover), then open the book sheet; the book flies into it.
+                        preloadSheet();
+                        preloadCover(b.src);
+                        const btn = e.currentTarget;
+                        openTimer.current = window.setTimeout(() => openBook(info.id, btn), OPEN_DELAY);
                       }
                     }}
                     // Load the book page ahead of the click, so it opens straight away.
                     onPointerEnter={() => {
                       if (!info) return;
-                      router.prefetch(`/books/${info.id}`);
-                      preloadPageCover(b.src);
+                      preloadSheet();
+                      preloadCover(b.src);
                     }}
                     onFocus={(e) => {
                       if (info) {
-                        router.prefetch(`/books/${info.id}`);
-                        preloadPageCover(b.src);
+                        preloadSheet();
+                        preloadCover(b.src);
                       }
                       centerBook(e.currentTarget);
                       if (e.currentTarget.matches(":focus-visible")) setFocusKey(b.src); // keyboard only
@@ -373,22 +398,12 @@ export function BookHero() {
                     className="group/book relative block cursor-pointer rounded-[10px] [transform-style:preserve-3d] outline-none"
                   >
                     <span
-                      className={`block transition-[translate,scale] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] [transform-style:preserve-3d] group-hover/book:-translate-y-4 ${
+                      className={`block transition-[translate,scale] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] [transform-style:preserve-3d] group-hover/book:-translate-y-4 group-data-[grabbed]/book:-translate-y-4 ${
                         selKey === b.src ? "-translate-y-6 scale-[1.12]" : focusKey === b.src ? "-translate-y-6 scale-[1.06]" : ""
                       }`}
                     >
-                      {/* The clicked copy (only that one: the loop renders every book twice, and names must be
-                          unique) shares a view-transition name with the book page's cover, so the book flies from
-                          the carousel into place on its page instead of disappearing (see BookCover3D). */}
-                      {i === selIdx && info ? (
-                        <ViewTransition name={`book-${info.id}`} share="book-morph" default="none">
-                          <span className="block [transform-style:preserve-3d]">
-                            <Book3D b={b} i={i % BOOKS.length} height={H} eager={i < 3} focused={false} />
-                          </span>
-                        </ViewTransition>
-                      ) : (
-                        <Book3D b={b} i={i % BOOKS.length} height={H} eager={i < 3} focused={focusKey === b.src && !selKey} />
-                      )}
+                      {/* The clicked book flies from here into the book sheet's cover (app/_lib/book-sheet.ts). */}
+                      <Book3D b={b} i={i % BOOKS.length} height={H} eager={i < 3} focused={focusKey === b.src && !selKey} />
                     </span>
                     <span
                       aria-hidden

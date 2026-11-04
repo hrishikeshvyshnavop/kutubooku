@@ -263,5 +263,97 @@ The first sectioned home page was replaced. The home page is now a **"wall of sh
 
 > **Performance pass: hero → book page (2026-11-03).** Measured on a production build in Chrome at 1440×900, normal CPU and 4× slowed (≈ mid-range phone):
 > - Click → transition finished: 1440 → 1078 ms (normal), 2799 → 1976 ms (4×). Main thread blocked: 88 → 55 ms / 1203 → 598 ms. Idle hero at 4×: 37 → 50 fps.
-> - Fixes: open delay 450 → 120 ms (the morph carries the motion now); the book page's cover is preloaded at its real size on hover/focus/click (`getImageProps`); `Book3D` memoised; hero loop no longer reads `scrollWidth` every frame; book floats pause per book when off screen (the old `data-paused` attribute had no CSS rule, so all 30 books floated all the time); book page sections below the fold use `content-visibility: auto`; nav links to pages not built yet don't prefetch (`live` flag in `app/_data/nav.ts`); book page marked `"use cache"`.
+> - Fixes: open delay 450 → 120 ms (the morph carries the motion now); the book page's cover is preloaded at its real size on hover/focus/click (`getImageProps`); `Book3D` memoised; hero loop no longer reads `scrollWidth` every frame; book floats also pause per book when off screen while the hero is visible (the hero-wide `data-paused` pause, which stops all floats when the hero is covered, was already there; only ~5 of the 30 books are ever in view); book page sections below the fold use `content-visibility: auto`; nav links to pages not built yet don't prefetch (`live` flag in `app/_data/nav.ts`); book page marked `"use cache"`.
 > - Remaining biggest cost: React rendering the whole book page on arrival (~300–500 ms at 4×).
+
+> **Hero height (2026-11-04):** the hero is exactly one screen tall below the header at every size (`h-[calc(100dvh-80px)]`, 88px header from xl; min 560px, 620px from sm). The old 940px cap left a gap on 1080p+ screens, and phones had no height at all. The carousel band grows to fill the space at every size, so the chat box always sits at the bottom.
+
+## 15. Book cart (decided 2026-11-04, not built yet)
+
+A family-wide cart on the site. Parents collect books, then send them all to Amazon.in in one go.
+
+| # | Decision |
+|---|---|
+| C1 | The cart **replaces** the curation sticky bar: ticking a book adds it to the cart; the bar reads "N in cart · View cart". |
+| C2 | Add-to-cart points: **curation page, Edition pop-up, book detail page** (not every cover on the site). |
+| C3 | Per-book "Buy on Amazon" **adds the book, then sends the whole cart** to Amazon. |
+| C4 | Label follows the cart: "Buy on Amazon" when the cart is empty, "Add & buy all N on Amazon" when it isn't. |
+| C5 | **No sign-in needed.** Cart is saved in the browser and copied into the account on sign-in. |
+| C6 | On add: **toast ("Added · View cart") + badge count**, parent stays on the page. |
+| C7 | Cart is its **own page, `/cart`**. |
+| C8 | **Netflix-style child profiles** ("Who's choosing books today?"). This is new and also affects home and curation pages. **One family cart, grouped by profile**, single checkout. |
+| C9 | No active profile → ask once "Who's this for? Aarav · Meera · Just browsing", remembered for the visit. |
+| C10 | Same book under two children → cart flags it: "Buy 1 to share, or 2?", default **1**. |
+| C11 | **No quantity control.** 1 copy each, except the C10 choice. |
+| C12 | Cart row: **cover, title, author, child tag, approximate price, Remove**; tapping it opens the book page. |
+| C13 | **Always show an approximate total** with a disclaimer (⚠️ Amazon price-display rules, see §12.5). |
+| C14 | Unavailable on Amazon.in → **keep it, mark it, offer "Swap for a similar book"**; not sent at checkout. |
+| C15 | **Soft limit about 20 books.** Above it, a note and checkout in batches (dev team: confirm Amazon's limit for adding many items at once). |
+| C16 | "Go to Amazon" → **handoff screen** ("you'll pay on Amazon" + affiliate disclosure) → Amazon in a **new tab**; this tab shows "What next?". |
+| C17 | After Amazon: **ask on return** "Did you place the order? Yes, clear my cart / Not yet, keep it". No answer → cart stays. |
+| C18 | "Yes" → books marked **Bought**: kept out of future curations, listed on each child's profile. |
+| C19 | Empty cart: **mascot + "See this month's Edition" / "Find books for [child]"**, plus a few picks if a profile is active. |
+| C20 | Cart icon **top-right next to the profile avatar, with a badge, on every page**. Header layout needs another look. |
+| C21 | **"Share cart" link** → read-only copy of the cart on this site with its own Amazon button (no affiliate links in messages). |
+| C22 | **No wishlist / save for later.** The cart is the only list. |
+| C23 | New Edition with old books still in the cart → **leave them**, gentle note "3 books from October's Edition are still here". |
+| C24 | Track: books added, cart views, Go to Amazon presses, "I ordered" confirmations, **by where the book was added and by child**. |
+
+**For the dev team:** Amazon's limit for adding many items at once (C15); whether showing prices is allowed (C13); sign-in merge of the browser cart (C5); share-link storage (C21).
+
+> **Box built (2026-11-04, mock data).** The cart is called **"box"** everywhere people see it (Amazon's own cart keeps its name). Route `/box` (`app/box/Box.tsx`), store `app/_lib/box.ts` (localStorage `kb:box`, bought books `kb:bought`), header box icon with count `app/_components/BoxLink.tsx`.
+> - **Box page:** C7, C8 grouping, C10, C12–C19, C21, C23, C24 (events go to `window.dataLayer`). Fills the screen height. `/box?demo=1` = sample books for two children; `/box?checkout=1` opens the Amazon handoff straight away.
+> - **Signed in vs guest (C5, simulated with `kb:signed-in`):** guest sees "Your box is only saved in this browser · Sign in to save it" (→ `/sign-in?next=/box`), and on the empty box "Started a box on another device? Sign in to see it". Signed in sees "Saved to your account"; the first visit after sign-in says "We've added the N books from this browser to your account". The header doesn't change with sign-in yet.
+> - **`/curation` is box-driven (C1):** a tick adds the book to the box for that child; nothing is added automatically ("Tick the ones you want in your box"), so unticked cards no longer fade. Sticky bar: "N in {child}'s box · approx ₹X", Regenerate, "View box (N)". Remove / Swap / Already own take the book out of the box; a swap moves the tick to the new book.
+> - **Buy on Amazon on a card or a book page (C3/C4):** adds the book, then sends the whole box. Only this book → Amazon opens now; otherwise → `/box?checkout=1`. Label: "Buy on Amazon" or "Add & buy all N on Amazon".
+> - **Book page tray:** "Add to box" (toast "Added to box · View box"; becomes "✓ In box") + Buy. Asks "Who's this for? {child} · Just browsing" once per visit when a child name is known (C9).
+> - **Listing sheet:** clicking a book on `/curation` opens the **new book page** (`BookPdp` in sheet mode) inside the old slide-up sheet; "Read more like this" opens in the same sheet; the tray sticks to the sheet's bottom. Old sheet copy: `scratchpad/BookDetails.before-pdp.tsx` (outside the repo).
+> - **Not wired yet:** Edition pop-up add-to-box, real child profiles. **Mock:** availability (`MOCK_UNAVAILABLE`), share links carry the list in the URL, no ASINs yet so Amazon opens a search.
+
+> **Sign-in works end to end (2026-11-04, still simulated).** One session store, `app/_lib/session.ts` (localStorage `kb:session`, so it survives reloads and new tabs; the old `kb:signed-in` flag is still read). "Continue with Google" signs in a **sample account** ("Sample Parent", parent@example.com) until real Google OAuth exists (dev team).
+> - **`/sign-in`** works from anywhere: `?next=` is where to go after (the header passes the current page). Title follows the reason: "Sign in to see {name}'s books" (curation), "Sign in to save your box" (box), "Sign in to KutuBooku" (anything else). Already signed in → "You're signed in" with Continue and Sign out. Back goes to the answers in the curation flow, otherwise back a page.
+> - **Header signed in:** "Log-in / Sign-up" is replaced by an avatar pill with the first name → menu (name and email, My box with count, My child's books, Edit reading answers, Sign out). On phones the same items sit in the Menu panel. Before hydration the slot is kept but hidden, so nothing jumps.
+
+> **Add-to-box moment (2026-11-04):** `app/_lib/fly.ts`. Adding a book (curation tick, book page "Add to box") lifts a copy of its cover off the page and flies it in an arc into the box: it lifts and grows a little, tumbles, shrinks, and fades into the box. The header box icon (`BoxLink.tsx`) opens its lid at take-off, snaps it shut with a bounce on landing, a green "+1" pops beside it, and the count only goes up on landing (badge pop). If the header was hidden by scrolling it slides back in (`kb:reveal-header`). If the cover is off screen, a book-shaped copy pops out of the tapped button instead. Inside the listing's sheet the tray's box button catches it (the sheet covers the header). With "reduce motion" there's no flight, just the catch. Covers are marked `data-book-cover`, landing spots `data-box-target`.
+
+> **Book page as a sheet on every screen (2026-11-04, reworked the same day).** Any book link inside the app (home hero and book list, the AI answer picks, box rows, "Read more like this") opens the book page in the slide-up sheet over the current screen. The sheet lives in the URL as **`?book=<id>`** (e.g. `/box?book=the-dot`), so **refresh keeps the screen and the sheet**, the link can be shared, and Back closes it. ×, Escape and the dimmed strip close it too (it slides down, then the URL updates). Plain `/books/<id>` links still open the full page when opened directly (search engines, old links); inside the app a click on them is caught and opens the sheet. Files: `app/_lib/book-sheet.ts` (open/close/preload/flight), `app/_components/BookSheetHost.tsx` (in the root layout), `BookSheet.tsx` (the frame), `BookSheetContent.tsx` (lazy content). `/curation` keeps its own sheet (it carries "Why we picked it", "Add to {child}'s list" and the child's box).
+> - **The book flies into the sheet (made seamless the same day):** the sheet's own 3D book flies from where the clicked book was (hero 3D book, card cover, box row) into its place, following the sheet as it slides up. Because the sheet clips its content while it slides, the flying book is an exact copy of that 3D book (same markup, tilt and images) in the browser's top layer; it lands exactly on the real one, which appears in the same frame, so there is no visible swap. Measured: it starts on the clicked hero book and ends at the real book's exact position and size. The listing's sheet (`/curation`) plays the same flight. Replaces the hero → page view-transition morph.
+> - **Closing puts the screen back:** the sheet announces `kb:book-sheet-closed`; the hero then drops the lifted book, un-dims the others, releases the focus the sheet returns to the clicked book, and starts drifting again.
+> - **Speed:** the sheet's code is loaded once the page is idle (and on hover), focus or touch of any book link, along with the cover image. The sheet renders the top (title, cover, tray) first and the rest of the page right after, in an interruptible transition. Measured in dev without hover warm-up: cover in the sheet about 360 ms after the click, full page about 410 ms.
+
+> **More than one child (built 2026-11-04, Q8 / C8 / C9).** Store: `app/_lib/children.ts` (localStorage `kb:children`; ⚠️ simulated until accounts exist, shown only when signed in). The active child drives `/curation`, the book page's "Who's this for?" and `readAnswers()`.
+> - **Ways to add a child:** "+ Add child" tile on the `/children` picker ("Who's choosing books today?"); "Add a child" in the header account menu (the menu now lists the readers too); "+ Add another child" in the reader chips above `/curation`; "+ Someone new" in "Who's this for?" (the book goes into the new child's box, then back to the book); "Got another reader? Add them" on the questions' summary.
+> - **Flow:** `/reading-preferences?new=1` (sign-in first; the first child's draft is saved as a reader then). Name question reads "Who's the next reader?". Interests and "Can't stand" offer "Start from {sibling}'s picks"; age, reading stage and books read are always asked fresh. Ends on the new child's books (active).
+> - **Edit / remove:** `/reading-preferences?child=<id>` opens on the summary: change answers or picture, rename (box rows move with the name), "Remove {name}" with a confirm (their books stay in the box under "Just browsing"). "Manage readers" on `/children` leads here.
+> - **Rules:** names must be unique in the account (box rows are filed by name), so a clash asks for an initial or nickname; at most 6 readers.
+> - **Profile pictures (Netflix-style):** book characters, 15 square crops of our covers in `public/avatars` (list: `app/_data/avatars.ts`). A new child gets one no sibling has; "Pick a character" grid from the pencil on the summary. ⚠️ Cover art belongs to the publishers: needs cleared character art before launch.
+
+> **Box per child: decisions (2026-11-04, B1–B10). Built 2026-11-04:** header switch `app/_components/ChildSwitch.tsx`; who-for helpers `readFor` / `setFor` / `switchChild` in `app/_lib/children.ts`; `moveItem`, scoped `markCheckoutStarted` / `confirmOrdered` and `sharedBoughtWith` in `app/_lib/box.ts`; box groups, "Buy {child}'s books" and "Move to…" in `app/box/Box.tsx`; toast "Change" and "+ Add for … too" in `BuyTray.tsx`.
+> | # | Decision |
+> |---|---|
+> | B1 | Adding a book: ask "Who's this for?" once per visit, then remember it. Every add shows "Added to {child}'s box · Change"; Change moves that one book. Switching child in the header changes the remembered answer too. |
+> | B2 | Book page button when the book is already in the box: "✓ In {child}'s box" plus "+ Add for {other child} too". |
+> | B3 | One family box, grouped by child; each group has "Buy {child}'s books on Amazon"; "Go to Amazon" still buys everything. |
+> | B4 | Wrong child: "Move to…" in each book's ⋯ menu (other children + For anyone). |
+> | B5 | A shared copy goes with whichever child's group is bought first; the other child's row shows "Shared with {child} · bought" once the order is confirmed. |
+> | B6 | Active child shown as their picture beside the box icon in the header; tap → other children, "+ Add child", "Manage readers". |
+> | B7 | "Just browsing" stays only in "Who's this for?"; its books sit in a "For anyone" group; the header always shows a child. |
+> | B8 | Header box badge counts the whole family box. |
+> | B9 | Guest taps "+ Someone new": sign in first; the book waits and goes into the new child's box. (As built.) |
+> | B10 | Box group order: active child first, then the others in the order they were added, "For anyone" last. |
+
+> **Box polish (2026-11-04):**
+> - `/curation` cards: the main button is "Add to {child}'s box" / "In {child}'s box" (tap again to take it out); the corner tick is gone.
+> - Header: one profile control, the active child's picture and name, with switching, add child, manage readers, My box, the Google email and Sign out. The parent's name is no longer shown.
+> - `/box`: no footer. The total counts to its new value with the difference floating beside it ("Buy 1 to share" ↔ "Buy 2", removals). Remove / Move to… run as View Transitions: rows glide, a moved row glows on landing. The Amazon handoff has a × close.
+> - Ticks are an SVG (`app/_components/CheckIcon.tsx`), not the ✓ character.
+
+> **All books page `/books` (2026-11-04).** Every book on the shelf, in the tall colour cards. Filter chips (decided): search (title/author), one age band (counts per band; empty bands greyed; the active child's band is picked to start, labelled "· Meera", and can be switched to All ages), any number of interests. Filters are kept in the URL (`?age=3-5&into=animals&q=dot`) so a filtered list can be shared. Tapping a card opens the book sheet; the main button adds to the box for the child shown in the header (B1/B6). Linked from the header nav ("All books") and the home book list ("See all books").
+
+> **Date of birth replaces the age (2026-11-04, supersedes Q1c's age tiles).** Question 2 is now "When's {name}'s birthday?", as tiles like the other questions: Year tiles (last 15 years), then Month tiles (future months greyed), plus "🎂 Add the day for a birthday surprise", which reveals an optional day grid sized to that month ("Skip the day" hides it). Live line: "Smith is 5 years and 7 months old · turns 6 on 12 March 🎉". Saved as `dob` "YYYY-MM-DD" ("YYYY-MM-" without the day; then the birthday counts as the 1st). Checks: real date (no 31 February), not in the future, 14 or under; a live line says "Meera is 5 years and 7 months old". The age everywhere (curation picks, `/books` default age, saving a child) comes from `ageOf()` in `app/_data/questions.ts`, which also reads older answers that have `age` + `ageAskedAt`. ⚠️ A child's full date of birth adds to Q31 (privacy and consent). The birthday pick itself isn't built yet.
+
+> **Signed out box and cursor (2026-11-04).**
+> - Box notes: no "Saved to your account" banner and no guest "only saved in this browser" note. Just after signing in, a toast says "Added N books from this browser to your account" once, then fades.
+> - Signed out, the box is one plain list: each book once, no child groups, no "Move to…", no "both have this"; Remove takes the book out for every child; the header badge counts each book once.
+> - Home book row and `/books` cards: "Add to {child}'s box" (shared `app/_components/useCardBox.tsx`).
+> - Cursor everywhere (desktop): our own chunky rounded arrow with a white outline, in the style of agentcard.com's (their image isn't used). Ink #1d2838 by default; on links, buttons, chips, tiles and cards only the fill changes, to coral #f26b4f. Disabled controls keep the ink arrow, text fields keep the text cursor, touch screens are unaffected. In `app/globals.css` (`--cursor-default`, `--cursor-action`).
