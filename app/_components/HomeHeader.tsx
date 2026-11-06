@@ -3,22 +3,38 @@
 // Home page header — built from Figma node 1424:31907 (Hrishi's Workspace).
 // The design frame is 2560px wide; values are scaled ×0.75 to the app's
 // 1920px layout (75px pills → 56px, 32px text → 24px, 64px socials → 48px).
-// Font: the project's Inter Tight in place of the design's Degular.
+// Font: the site's Cal Sans / Figtree pair in place of the design's Degular.
 
 import Link from "next/link";
+import { NavLink } from "./NavLink";
+import { MascotVideo } from "./MascotVideo";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { NAV, PILL } from "../_data/nav";
 import { BoxLink } from "./BoxLink";
 import { AccountMenu } from "./AccountMenu";
-import { useSession } from "../_lib/session";
+import { Toast } from "./Toast";
+import { lastSignOut, useSession } from "../_lib/session";
 
 
 function Logo() {
+  // Book worm + wordmark, as in Figma "Navigation / Header / Default" (node 1257:3881). The worm is
+  // Figma's blinking clip (transparent, MascotVideo): still until you hover or keyboard-focus the
+  // logo, then it plays, finishing its loop when you leave.
+  const [active, setActive] = useState(false);
   return (
-    <Link href="/" aria-label="KutuBooku home" className="flex items-center text-[#111]">
-      <Image src="/brand/kutubooku-logo.svg" alt="kutubooku" width={1674} height={275} priority className="h-auto w-[154px]" />
+    <Link
+      href="/"
+      aria-label="KutuBooku home"
+      onPointerEnter={() => setActive(true)}
+      onPointerLeave={() => setActive(false)}
+      onFocus={() => setActive(true)}
+      onBlur={() => setActive(false)}
+      className="flex items-center gap-1 text-[#111]"
+    >
+      <MascotVideo name="kutu-logo-mark" poster="/brand/mascot/kutu-logo-mark.webp" width={124} height={168} play="hover" active={active} className="h-[52px] w-auto sm:h-[56px]" />
+      <Image src="/brand/kutubooku-logo-deep.svg" alt="kutubooku" width={1674} height={275} priority className="h-auto w-[132px] sm:w-[154px]" />
     </Link>
   );
 }
@@ -63,6 +79,39 @@ export function SplitCta({
   );
 }
 
+/** "You've signed out" for a few seconds after signing out. Timed from the sign-out itself, so it
+ *  carries on smoothly if signing out also changed the page (account-only pages go home). */
+const SIGNED_OUT_MS = 3200;
+// Some pages render the header twice; the first one owns the toast.
+let toastOwner: symbol | null = null;
+function SignedOutToast({ session }: { session: unknown }) {
+  const [show, setShow] = useState(false);
+  const [me] = useState(() => Symbol("toast"));
+  useEffect(() => {
+    if (!toastOwner) toastOwner = me;
+    return () => {
+      if (toastOwner === me) toastOwner = null;
+    };
+  }, [me]);
+  useEffect(() => {
+    if (session !== null || toastOwner !== me) return;
+    const left = SIGNED_OUT_MS - (Date.now() - lastSignOut());
+    if (!lastSignOut() || left <= 0) return;
+    setShow(true); // eslint-disable-line react-hooks/set-state-in-effect
+    const t = setTimeout(() => setShow(false), left);
+    return () => clearTimeout(t);
+  }, [session, me]);
+  return <Toast toast={show ? { text: "You've signed out. Your box is saved for next time.", tone: "info" } : null} />;
+}
+
+/** "Log-in / Sign-up". Right after signing out it fades in where the profile button was. */
+function LoginCta({ href, hidden }: { href: string; hidden: boolean }) {
+  // Decided once, when it mounts (it mounts as the profile button goes away).
+  // Browser only: the server prerender must not read the clock (and nobody signs out there).
+  const [fresh] = useState(() => typeof window !== "undefined" && lastSignOut() > 0 && Date.now() - lastSignOut() < SIGNED_OUT_MS);
+  return <SplitCta href={href} label="Log-in / Sign-up" className={hidden ? "invisible" : fresh ? "animate-q-in" : ""} />;
+}
+
 export function HomeHeader() {
   const [open, setOpen] = useState(false);
   const session = useSession(); // undefined until hydrated: the slot is kept but hidden, so nothing jumps
@@ -78,7 +127,8 @@ export function HomeHeader() {
   }, [open]);
 
   return (
-    <header className="relative z-40 mx-auto w-full max-w-[1920px] bg-transparent px-4 py-4 sm:px-6">
+    <header className="relative z-40 mx-auto w-full max-w-[1920px] bg-transparent px-page py-4">
+      <SignedOutToast session={session} />
       <div className="flex items-center justify-between gap-4 xl:grid xl:grid-cols-[1fr_auto_1fr]">
         <Logo />
 
@@ -87,9 +137,9 @@ export function HomeHeader() {
           <ul className="flex items-center gap-2">
             {NAV.map((n) => (
               <li key={n.href}>
-                <Link href={n.href} prefetch={n.live ? undefined : false} className={`${PILL} max-2xl:px-3.5 max-2xl:text-xl`}>
+                <NavLink href={n.href} prefetch={n.live ? undefined : false} className={`${PILL} font-heading max-2xl:px-3.5 max-2xl:text-xl`}>
                   {n.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
           </ul>
@@ -100,7 +150,7 @@ export function HomeHeader() {
           {session ? (
             <AccountMenu session={session} />
           ) : (
-            <SplitCta href={signInHref} label="Log-in / Sign-up" className={session === undefined ? "invisible" : ""} />
+            <LoginCta href={signInHref} hidden={session === undefined} />
           )}
         </div>
 
@@ -137,9 +187,9 @@ export function HomeHeader() {
           <ul className="flex flex-col gap-1.5">
             {NAV.map((n) => (
               <li key={n.href}>
-                <Link href={n.href} prefetch={n.live ? undefined : false} onClick={() => setOpen(false)} className={`${PILL} justify-center`}>
+                <NavLink href={n.href} prefetch={n.live ? undefined : false} onClick={() => setOpen(false)} className={`${PILL} font-heading justify-center`}>
                   {n.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
           </ul>

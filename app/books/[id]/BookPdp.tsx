@@ -1,7 +1,7 @@
 // Book product page sections — Figma node 1431:6 (Hrishi's Workspace).
 // The frame is 2560px wide; sizes are scaled ×0.75 to the app's 1920px layout
 // (same as HomeHeader), and big type scales down fluidly with clamp() on smaller screens.
-// Inter Tight stands in for the design's Champ/Degular; Caveat for the handwritten label.
+// Cal Sans / Figtree (the site's type pair) stand in for the design's Champ/Degular; Caveat for the handwritten label.
 //
 // The Figma frame was laid out over a third-party book page, so only its LAYOUT is used:
 // the content is KutuBooku's catalogue, and the background waves are drawn here.
@@ -121,7 +121,7 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
       {/* ------------------------------- Hero ------------------------------- */}
       <section aria-labelledby="book-title" className="relative overflow-hidden bg-[var(--book-tint)]">
         <HeroWaves />
-        <div className="relative flex flex-col items-center gap-6 px-4 pb-[clamp(140px,13.4vw,257px)] pt-[clamp(40px,9vw,174px)] text-center sm:gap-10 sm:px-6">
+        <div className="relative flex flex-col items-center gap-6 px-page pb-[clamp(140px,13.4vw,257px)] pt-[clamp(40px,9vw,174px)] text-center sm:gap-10">
           <div className="flex flex-col items-center gap-6 sm:gap-10">
             <p className="text-xl font-semibold leading-[1.2] tracking-[-0.02em] sm:text-[32px]">{book.author}</p>
             <h1
@@ -150,14 +150,14 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
 
       {/* ------------------------------- Cover ------------------------------ */}
       {/* The home hero's 3D book, overlapping the bottom of the hero like the design's cover. */}
-      <div className="relative z-10 -mt-[clamp(120px,10.5vw,215px)] px-4 sm:px-6">
+      <div className="relative z-10 -mt-[clamp(120px,10.5vw,215px)] px-page">
         <BookCover3D book={book} />
       </div>
 
       {!sheet?.lite && (
       <>
       {/* ------------------------------- Body ------------------------------- */}
-      <div className="mx-auto w-full max-w-[1312px] px-5 sm:px-10 lg:px-8">
+      <div className="mx-auto w-full max-w-[1312px] px-page">
         {/* At a glance */}
         <section aria-labelledby="glance-title" className="relative flex flex-col items-center gap-2 pb-10 pt-16 sm:pb-[59px] sm:pt-[110px]">
           <h2
@@ -291,7 +291,7 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
       {d.activities.length > 0 && (
         <section aria-labelledby="together-title" className={`relative mt-24 overflow-clip bg-[var(--book-tint)] sm:mt-40 ${LAZY_LAYOUT}`}>
           <TastePattern />
-          <div className="relative flex flex-col items-center px-4 pb-16 sm:px-6 sm:pb-[120px]">
+          <div className="relative flex flex-col items-center px-page pb-16 sm:pb-[120px]">
             <SectionTitle id="together-title" eyebrow="after story time" align="center" className="pb-10 pt-20 sm:pb-16 sm:pt-[120px]">
               Read it together
             </SectionTitle>
@@ -304,7 +304,7 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
 
       {/* ------------------------- Read more like this ------------------------- */}
       {similar.length > 0 && (
-        <section aria-labelledby="similar-title" className={`mx-auto w-full max-w-[1312px] px-5 pb-10 pt-20 sm:px-10 sm:pb-24 sm:pt-[120px] lg:px-8 ${LAZY_LAYOUT}`}>
+        <section aria-labelledby="similar-title" className={`mx-auto w-full max-w-[1312px] px-page pb-10 pt-20 sm:pb-24 sm:pt-[120px] ${LAZY_LAYOUT}`}>
           <SectionTitle id="similar-title" eyebrow="up next">
             Read more
             <br />
@@ -313,7 +313,7 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
           {/* Phones: a swipeable row. lg+: a row of four. Same tall colour cards as the home page. */}
           <ul
             aria-label={`Books like ${book.title}`}
-            className="-mx-5 mt-10 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-6 pt-2 [scrollbar-width:none] sm:-mx-10 sm:mt-14 sm:scroll-px-10 sm:px-10 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-5 lg:overflow-visible lg:px-0"
+            className="mx-[calc(var(--gutter)*-1)] mt-10 flex snap-x snap-mandatory scroll-px-[var(--gutter)] gap-4 overflow-x-auto px-page pb-6 pt-2 [scrollbar-width:none] sm:mt-14 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-5 lg:overflow-visible lg:px-0"
             data-lenis-prevent-horizontal
           >
             {similar.map((s, i) => (

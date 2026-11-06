@@ -33,7 +33,8 @@ export type BoxState = {
   copies: Record<string, "share" | "each">;
   /** Set when the parent was sent to Amazon; cleared when they answer "Did you order?" (C17).
    *  `child`: only that child's books went (B3, "Buy Meera's books"); missing = the whole box. */
-  pendingCheckout: { at: number; count: number; child?: string | null } | null;
+  /** child: one child's group (B3). bookId: just that book, bought straight from its page ("Buy now"). */
+  pendingCheckout: { at: number; count: number; child?: string | null; bookId?: string } | null;
 };
 
 export type BoughtBook = { bookId: string; child: string | null; at: number };
@@ -211,6 +212,17 @@ export function buyNow(book: MockBook, child: string | null, from: BoxSource): "
   return "amazon";
 }
 
+/**
+ * "Buy now" on a book page: only this book, straight to Amazon (must run inside the click),
+ * whatever else is in the box, which is left as it is. The box then asks "Did you order …?"
+ * about this one book (confirmOrdered marks just it bought).
+ */
+export function buyThisBook(book: MockBook, from: BoxSource) {
+  track("go_to_amazon", { batch: 1, of: 1, books: 1, from, only: book.id });
+  write({ ...read(), pendingCheckout: { at: Date.now(), count: 1, bookId: book.id } });
+  window.open(amazonCartUrl([book], `${book.title} ${book.author}`), "_blank", "noopener");
+}
+
 /** Label for a book's buy button (C4): follows what else is in the box. */
 export function buyLabel(box: BoxState | null, bookId: string, price?: string) {
   const ids = new Set((box?.items ?? []).map((i) => i.bookId));
@@ -233,6 +245,22 @@ export function keepBox() {
  */
 export function confirmOrdered(): { count: number; empty: boolean } {
   const s = read();
+  // "Buy now" of one book: mark just it bought, and take its rows (any child's) out of the box.
+  const only = s.pendingCheckout?.bookId;
+  if (only) {
+    const at = Date.now();
+    const rows = s.items.filter((i) => i.bookId === only);
+    try {
+      const add = (rows.length ? rows : [{ bookId: only, child: null }]).map((i) => ({ bookId: i.bookId, child: i.child, at }));
+      localStorage.setItem(BOUGHT_KEY, JSON.stringify([...readBought(), ...add]));
+    } catch {
+      /* ignore */
+    }
+    const items = s.items.filter((i) => i.bookId !== only);
+    write({ ...s, items, pendingCheckout: null });
+    track("order_confirmed", { count: 1, only });
+    return { count: 1, empty: items.length === 0 };
+  }
   const scope = s.pendingCheckout && "child" in s.pendingCheckout ? { child: s.pendingCheckout.child ?? null } : undefined;
   const at = Date.now();
   const inScope = (i: BoxItem) => !scope || i.child === scope.child;

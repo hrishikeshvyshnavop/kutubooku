@@ -10,12 +10,13 @@ import { toggleInBox, useBox } from "../_lib/box";
 import { activeOf, displayName, readFor, useChildren } from "../_lib/children";
 import { flyToBox } from "../_lib/fly";
 import { useSession } from "../_lib/session";
+import { Toast, type ToastData } from "./Toast";
 
 export function useCardBox() {
   const session = useSession();
   const kids = useChildren();
   const box = useBox();
-  const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
+  const [toast, setToast] = useState<ToastData | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
@@ -34,20 +35,17 @@ export function useCardBox() {
     if (!book) return;
     const added = toggleInBox(id, child, "book");
     if (added) flyToBox({ bookId: id, cover: book.cover });
-    setToast((t) => ({ text: `${added ? "Added" : "Took"} “${book.title}” ${added ? "to" : "out of"} ${whoseBox}.`, n: (t?.n ?? 0) + 1 }));
+    setToast((t) => ({
+      text: `${added ? "Added" : "Took"} “${book.title}” ${added ? "to" : "out of"} ${whoseBox}.`,
+      n: (t?.n ?? 0) + 1,
+      tone: added ? "done" : "info",
+      action: added ? { label: "View box", href: "/box" } : undefined,
+    }));
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(null), 3200);
   };
 
-  const toastEl = (
-    <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center px-4">
-      {toast ? (
-        <p key={toast.n} className="animate-q-in rounded-full bg-[#1d2838] px-5 py-2.5 type-body-sm text-white shadow-lg">
-          {toast.text}
-        </p>
-      ) : null}
-    </div>
-  );
+  const toastEl = <Toast toast={toast} />;
 
   /** Props for a BookCard: the main button becomes "Add to {child}'s box". */
   const cardProps = (id: string) => ({ boxChild: child, selected: inBox.has(id), onToggle: () => toggle(id) });

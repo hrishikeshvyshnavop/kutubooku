@@ -366,7 +366,7 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
         </aside>
 
         {/* ---------------- Right panel: the question ---------------- */}
-        <main className="flex flex-col rounded-[36px] bg-[#fffdf8] px-5 pb-6 pt-8 sm:rounded-[56px] sm:px-10 sm:pt-12 lg:rounded-b-none lg:rounded-t-[64px] lg:px-[6%] lg:pt-16">
+        <main className="flex flex-col rounded-[36px] bg-[#fffdf8] px-page-inset pb-6 pt-8 sm:rounded-[56px] sm:pt-12 lg:rounded-b-none lg:rounded-t-[64px] lg:pt-16">
           <ViewTransition key={done ? "done" : step} name="q-content" share="q-swap" enter="q-swap" exit="q-swap" default="none">
           <div className="flex flex-1 flex-col">
           {done ? (
@@ -700,7 +700,7 @@ function Summary({
             >
               <span className="w-24 shrink-0 type-caption text-[#1d2838]/55 sm:w-40">{q.summaryLabel}</span>
               <span className="flex-1 type-body">{text}</span>
-              <span className="type-label text-[#1d2838]/60 underline underline-offset-4 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-visible:opacity-100">
+              <span className="type-label text-[#1d2838]/60 link-underline-on transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-visible:opacity-100">
                 Edit
               </span>
             </button>
@@ -711,12 +711,12 @@ function Summary({
       {/* Quiet secondary actions: another reader; removing this one (edit). */}
       <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
         {roomForAnother ? (
-          <button type="button" onClick={onAddAnother} className="type-label underline underline-offset-4 hover:text-[#1d2838]/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]">
+          <button type="button" onClick={onAddAnother} className="type-label link-underline-on hover:text-[#1d2838]/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]">
             Got another reader? Add them
           </button>
         ) : null}
         {kind === "edit" && !confirmRemove ? (
-          <button type="button" onClick={() => setConfirmRemove(true)} className="type-label text-[#b3402a] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]">
+          <button type="button" onClick={() => setConfirmRemove(true)} className="type-label text-[#b3402a] link-underline-on focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]">
             Remove {who}
           </button>
         ) : null}
@@ -1022,7 +1022,7 @@ function DobPicker({ value, name, onChange }: { value: string; name: string; onC
                 setWithDay(false);
                 set({ y, m, d: "" });
               }}
-              className="mt-3 rounded type-caption text-[#1d2838]/60 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
+              className="mt-3 rounded type-caption text-[#1d2838]/60 link-underline-on focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
             >
               Skip the day
             </button>

@@ -45,7 +45,7 @@ export function ReviewWall({ reviews }: { reviews: { quote: string; who: string 
     <section ref={ref} aria-labelledby="reviews-title" data-in={inView || undefined} className="review-wall flex flex-col gap-10 py-10">
       {/* Heading in the same column as the book page's other section headings (BookPdp body:
           1312px with its side padding, then 1248px); only the card row below runs full width. */}
-      <div className="mx-auto w-full max-w-[1312px] px-5 sm:px-10 lg:px-8">
+      <div className="mx-auto w-full max-w-[1312px] px-page">
         <SectionTitle id="reviews-title" eyebrow="from parents" className="mx-auto max-w-[1248px]">
           <span className="review-line">
             <span style={{ "--i": 0 } as React.CSSProperties}>Don&apos;t just take</span>

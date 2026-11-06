@@ -18,8 +18,8 @@ export function HomeFaq() {
 
   return (
     // relative z-10: covers the sticky hero, like HomeBookList.
-    <section aria-labelledby="home-faq-title" className="relative z-10 bg-[#fffdf8]">
-      <div className="mx-auto grid w-full max-w-[1920px] gap-10 px-4 pb-24 pt-20 sm:px-6 sm:pb-32 sm:pt-28 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-[6vw]">
+    <section id="faq" tabIndex={-1} aria-labelledby="home-faq-title" className="relative z-10 bg-[#fffdf8] outline-none">
+      <div className="mx-auto grid w-full max-w-[1920px] gap-10 px-page pb-24 pt-20 sm:pb-32 sm:pt-28 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-[6vw]">
         {/* Same max width and side padding as the header (HomeHeader), so the edges line up. */}
         {/* Left: title + CTA */}
         <div className="lg:sticky lg:top-32 lg:self-start">

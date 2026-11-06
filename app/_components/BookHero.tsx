@@ -179,6 +179,11 @@ export function BookHero() {
     const covering = new IntersectionObserver(
       ([e]) => {
         covered = e.isIntersecting;
+        // Fully covered by the next section: skip rendering the 3D row entirely. Its ~60 books
+        // (two loop copies, several 3D faces each) otherwise stay in the compositor's layer tree,
+        // and re-layering them on every scroll frame was most of the home page's scroll cost.
+        // The scene keeps its size (flex-1 in a fixed-height hero), so nothing moves.
+        scene.style.contentVisibility = covered ? "hidden" : "";
         setRunning();
       },
       { rootMargin: "0px 0px -98% 0px" },
@@ -303,6 +308,40 @@ export function BookHero() {
     };
   }, []);
 
+  // Home intro hand-off (HomeIntro): the books on screen fly out of the intro's box into their
+  // places, nearest first. Offsets are divided by the row's scale, since they apply inside it.
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    let clear = 0;
+    const onIntro = (e: Event) => {
+      const from = (e as CustomEvent<{ x: number; y: number } | null>).detail;
+      if (!from) return;
+      const items = [...scene.querySelectorAll<HTMLElement>("[data-intro-item]")]
+        .map((el) => ({ el, r: el.getBoundingClientRect() }))
+        .filter(({ r }) => r.right > 0 && r.left < window.innerWidth);
+      items.sort((a, b) => Math.abs(a.r.left + a.r.width / 2 - from.x) - Math.abs(b.r.left + b.r.width / 2 - from.x));
+      items.forEach(({ el, r }, n) => {
+        const k = r.width / (el.offsetWidth || r.width) || 1;
+        el.style.setProperty("--ix", `${(from.x - (r.left + r.width / 2)) / k}px`);
+        el.style.setProperty("--iy", `${(from.y - (r.top + r.height / 2)) / k}px`);
+        el.style.setProperty("--d", `${n * 70}ms`);
+        el.dataset.introOn = "";
+      });
+      clear = window.setTimeout(() => {
+        items.forEach(({ el }) => {
+          delete el.dataset.introOn;
+          ["--ix", "--iy", "--d"].forEach((p) => el.style.removeProperty(p));
+        });
+      }, 900 + items.length * 70 + 100);
+    };
+    window.addEventListener("kb:intro-done", onIntro);
+    return () => {
+      window.removeEventListener("kb:intro-done", onIntro);
+      window.clearTimeout(clear);
+    };
+  }, []);
+
   // centre a book (on click or keyboard focus); arrows step through books
   const centerBook = (el: HTMLElement) => {
     const scene = sceneRef.current;
@@ -363,6 +402,7 @@ export function BookHero() {
               return (
                 <div
                   key={`${b.src}-${i}`}
+                  data-intro-item
                   className={`shrink-0 transition-opacity duration-500 [transform-style:preserve-3d] ${selKey && selKey !== b.src ? "opacity-30" : ""}`}
                   style={{ marginRight: GAP }}
                 >
@@ -425,7 +465,7 @@ export function BookHero() {
       </div>
 
       {/* Ask KutuBooku AI: prompt box along the bottom; its reply opens above it, over the carousel. */}
-      <div className="relative z-20 flex-none px-4 pb-6 sm:px-6 sm:pb-10">
+      <div className="relative z-20 flex-none px-page pb-6 sm:pb-10">
         <HeroAsk onOpenChange={setAskOpen} />
       </div>
 

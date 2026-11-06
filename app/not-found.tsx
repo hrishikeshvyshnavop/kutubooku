@@ -1,4 +1,3 @@
-import { Caveat } from "next/font/google";
 import Link from "next/link";
 import { FooterMascot } from "./_components/FooterMascot";
 import { GlobalFooter, REVEAL_ABOVE } from "./_components/GlobalFooter";
@@ -6,14 +5,13 @@ import { GlobalHeader } from "./_components/GlobalHeader";
 import { PageTransition } from "./_components/PageTransition";
 
 // Handwritten footer label.
-const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"] });
 
 export default function NotFound() {
   return (
     <PageTransition>
-      <div className={`${caveat.variable} flex min-h-dvh flex-col bg-[#FDDAA6] text-[#1d2838]`}>
+      <div className={`flex min-h-dvh flex-col bg-[#FDDAA6] text-[#1d2838]`}>
         <GlobalHeader />
-        <main className={`flex flex-1 flex-col items-center bg-[#FDDAA6] px-5 pt-8 sm:px-8 ${REVEAL_ABOVE}`}>
+        <main className={`flex flex-1 flex-col items-center bg-[#FDDAA6] px-page pt-8 sm:pt-12 ${REVEAL_ABOVE}`}>
           <div className="my-auto w-full max-w-[720px] py-8 text-center">
             <div className="rounded-[36px] bg-[#fffdf8] px-6 py-12 shadow-[0_24px_70px_rgba(29,40,56,0.12)] sm:rounded-[56px] sm:px-12 sm:py-16">
               <p className="type-label text-[#1d2838]/60">404 · Lost in the library</p>

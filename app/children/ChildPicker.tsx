@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MAX_CHILDREN, commitDraft, displayName, switchChild, useChildren, type ChildProfile } from "../_lib/children";
-import { useSession } from "../_lib/session";
+import { useSession, lastSignOut } from "../_lib/session";
 import { useBox } from "../_lib/box";
 import { ReaderAvatar } from "../_components/ReaderAvatar";
 
@@ -24,7 +24,8 @@ export function ChildPicker() {
   useEffect(() => {
     if (session === undefined) return;
     if (session === null) {
-      router.replace("/sign-in?next=/children");
+      // Just signed out here → home (the header says "You've signed out"); otherwise ask to sign in.
+      router.replace(Date.now() - lastSignOut() < 5000 ? "/" : "/sign-in?next=/children");
       return;
     }
     commitDraft(); // answers given before signing in become the first reader
@@ -39,7 +40,7 @@ export function ChildPicker() {
 
   if (!list.length) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-5 py-16 text-center">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-page py-16 text-center">
         <h1 className="type-display">Let&apos;s meet your first reader</h1>
         <p className="mt-4 max-w-xl type-body-lg text-[#1d2838]/70">A few quick questions and we&apos;ll pick books just for them.</p>
         <Link href="/reading-preferences" className={`mt-10 inline-flex h-14 items-center rounded-full bg-[#1d2838] px-7 type-button text-white ${FOCUS}`}>
@@ -56,7 +57,7 @@ export function ChildPicker() {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-5 pb-16 pt-10 text-center sm:pt-16">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-page pb-16 pt-8 text-center sm:pt-12">
       <h1 className="type-display">{manage ? "Manage readers" : "Who's choosing books today?"}</h1>
       <p className="mt-3 type-body-lg text-[#1d2838]/70">
         {manage ? "Tap a reader to change their answers, rename or remove them." : "Each reader gets their own books. One box for the whole family."}

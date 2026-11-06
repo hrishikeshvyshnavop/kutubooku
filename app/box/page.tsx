@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { Caveat } from "next/font/google";
 import { GlobalHeader } from "../_components/GlobalHeader";
 import { PageTransition } from "../_components/PageTransition";
 import { Box } from "./Box";
 
 // Handwritten labels ("your box").
-const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Your box — KutuBooku",
@@ -16,7 +14,7 @@ export const metadata: Metadata = {
 export default function BoxPage() {
   return (
     <PageTransition>
-      <div className={`${caveat.variable} flex min-h-dvh flex-col bg-[#FDDAA6] font-[family-name:var(--font-q-sans)] text-[#1d2838]`}>
+      <div className={`flex min-h-dvh flex-col bg-[#FDDAA6] font-[family-name:var(--font-q-sans)] text-[#1d2838]`}>
         <GlobalHeader />
         {/* No footer here: the box is a focused task screen. Fills the screen; pb on phones leaves
             room for the fixed total + Amazon bar. The Amazon Associate line sits in the box's total. */}

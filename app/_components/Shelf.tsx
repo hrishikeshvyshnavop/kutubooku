@@ -234,7 +234,7 @@ function EditionDialog({ edition, onClose }: { edition: Edition | null; onClose:
                 </a>
                 <Link
                   href={`/reading-preferences?edition=${e.slug}`}
-                  className="mt-2 block text-center text-sm font-semibold text-ink-soft underline decoration-line underline-offset-4 hover:text-ink"
+                  className="mt-2 block text-center text-sm font-semibold text-ink-soft link-underline-on hover:text-ink"
                 >
                   Personalise this Edition for my child
                 </Link>

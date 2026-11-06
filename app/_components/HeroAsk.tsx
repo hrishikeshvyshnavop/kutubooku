@@ -23,14 +23,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { askMock, type AskAnswer } from "../_data/ask-mock";
 import { ChatScrollArea } from "./ChatScrollArea";
 import { KutuAvatar } from "./KutuAvatar";
+import { useCardBox } from "./useCardBox";
+import { BoxToggleButton } from "./BoxToggleButton";
 
 const SUGGESTIONS = ["My 6-year-old loves animals", "A brave book for a shy 5-year-old", "Something funny for bedtime"];
 // Cycling placeholder examples
+// Sentence case. Tab puts the one showing into the field.
 const EXAMPLES = [
-  "a book for my 5-year-old who loves space",
-  "something calming for a worried 4-year-old",
-  "my daughter wants to be an artist",
-  "a funny read-aloud for bedtime",
+  "A book for my 5-year-old who loves space",
+  "Something calming for a worried 4-year-old",
+  "My daughter wants to be an artist",
+  "A funny read-aloud for bedtime",
 ];
 
 // Design language: flat solid colours, bold black type, amber pills (header nav),
@@ -56,6 +59,12 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
   const [typed, setTyped] = useState(0);
   const [closing, setClosing] = useState(false);
   const [focused, setFocused] = useState(false);
+  // "Add to box" on the picks: same box, toast and fly-to-box as the book cards.
+  const { whoseBox, cardProps, toastEl } = useCardBox();
+  const pickBox = (id: string) => {
+    const { selected, onToggle } = cardProps(id);
+    return { selected, onToggle };
+  };
   const [example, setExample] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const reduced = useRef(false);
@@ -250,22 +259,34 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
                             style={{ "--r": `${TILTS[i % TILTS.length]}deg`, animationDelay: `${isLatest ? i * 110 : 0}ms` } as React.CSSProperties}
                             className="animate-[ask-card-in_560ms_cubic-bezier(0.34,1.4,0.64,1)_both]"
                           >
-                            <Link
-                              href={`/books/${p.book.id}`}
-                              className={`group block rotate-[var(--r)] rounded-[20px] p-2 text-black transition-[rotate,translate] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1.5 hover:rotate-0 focus-visible:rotate-0 focus-visible:outline-2 focus-visible:outline-black sm:p-2.5 ${PICK_TONES[i % PICK_TONES.length]}`}
+                            {/* The card: the book link on top, "Add to box" underneath (a button can't sit inside a link). */}
+                            <div
+                              className={`group flex h-full rotate-[var(--r)] flex-col rounded-[20px] p-2 text-black transition-[rotate,translate] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1.5 hover:rotate-0 focus-within:rotate-0 sm:p-2.5 ${PICK_TONES[i % PICK_TONES.length]}`}
                             >
-                              <span className="relative block aspect-square overflow-hidden rounded-r-[8px] rounded-l-[3px]">
-                                <Image src={p.book.cover} alt="" fill sizes="180px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                              </span>
-                              <span className="mt-2 block w-fit rounded-full bg-black px-2.5 py-1 text-xs font-semibold leading-none text-white">{p.reason}</span>
-                              <span className="mt-1.5 line-clamp-2 block text-sm font-bold leading-tight tracking-[-0.01em] sm:text-base">{p.book.title}</span>
-                              <span className="flex items-center gap-1 text-xs font-semibold opacity-60">
-                                Ages {p.book.ageMin}–{p.book.ageMax}
-                                <span aria-hidden className="ml-auto -translate-x-1 opacity-0 transition-[opacity,translate] duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-                                  →
+                              <Link href={`/books/${p.book.id}`} className="block flex-1 rounded-[12px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                                <span data-book-cover={p.book.id} className="relative block aspect-square overflow-hidden rounded-r-[8px] rounded-l-[3px]">
+                                  <Image src={p.book.cover} alt="" fill sizes="180px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
                                 </span>
-                              </span>
-                            </Link>
+                                <span className="mt-2 block w-fit rounded-full bg-black px-2.5 py-1 text-xs font-semibold leading-none text-white">{p.reason}</span>
+                                <span className="mt-1.5 line-clamp-2 block text-sm font-bold leading-tight tracking-[-0.01em] sm:text-base">{p.book.title}</span>
+                                <span className="flex items-center gap-1 text-xs font-semibold opacity-60">
+                                  Ages {p.book.ageMin}–{p.book.ageMax}
+                                  <span aria-hidden className="ml-auto -translate-x-1 opacity-0 transition-[opacity,translate] duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+                                    →
+                                  </span>
+                                </span>
+                              </Link>
+                              <BoxToggleButton
+                                {...pickBox(p.book.id)}
+                                title={p.book.title}
+                                whoseBox={whoseBox}
+                                addLabel="Add to box"
+                                inLabel="In box"
+                                fill={{ bg: "#000", fg: "#fff" }}
+                                size="sm"
+                                className="mt-2 w-full"
+                              />
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -330,15 +351,21 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
             }`}
           >
             {/* while the AI is thinking, an amber bar sweeps along the bottom of the field */}
-            <span
-              aria-hidden
-              className={`absolute inset-x-0 bottom-0 h-1 animate-[ai-shimmer_1.2s_linear_infinite] bg-[linear-gradient(90deg,transparent_0%,transparent_35%,#f9a220_50%,transparent_65%,transparent_100%)] bg-[length:250%_100%] transition-opacity duration-300 ${thinkingNow ? "opacity-100" : "opacity-0"}`}
-            />
+            {/* Moves with transform (GPU, no repaint) and only runs while thinking: it used to animate
+                background-position forever, repainting every frame even while invisible. */}
+            <span aria-hidden className={`absolute inset-x-0 bottom-0 h-1 overflow-hidden transition-opacity duration-300 ${thinkingNow ? "opacity-100" : "opacity-0"}`}>
+              <span
+                className={`absolute inset-y-0 left-0 w-[250%] animate-[ai-sweep_1.2s_linear_infinite] bg-[linear-gradient(90deg,transparent_0%,transparent_35%,#f9a220_50%,transparent_65%,transparent_100%)] ${thinkingNow ? "" : "[animation-play-state:paused]"}`}
+              />
+            </span>
             {/* who you're asking: the mascot, concentric in the pill's round end (48px in a 64px pill) */}
             <KutuAvatar size={48} thinking={thinkingNow} className={`-ml-1.5 transition-transform duration-500 ${focused ? "scale-105" : ""}`} />
             <label htmlFor="hero-ask" className="sr-only">
               Ask KutuBooku AI for a book
             </label>
+            <span id="hero-ask-tab" className="sr-only">
+              Suggestion: {EXAMPLES[example]}. Press Tab to use it.
+            </span>
             <div className="relative min-w-0 flex-1">
               <input
                 ref={inputRef}
@@ -347,6 +374,14 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
                 onChange={(e) => setValue(e.target.value)}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
+                onKeyDown={(e) => {
+                  // Tab on an empty field takes the suggestion showing (then Tab moves on as usual).
+                  if (e.key === "Tab" && !e.shiftKey && !value && !open) {
+                    e.preventDefault();
+                    setValue(EXAMPLES[example]);
+                  }
+                }}
+                aria-describedby={!value && !open ? "hero-ask-tab" : undefined}
                 autoComplete="off"
                 // No outline on the input itself: the field around it shows the amber focus ring.
                 className="w-full bg-transparent text-lg font-semibold tracking-[-0.02em] text-black outline-none sm:text-xl"
@@ -355,11 +390,18 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
               {!value && (
                 // Dims a little more on focus, so the caret reads as "your turn".
                 <span aria-hidden className={`pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center overflow-hidden text-lg font-semibold tracking-[-0.02em] transition-colors duration-300 sm:text-xl ${focused ? "text-black/25" : "text-black/40"}`}>
-                  <span className="shrink-0">{open ? "Ask a follow-up…" : "Ask KutuBooku AI:"}&nbsp;</span>
+                  {/* (The visible "Ask KutuBooku AI:" prefix was removed on 2026-11-05; the examples speak for themselves.) */}
+                  {open && <span className="shrink-0">Ask a follow-up…</span>}
                   {!open && (
                     <span key={example} className="truncate animate-[ask-ph-in_420ms_cubic-bezier(0.22,1,0.36,1)_both]">
-                      “{EXAMPLES[example]}”
+                      {EXAMPLES[example]}
                     </span>
+                  )}
+                  {/* Tab hint (keyboards only, so not on touch screens) */}
+                  {!open && (
+                    <kbd className="ml-auto hidden shrink-0 rounded-md border border-black/15 bg-white/60 px-1.5 py-0.5 font-sans text-[12px] font-semibold leading-none tracking-normal text-black/45 [@media(hover:hover)]:sm:inline-block">
+                      Tab
+                    </kbd>
                   )}
                 </span>
               )}
@@ -379,6 +421,8 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
           </div>
         </form>
       </div>
+      {/* "Added to box" toast for the picks */}
+      {toastEl}
     </div>
   );
 }

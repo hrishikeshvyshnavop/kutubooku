@@ -15,6 +15,8 @@ import { useBox } from "../_lib/box";
 import { MAX_CHILDREN, activeOf, displayName, switchChild, useChildren } from "../_lib/children";
 import { ReaderAvatar } from "./ReaderAvatar";
 
+/** Menu close animation length; signing out waits for it so nothing swaps under a fading menu. */
+const CLOSE_MS = 200;
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 const ITEM = `flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-lg font-semibold tracking-[-0.01em] hover:bg-[#fff3d6] ${FOCUS}`;
 
@@ -36,11 +38,21 @@ export function AccountMenu({ session }: { session: Session }) {
   const kids = useChildren();
   const [open, setOpen] = useState(false);
   const [said, setSaid] = useState("");
+  const [confirming, setConfirming] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const stayRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
 
+  // Keyboard: the question takes focus on its safe answer ("Stay signed in").
   useEffect(() => {
-    if (!open) return;
+    if (confirming) stayRef.current?.focus();
+  }, [confirming]);
+
+  useEffect(() => {
+    if (!open) {
+      setConfirming(false); // eslint-disable-line react-hooks/set-state-in-effect
+      return;
+    }
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     const onDown = (e: PointerEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
     window.addEventListener("keydown", onKey);
@@ -76,10 +88,14 @@ export function AccountMenu({ session }: { session: Session }) {
       </button>
       <p role="status" aria-live="polite" className="sr-only">{said}</p>
 
+      {/* Opens and closes with a short fade + drop (not an instant show/hide). Closed: invisible
+          once the fade ends, and inert, so nothing in it can be reached. */}
       <div
         id={menuId}
-        hidden={!open}
-        className="absolute right-0 top-[calc(100%+8px)] z-50 max-h-[calc(100dvh-120px)] w-[300px] overflow-y-auto rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5"
+        inert={!open}
+        className={`absolute right-0 top-[calc(100%+8px)] z-50 max-h-[calc(100dvh-120px)] w-[300px] origin-top-right overflow-y-auto rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5 transition-[opacity,scale,translate,visibility] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+          open ? "visible translate-y-0 scale-100 opacity-100" : "invisible -translate-y-1 scale-[0.98] opacity-0"
+        }`}
       >
         {active ? (
           <>
@@ -145,17 +161,64 @@ export function AccountMenu({ session }: { session: Session }) {
             <p className="text-sm font-semibold text-black/50">Signed in with Google</p>
             <p className="truncate text-[15px]">{session.email}</p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              signOut();
-              done();
-              router.refresh();
-            }}
-            className={`${ITEM} text-black/65`}
+          {/* Sign out asks first, in place (no dialog over a menu): the row turns into a short
+              question with Sign out / Stay signed in. Leaving the menu cancels it. */}
+          {/* Both stay mounted and swap with a height animation (grid rows 1fr <-> 0fr), so the
+              menu grows smoothly instead of jumping. The hidden one is inert. */}
+          <div
+            inert={confirming}
+            className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+              confirming ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
+            }`}
           >
-            Sign out
-          </button>
+            <div className="min-h-0 overflow-hidden">
+              <button type="button" onClick={() => setConfirming(true)} className={`${ITEM} text-black/65`}>
+                Sign out
+              </button>
+            </div>
+          </div>
+          <div
+            inert={!confirming}
+            className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+              confirming ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <div role="group" aria-labelledby={`${menuId}-q`} className="mt-1 rounded-xl bg-[#fff3d6] p-3">
+                <p id={`${menuId}-q`} className="text-lg font-semibold leading-tight tracking-[-0.01em]">
+                  Sign out of KutuBooku?
+                </p>
+                <p className="mt-1 text-[15px] leading-snug text-black/65">
+                  Your box and readers stay saved to your account for next time.
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Let the menu fade away first, then sign out: the header's profile button
+                      // then fades over to "Log-in / Sign-up" and a toast confirms it.
+                      done();
+                      setTimeout(() => {
+                        signOut(); // account-only pages send you home
+                        router.refresh();
+                      }, CLOSE_MS);
+                    }}
+                    className={`h-11 flex-auto whitespace-nowrap rounded-full bg-black px-4 text-[15px] font-semibold text-white transition-colors hover:bg-black/80 ${FOCUS}`}
+                  >
+                    Sign out
+                  </button>
+                  <button
+                    ref={stayRef}
+                    type="button"
+                    onClick={() => setConfirming(false)}
+                    className={`h-11 flex-auto whitespace-nowrap rounded-full border-2 border-black/15 px-4 text-[15px] font-semibold transition-colors hover:border-black ${FOCUS}`}
+                  >
+                    Stay signed in
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

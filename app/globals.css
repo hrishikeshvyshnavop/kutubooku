@@ -20,7 +20,8 @@
   --color-plum: #76508a;
 
   --font-display: var(--font-fraunces);
-  --font-sans: var(--font-q-sans);
+  --font-sans: var(--type-font-body); /* font-sans */
+  --font-heading: var(--type-font-heading); /* font-heading: Cal Sans on anything */
   --font-anton: var(--font-anton-src);
   --font-script: var(--font-caveat);
 
@@ -36,6 +37,122 @@
       transform: none;
     }
   }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Home intro (HomeIntro.tsx, 2026-11-05): three beats, then the hero.         */
+/* ~4.4s, about 1.4s a beat: brisk, but each line and picture still lands.   */
+/* Times (ms from load): card 380-1680, chips 760/910/1060, covers deal       */
+/* 1460-1900 and drop ~2900-3610, box 2810, flaps close 3620-3890, hop 3940,  */
+/* lines 320 / 1510 / 2860, hand-off 4400.                                    */
+/* Performance: transform and opacity only (all compositor-run), layers       */
+/* promoted up front (will-change) so nothing rasterises mid-animation, no    */
+/* backdrop blur over moving content. The overlay is removed after it fades.  */
+/* ------------------------------------------------------------------------- */
+.kb-intro-skip .home-intro {
+  display: none;
+}
+/* (No page scroll lock while it plays: toggling overflow on <html> brought the scrollbar back
+   mid hand-off on Windows, shifting the carousel ~17px, and restyled the whole page. The overlay
+   swallows scroll gestures itself: HomeIntro, overscroll-behavior + touch-action below.) */
+.home-intro {
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+.home-intro,
+.hi-card,
+.hi-cover,
+.hi-box,
+.hi-box-front,
+.hi-flap-l,
+.hi-flap-r,
+.hi-line {
+  will-change: transform, opacity;
+}
+.hi-brand { animation: hi-rise 500ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes hi-rise {
+  from { opacity: 0; transform: translateY(14px); }
+}
+/* 1. child card fills in, then steps aside */
+.hi-card { animation: hi-card 1300ms cubic-bezier(0.22, 1, 0.36, 1) 380ms both; }
+@keyframes hi-card {
+  0% { opacity: 0; transform: translateY(24px) scale(0.94); }
+  22%, 82% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateX(-70px) scale(0.9) rotate(-4deg); }
+}
+.hi-chip { animation: hi-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes hi-pop {
+  from { opacity: 0; transform: scale(0.4); }
+}
+/* 2. covers deal onto a fan (--i: -1, 0, 1), hold, gather, drop into the box */
+.hi-cover { animation: hi-cover 1870ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes hi-cover {
+  0% { opacity: 0; transform: translate(calc(var(--i) * 40px), -90px) rotate(calc(var(--i) * -25deg - 12deg)) scale(0.8); }
+  24% { opacity: 1; transform: translate(calc(var(--i) * 86px), 0) rotate(calc(var(--i) * 9deg)); }
+  62% { opacity: 1; transform: translate(calc(var(--i) * 86px), 0) rotate(calc(var(--i) * 9deg)); animation-timing-function: cubic-bezier(0.5, 0, 0.5, 1); }
+  80% { opacity: 1; transform: translate(0, 24px) rotate(0) scale(0.9); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  93% { opacity: 1; transform: translate(0, 118px) scale(0.74); }
+  100% { opacity: 0; transform: translate(0, 150px) scale(0.7); }
+}
+/* 3. the box rises, takes the books, closes, hops */
+.hi-box,
+.hi-box-front {
+  animation:
+    hi-box 500ms cubic-bezier(0.34, 1.4, 0.64, 1) 2810ms both,
+    hi-hop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) 3940ms;
+}
+@keyframes hi-box {
+  from { opacity: 0; transform: translateY(46px); }
+}
+@keyframes hi-hop {
+  50% { transform: translateY(-10px); }
+}
+.hi-flap-l { animation: hi-flap-l 1080ms cubic-bezier(0.65, 0, 0.35, 1) 2810ms both; }
+.hi-flap-r { animation: hi-flap-r 1080ms cubic-bezier(0.65, 0, 0.35, 1) 2810ms both; }
+@keyframes hi-flap-l {
+  0%, 75% { transform: rotate(-125deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes hi-flap-r {
+  0%, 75% { transform: rotate(125deg); }
+  100% { transform: rotate(0); }
+}
+/* hand-off: the flaps burst open as the intro fades and the hero's books fly out */
+.is-exit .hi-flap-l { animation: hi-burst-l 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.is-exit .hi-flap-r { animation: hi-burst-r 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes hi-burst-l { to { transform: rotate(-150deg); } }
+@keyframes hi-burst-r { to { transform: rotate(150deg); } }
+/* the line for each beat */
+.hi-line-1 { animation: hi-line 1220ms cubic-bezier(0.22, 1, 0.36, 1) 320ms both; }
+.hi-line-2 { animation: hi-line 1550ms cubic-bezier(0.22, 1, 0.36, 1) 1510ms both; }
+.hi-line-3 { animation: hi-line-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 2860ms both; }
+@keyframes hi-line {
+  0% { opacity: 0; transform: translateY(105%); }
+  22%, 85% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-105%); }
+}
+@keyframes hi-line-in {
+  from { opacity: 0; transform: translateY(105%); }
+}
+/* progress dots: solid ink at 20% opacity, lit to full (opacity: compositor-only) */
+.hi-dot { opacity: 0.2; }
+.hi-dot-1 { animation: hi-dot 1220ms ease 320ms both; }
+.hi-dot-2 { animation: hi-dot 1550ms ease 1510ms both; }
+.hi-dot-3 { animation: hi-dot-on 300ms ease 2860ms both; }
+@keyframes hi-dot {
+  0%, 100% { opacity: 0.2; }
+  12%, 88% { opacity: 1; }
+}
+@keyframes hi-dot-on { to { opacity: 1; } }
+/* The hero's books fly out of the box into the carousel (BookHero sets --ix/--iy/--d). */
+/* Only the books on screen get it (data-intro-on, set per book): marking all ~60 at once built
+   60 compositing layers in one frame and froze the hand-off. */
+[data-intro-on] {
+  will-change: transform, opacity;
+  animation: hero-intro 900ms cubic-bezier(0.33, 1, 0.68, 1) var(--d, 0ms) both;
+}
+@keyframes hero-intro {
+  from { opacity: 0; transform: translate(var(--ix, 0), var(--iy, 0)) scale(0.2) rotate(-12deg); }
 }
 
 /* Intro preloader: waves rise, books tumble in, wordmark pops */
@@ -192,6 +309,27 @@
   }
 }
 
+/* Book card box button (BookCard): "buy-peek" = hovering / keyboard-focusing an added book's
+   button, unless it was just clicked ([data-fresh]: you'd otherwise see "Take it out" the moment
+   you add a book). Touch screens never hover, so they skip the peek. */
+@custom-variant buy-peek {
+  @media (hover: hover) {
+    .buy-btn:hover:not([data-fresh]) & {
+      @slot;
+    }
+  }
+  .buy-btn:focus-visible:not([data-fresh]) & {
+    @slot;
+  }
+}
+/* A book goes into the box: the button dips and springs back. */
+@keyframes buy-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.94); }
+  70% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
 /* Box count pops when a book lands in the box (BoxLink). */
 @keyframes badge-pop {
   0% { transform: scale(0.4); }
@@ -206,6 +344,15 @@
   }
   to {
     background-position: 0% 0;
+  }
+}
+/* Same sweep with transform (on a 250%-wide strip inside an overflow-hidden track): composited. */
+@keyframes ai-sweep {
+  from {
+    transform: translateX(-60%);
+  }
+  to {
+    transform: translateX(0);
   }
 }
 @keyframes book-float {
@@ -356,10 +503,13 @@
 ::view-transition-new(root) {
   animation: none;
 }
-/* Page-to-page (PageTransition: name="page", share="page-swap", enter="page-in").
-   The new page rises in over the old one; the old one stays put underneath (only
-   dimming), so different page backgrounds never flash through.
-   (A comic "ribbon wipe" was tried here on 2026-11-03 and removed the same day.) */
+/* Page-to-page (PageTransition: name="page", share="page-swap", enter="page-in"): "Splash".
+   The new page spreads out from where you clicked (--pt-x/--pt-y, set by SplashOrigin) in a soft,
+   wobbly blob; the old page stays still underneath, so different page backgrounds never flash
+   through. Chosen 2026-11-05 from the /transitions trial (Rise, Marigold wipe, Book spines, Pop-up,
+   Deal and Box open were removed). Plain clip-path keyframes (24-point polygon, start and end
+   only): interpolated natively, no per-frame style work, so it stays smooth while the new page
+   renders. 0.75s (was 2.4s, which left half the screen frozen long enough to feel stuck). */
 ::view-transition-group(.page-swap) {
   animation: none; /* no size morph between pages of different heights */
 }
@@ -368,28 +518,24 @@
 }
 ::view-transition-old(.page-swap) {
   mix-blend-mode: normal;
-  animation: page-out 420ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: none;
 }
 ::view-transition-new(.page-swap),
 ::view-transition-new(.page-in) {
   mix-blend-mode: normal;
-  animation:
-    page-fade-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both,
-    page-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pt-splash 750ms cubic-bezier(0.6, 0, 0.25, 1) both;
 }
-@keyframes page-out {
+@keyframes pt-splash {
+  from {
+    clip-path: polygon(var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh), var(--pt-x, 50vw) var(--pt-y, 50vh));
+  }
   to {
-    filter: brightness(0.9);
+    clip-path: polygon(calc(var(--pt-x, 50vw) + 165vmax * 1.042) calc(var(--pt-y, 50vh) + 165vmax * 0.0), calc(var(--pt-x, 50vw) + 165vmax * 1.049) calc(var(--pt-y, 50vh) + 165vmax * 0.281), calc(var(--pt-x, 50vw) + 165vmax * 0.907) calc(var(--pt-y, 50vh) + 165vmax * 0.524), calc(var(--pt-x, 50vw) + 165vmax * 0.708) calc(var(--pt-y, 50vh) + 165vmax * 0.708), calc(var(--pt-x, 50vw) + 165vmax * 0.499) calc(var(--pt-y, 50vh) + 165vmax * 0.864), calc(var(--pt-x, 50vw) + 165vmax * 0.258) calc(var(--pt-y, 50vh) + 165vmax * 0.964), calc(var(--pt-x, 50vw) + 165vmax * 0.0) calc(var(--pt-y, 50vh) + 165vmax * 0.957), calc(var(--pt-x, 50vw) + 165vmax * -0.237) calc(var(--pt-y, 50vh) + 165vmax * 0.886), calc(var(--pt-x, 50vw) + 165vmax * -0.478) calc(var(--pt-y, 50vh) + 165vmax * 0.828), calc(var(--pt-x, 50vw) + 165vmax * -0.75) calc(var(--pt-y, 50vh) + 165vmax * 0.75), calc(var(--pt-x, 50vw) + 165vmax * -0.97) calc(var(--pt-y, 50vh) + 165vmax * 0.56), calc(var(--pt-x, 50vw) + 165vmax * -1.028) calc(var(--pt-y, 50vh) + 165vmax * 0.276), calc(var(--pt-x, 50vw) + 165vmax * -0.958) calc(var(--pt-y, 50vh) + 165vmax * 0.0), calc(var(--pt-x, 50vw) + 165vmax * -0.882) calc(var(--pt-y, 50vh) + 165vmax * -0.236), calc(var(--pt-x, 50vw) + 165vmax * -0.825) calc(var(--pt-y, 50vh) + 165vmax * -0.476), calc(var(--pt-x, 50vw) + 165vmax * -0.707) calc(var(--pt-y, 50vh) + 165vmax * -0.707), calc(var(--pt-x, 50vw) + 165vmax * -0.501) calc(var(--pt-y, 50vh) + 165vmax * -0.868), calc(var(--pt-x, 50vw) + 165vmax * -0.259) calc(var(--pt-y, 50vh) + 165vmax * -0.968), calc(var(--pt-x, 50vw) + 165vmax * -0.0) calc(var(--pt-y, 50vh) + 165vmax * -1.043), calc(var(--pt-x, 50vw) + 165vmax * 0.28) calc(var(--pt-y, 50vh) + 165vmax * -1.046), calc(var(--pt-x, 50vw) + 165vmax * 0.522) calc(var(--pt-y, 50vh) + 165vmax * -0.905), calc(var(--pt-x, 50vw) + 165vmax * 0.665) calc(var(--pt-y, 50vh) + 165vmax * -0.665), calc(var(--pt-x, 50vw) + 165vmax * 0.762) calc(var(--pt-y, 50vh) + 165vmax * -0.44), calc(var(--pt-x, 50vw) + 165vmax * 0.903) calc(var(--pt-y, 50vh) + 165vmax * -0.242));
   }
 }
 @keyframes page-fade-in {
   from {
     opacity: 0;
-  }
-}
-@keyframes page-rise {
-  from {
-    transform: translateY(40px);
   }
 }
 /* Hero book → book page (BookHero + BookCover3D share name="book-<id>", share="book-morph"):
@@ -443,10 +589,36 @@ html {
 }
 
 /* ------------------------------------------------------------------------- */
-/* Typography scale (2026-11-02). One family (Inter Tight); every text style   */
-/* in the app uses one of these. Breakpoints: sm = 40rem, lg = 64rem.          */
-/* Colour is applied separately (text-[#1d2838], /70 etc.).                    */
+/* Typography (2026-11-05). Edit the site's type here, nowhere else.           */
+/*  - Faces: the two tokens below (fonts are loaded in app/layout.tsx).        */
+/*  - Which text is a heading: the selector list under "Heading face".         */
+/*  - Sizes / line height / tracking / weight: the type-* utilities below.     */
+/* Breakpoints: sm = 40rem, lg = 64rem. Colour is applied separately.          */
 /* ------------------------------------------------------------------------- */
+:root {
+  /* Body, labels, captions, footer nav, small text: Figtree. */
+  --type-font-body: var(--font-q-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Headings, titles, big numbers, prices, buttons, header nav: Cal Sans. */
+  --type-font-heading: var(--font-cal), var(--font-q-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Cal Sans has one weight; every heading renders at it. Change if the heading face gets weights. */
+  --type-heading-weight: 400;
+}
+
+/* Heading face: headings, the heading-type utilities, bold text (on this site bold = a title or
+   a price), buttons, and anything marked font-heading (e.g. the header nav). In the base layer, so one element can opt out with a font class
+   (e.g. font-sans). Never fake bold/italic a single-weight face. */
+@layer base {
+  :is(
+      h1, h2, h3, h4, h5, h6, button, .font-bold, .font-extrabold, .font-heading,
+      .type-display, .type-display-sm, .type-heading, .type-title, .type-title-sm,
+      .type-stat, .type-button, .type-button-sm, .type-tile
+    ) {
+    font-family: var(--type-font-heading);
+    font-weight: var(--type-heading-weight);
+    font-synthesis: none;
+  }
+}
+
 @utility type-display {
   font-size: 40px;
   line-height: 1.02;
@@ -627,6 +799,14 @@ html {
   display: none;
 }
 
+/* Native scrolling (SmoothScroll.tsx). The scrollbar's space is always reserved, so nothing
+   shifts sideways when it hides (modal dialog open) or a page is shorter than the screen. */
+html {
+  scrollbar-gutter: stable;
+}
+html.kb-scroll-lock {
+  overflow: hidden;
+}
 body {
   background: var(--color-paper);
   color: var(--color-ink);
@@ -661,7 +841,7 @@ details[open] .chevron {
   .delta-anim { display: none; }
 }
 
-/* Box: Remove / Move to… run as a View Transition (app/box/Box.tsx, animateBox).
+/* Box: Remove / Move to… run as a View Transition (app/_lib/local-transition.ts).
    Rows glide to their new place, group cards resize, a removed row fades and drops back. */
 ::view-transition-group(*.box-row),
 ::view-transition-group(*.box-group) {
@@ -673,6 +853,39 @@ details[open] .chevron {
 }
 @keyframes box-row-out {
   to { opacity: 0; transform: translateX(-24px) scale(0.96); }
+}
+/* Catalogue filters (app/books/Catalogue.tsx, same helper): cards that stay glide to their new
+   place; ones that drop out fade and shrink away quickly; newcomers fade up once the others have moved. */
+::view-transition-group(*.cat-card) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(*.cat-card):only-child {
+  animation: cat-out 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(*.cat-card):only-child {
+  animation: cat-in 420ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
+}
+@keyframes cat-out {
+  to { opacity: 0; transform: scale(0.92); }
+}
+@keyframes cat-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+}
+/* The sticky header stays on top while rows and cards move (localTransition adds .vt-local for the
+   transition only, so page-to-page transitions still treat the header as part of the page). */
+.vt-local .site-header {
+  view-transition-name: site-header;
+}
+::view-transition-group(site-header) {
+  z-index: 100;
+  animation: none;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
 }
 /* A moved row lands, then glows warm for a moment. */
 @keyframes row-arrive {
@@ -725,4 +938,114 @@ details[open] .chevron {
   .cursor-not-allowed {
     cursor: var(--cursor-default);
   }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Text-link underline: the one underline motion used across the app.         */
+/* A 2px background line (not text-decoration) so it animates on every line  */
+/* of wrapped text. Triggers on the element itself or the link/button it sits */
+/* in, on hover and keyboard focus.                                           */
+/*   link-underline     hidden at rest; draws in from the left, slides out to */
+/*                      the right on leave (titles, footer and nav links).    */
+/*   link-underline-on  always shown (text-only actions like "Clear filters");*/
+/*                      on hover it wipes off to the right and redraws.       */
+/* ------------------------------------------------------------------------- */
+/* Plain classes (not @utility): flat selectors so every CSS pipeline keeps them. */
+.link-underline,
+.link-underline-on {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.link-underline {
+  background-size: 0% 2px;
+  background-position: right 100%;
+  transition: background-size 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-underline:hover,
+.link-underline:focus-visible,
+a:hover .link-underline,
+a:focus-visible .link-underline,
+button:hover .link-underline,
+button:focus-visible .link-underline {
+  background-size: 100% 2px;
+  background-position: left 100%;
+}
+.link-underline-on {
+  background-size: 100% 2px;
+  background-position: left 100%;
+}
+.link-underline-on:hover,
+.link-underline-on:focus-visible,
+a:hover .link-underline-on,
+a:focus-visible .link-underline-on,
+button:hover .link-underline-on,
+button:focus-visible .link-underline-on {
+  animation: link-redraw 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .link-underline {
+    transition: none;
+  }
+  .link-underline-on {
+    animation: none !important;
+  }
+}
+@keyframes link-redraw {
+  0% {
+    background-size: 100% 2px;
+    background-position: right 100%;
+  }
+  45% {
+    background-size: 0% 2px;
+    background-position: right 100%;
+  }
+  46% {
+    background-size: 0% 2px;
+    background-position: left 100%;
+  }
+  100% {
+    background-size: 100% 2px;
+    background-position: left 100%;
+  }
+}
+
+/* Toast (app/_components/Toast.tsx): drops in under the header, lifts back out. */
+/* Toast sits bottom-centre (2026-11-05): rises in from below, sinks back out. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Page gutter (2026-11-05): the one side margin for header, footer, home     */
+/* sections and every page, so their edges line up. 16px on phones, growing  */
+/* with the screen to 64px. Card-style flow pages (questions, sign-in,        */
+/* curation) sit in a 10/12px shell, so their panel padding is the gutter     */
+/* minus that inset (never under 20px, for breathing room inside the card).   */
+/* ------------------------------------------------------------------------- */
+:root {
+  --gutter: clamp(16px, 4vw, 64px);
+  --shell-inset: 10px;
+}
+@media (min-width: 40rem) {
+  :root {
+    --shell-inset: 12px;
+  }
+}
+@utility px-page {
+  padding-inline: var(--gutter);
+}
+@utility px-page-inset {
+  padding-inline: max(20px, calc(var(--gutter) - var(--shell-inset)));
 }

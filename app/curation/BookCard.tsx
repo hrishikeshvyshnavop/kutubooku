@@ -4,13 +4,14 @@
 // AI reason) and the home page (plain: cover, tags, title, blurb, price, buy).
 // Moved out of Curation.tsx on 2026-11-03.
 
-import Link from "next/link";
+import { IntentLink } from "../_components/IntentLink";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { MockBook } from "../_data/curation-mock";
 import { buyLabel, buyNow, useBox } from "../_lib/box";
 import { bookIdFromHref, openBook, rememberMorph } from "../_lib/book-sheet";
 import { BookCover, rupeesFmt } from "../_components/curation/ui";
+import { BoxToggleButton } from "../_components/BoxToggleButton";
 import { CARD_TILTS, PILL_COLOURS, TAG_SHORT, cardColourFor } from "./card-style";
 
 export function BookCard({
@@ -91,10 +92,9 @@ export function BookCard({
   const pills = [...book.tags.map((t) => TAG_SHORT[t] ?? t), ages];
   const pillColours = PILL_COLOURS.filter((c) => c.bg !== card.bg);
 
-  // Animated underline: draws in from the left on hover/focus, slides out to the right on leave.
-  // A background (not text-decoration) so it animates on every line of a wrapped title.
+  // Shared animated underline (globals.css link-underline), driven by the title link/button.
   const titleText = (
-    <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_2px] bg-[position:right_100%] bg-no-repeat pb-0.5 [box-decoration-break:clone] transition-[background-size] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/title:bg-[length:100%_2px] group-hover/title:bg-[position:left_100%] group-focus-visible/title:bg-[length:100%_2px] group-focus-visible/title:bg-[position:left_100%] motion-reduce:transition-none">
+    <span className="link-underline">
       {book.title}
     </span>
   );
@@ -136,9 +136,9 @@ export function BookCard({
 
         <Title className="mt-2.5 type-title">
           {href ? (
-            <Link href={href} className="group/title text-left focus-visible:outline-none">
+            <IntentLink href={href} className="group/title text-left focus-visible:outline-none">
               {titleText}
-            </Link>
+            </IntentLink>
           ) : (
             <button type="button" onClick={onOpen} className="group/title text-left focus-visible:outline-none">
               {titleText}
@@ -226,39 +226,14 @@ export function BookCard({
         {/* Curation: the main button puts the book in this child's box (C1); Amazon is reached from the box.
             Pressed again, it takes it out. */}
         {onToggle ? (
-          <button
-            type="button"
-            aria-pressed={!!selected}
-            aria-label={selected ? `“${book.title}” is in ${whoseBox}. Take it out` : `Add “${book.title}” to ${whoseBox}`}
-            onClick={(e) => {
-              e.stopPropagation(); // the card itself opens the book
-              onToggle();
-            }}
-            className="group/buy mt-2 flex h-12 w-full items-stretch gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-          >
-            <span
-              className={`flex flex-1 items-center justify-center gap-2 rounded-[14px] type-button-sm transition-[border-radius,background-color,color] duration-300 group-hover/buy:rounded-[24px] ${selected ? "border-2 border-current" : ""}`}
-              style={selected ? { backgroundColor: "transparent", color: "inherit" } : { backgroundColor: card.dark ? "#fffdf8" : "#1d2838", color: card.dark ? "#1d2838" : "#fffdf8" }}
-            >
-              {selected ? (
-                <>
-                  <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d="M5 12l5 5L20 7" />
-                  </svg>
-                  <span className="group-hover/buy:hidden">In {whoseBox}</span>
-                  <span className="hidden group-hover/buy:inline">Take it out</span>
-                </>
-              ) : (
-                <>
-                  <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d="M3.5 8.5 12 4l8.5 4.5v9L12 22l-8.5-4.5z" />
-                    <path d="M3.5 8.5 12 13l8.5-4.5M12 13v9" />
-                  </svg>
-                  Add to {whoseBox}
-                </>
-              )}
-            </span>
-          </button>
+          <BoxToggleButton
+            selected={!!selected}
+            onToggle={onToggle}
+            title={book.title}
+            whoseBox={whoseBox}
+            fill={{ bg: card.dark ? "#fffdf8" : "#1d2838", fg: card.dark ? "#1d2838" : "#fffdf8" }}
+            className="mt-2 w-full"
+          />
         ) : (
         <>
         {/* split CTA: label + arrow chip */}

@@ -78,6 +78,7 @@ export function HomeHowItWorks() {
   const sectionRef = useRef<HTMLElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const stepPx = useRef(0); // page scroll per step while pinned
+  const fillRefs = useRef<(HTMLSpanElement | null)[]>([]); // progress bar fills (pinned)
   const last = STEPS.length - 1;
   const clampStep = (i: number) => Math.max(0, Math.min(last, i));
 
@@ -96,8 +97,16 @@ export function HomeHowItWorks() {
 
     const sync = () => {
       if (!section.style.height || !stepPx.current) return;
-      const scrolled = -section.getBoundingClientRect().top;
-      setActive(clampStep(Math.round(scrolled / stepPx.current)));
+      const s = Math.max(0, -section.getBoundingClientRect().top / stepPx.current); // steps scrolled
+      setActive(clampStep(Math.round(s)));
+      // Progress bar: segment i fills while step i is on screen (s from i-0.5 to i+0.5; the
+      // first from 0), so the bar visibly tracks the scroll, not just the step. Written to the
+      // DOM directly so scrolling doesn't re-render.
+      fillRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const f = i === 0 ? s / 0.5 : s - (i - 0.5);
+        el.style.transform = `scaleX(${Math.max(0, Math.min(1, f))})`;
+      });
     };
     const layout = () => {
       const fits = lg.matches && inner.offsetHeight + PAD <= window.innerHeight;
@@ -107,16 +116,29 @@ export function HomeHowItWorks() {
       sync();
     };
 
+    // Scroll: one sync per frame, and only while the section is on or near the screen (it used
+    // to measure layout on every scroll event anywhere on the page).
+    let raf = 0;
+    let near = false;
+    const onScroll = () => {
+      if (!near) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(sync);
+    };
+    const io = new IntersectionObserver(([e]) => (near = e.isIntersecting), { rootMargin: "50% 0px" });
+    io.observe(section);
     const ro = new ResizeObserver(layout); // its first callback also does the initial layout
     ro.observe(inner);
     lg.addEventListener("change", layout);
     window.addEventListener("resize", layout);
-    window.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
       ro.disconnect();
       lg.removeEventListener("change", layout);
       window.removeEventListener("resize", layout);
-      window.removeEventListener("scroll", sync);
+      window.removeEventListener("scroll", onScroll);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -139,7 +161,7 @@ export function HomeHowItWorks() {
     <section ref={sectionRef} aria-labelledby="how-title" className="relative z-10 overflow-x-clip bg-[#FDDAA6] text-black">
       {/* pinned: sticks for the scroll distance and centres the content in the screen */}
       <div className={pinned ? "sticky top-0 flex h-dvh flex-col justify-center" : "pb-24 pt-20 sm:pb-32 sm:pt-28"}>
-      <div ref={innerRef} className="mx-auto w-full max-w-[1920px] px-4 sm:px-6">
+      <div ref={innerRef} className="mx-auto w-full max-w-[1920px] px-page">
         {/* Heading */}
         <SectionTitle id="how-title" eyebrow="How it works" align="center" className="mx-auto max-w-[1100px]">
           The right books for your child, in three steps.
@@ -239,36 +261,43 @@ export function HomeHowItWorks() {
             </div>
           </div>
 
-          {/* Controls + CTA on one row (keeps the pinned section within one screen).
-              Pinned (scroll-driven): a 3-segment progress bar; no arrows, since scrolling is the control.
+          {/* Controls, then the CTA below them (stacked, centred).
+              Pinned (scroll-driven): a progress bar that fills as you scroll + a "scroll" hint;
+              no arrows, since scrolling is the control.
               Otherwise (phones, short screens): arrows, the visible hint that this is a carousel. */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-6 sm:mt-12">
+          <div className="mt-8 flex flex-col items-center gap-6 sm:mt-10">
           {pinned ? (
-            <div className="flex items-center gap-4">
-              {/* Done = black, current = black and longer, upcoming = faint. Each segment jumps to its step. */}
-              <ol aria-label="Steps" className="flex items-center gap-1.5">
-                {STEPS.map((s, i) => (
-                  <li key={s.title}>
-                    <button
-                      type="button"
-                      onClick={() => go(i)}
-                      aria-label={`Step ${i + 1}: ${s.title}`}
-                      aria-current={i === active ? "step" : undefined}
-                      // tall hit area, thin visible bar
-                      className="group grid h-8 place-items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
-                    >
-                      <span
-                        className={`block h-1.5 rounded-full transition-[width,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-                          i === active ? "w-16 bg-black" : i < active ? "w-8 bg-black group-hover:bg-black/70" : "w-8 bg-black/20 group-hover:bg-black/40"
-                        }`}
-                      />
-                    </button>
-                  </li>
-                ))}
-              </ol>
-              <span aria-hidden className="text-base font-bold tabular-nums">
-                {pad(active + 1)} / {pad(STEPS.length)}
-              </span>
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center gap-4">
+                {/* One segment per step, filling with the scroll. Each segment jumps to its step. */}
+                <ol aria-label="Steps" className="flex items-center gap-2">
+                  {STEPS.map((s, i) => (
+                    <li key={s.title}>
+                      <button
+                        type="button"
+                        onClick={() => go(i)}
+                        aria-label={`Step ${i + 1}: ${s.title}`}
+                        aria-current={i === active ? "step" : undefined}
+                        // tall hit area, visible bar
+                        className="group grid h-8 place-items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                      >
+                        <span className="block h-2.5 w-20 overflow-hidden rounded-full bg-black/15 transition-colors group-hover:bg-black/25">
+                          <span
+                            ref={(el) => {
+                              fillRefs.current[i] = el;
+                            }}
+                            className="block h-full origin-left rounded-full bg-black"
+                            style={{ transform: "scaleX(0)" }}
+                          />
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+                <span aria-hidden className="text-base font-bold tabular-nums">
+                  {pad(active + 1)} / {pad(STEPS.length)}
+                </span>
+              </div>
             </div>
           ) : (
           <div className="flex items-center gap-3">

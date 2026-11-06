@@ -1,28 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 /**
  * Sticky bar that slides up out of view while scrolling down and comes back on
  * any scroll up. Always shown near the top of the page, and while something
  * inside has keyboard focus (focus-within).
+ * Shown / hidden by toggling a data attribute on the element (no React re-render while
+ * scrolling); the slide is a CSS transform transition.
  */
 export function HideOnScroll({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const [hidden, setHidden] = useState(false);
-  const last = useRef(0);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    last.current = window.scrollY;
+    const el = ref.current;
+    if (!el) return;
+    let last = window.scrollY;
     let raf = 0;
+    const setHidden = (h: boolean) => {
+      if (h) el.dataset.hidden = "";
+      else delete el.dataset.hidden;
+    };
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         const y = window.scrollY;
-        const dy = y - last.current;
+        const dy = y - last;
         if (y < 80) setHidden(false); // near the top: always visible
         else if (dy > 6) setHidden(true); // scrolling down
         else if (dy < -6) setHidden(false); // scrolling up
-        if (Math.abs(dy) > 6 || y < 80) last.current = y;
+        if (Math.abs(dy) > 6 || y < 80) last = y;
       });
     };
     // Something wants the header in view (a book flying into the header's box: app/_lib/fly.ts).
@@ -38,9 +45,8 @@ export function HideOnScroll({ children, className = "" }: { children: React.Rea
 
   return (
     <div
-      className={`sticky top-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus-within:translate-y-0 motion-reduce:transition-none ${
-        hidden ? "-translate-y-full" : "translate-y-0"
-      } ${className}`}
+      ref={ref}
+      className={`site-header sticky top-0 translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[hidden]:not-focus-within:-translate-y-full motion-reduce:transition-none ${className}`}
     >
       {children}
     </div>

@@ -68,7 +68,7 @@ export function SignIn() {
         </aside>
 
         {/* Right panel: the action */}
-        <main className="flex flex-col rounded-[36px] bg-[#fffdf8] px-5 pb-6 pt-8 sm:rounded-[56px] sm:px-10 sm:pt-12 lg:rounded-b-none lg:rounded-t-[64px] lg:px-[6%] lg:pt-16">
+        <main className="flex flex-col rounded-[36px] bg-[#fffdf8] px-page-inset pb-6 pt-8 sm:rounded-[56px] sm:pt-12 lg:rounded-b-none lg:rounded-t-[64px] lg:pt-16">
           {session ? (
             <>
               <h1 className="max-w-[16ch] type-display">You&apos;re signed in</h1>

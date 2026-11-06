@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Caveat } from "next/font/google";
 import { BookHero } from "../_components/BookHero";
+import { HomeCollections } from "../_components/HomeCollections";
 import { HomeBookList } from "../_components/HomeBookList";
 import { FooterMascot } from "../_components/FooterMascot";
 import { HomeFaq } from "../_components/HomeFaq";
 import { HomeHowItWorks } from "../_components/HomeHowItWorks";
+import { HomeIntro } from "../_components/HomeIntro";
 import { GlobalFooter, REVEAL_ABOVE } from "../_components/GlobalFooter";
 import { GlobalHeader } from "../_components/GlobalHeader";
 import { PageTransition } from "../_components/PageTransition";
@@ -13,7 +14,6 @@ import { SITE_NAME, SITE_URL, abs, jsonLd } from "../_lib/site";
 // Home page. This is also exported from app/page.tsx as the root route.
 
 // Handwritten labels ("How it works", the chat's "book finder"). Loaded per page, like the book page does.
-const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "KutuBooku — Books picked for your child",
@@ -54,9 +54,11 @@ const STRUCTURED = [
 export default function HomePage() {
   return (
     <PageTransition>
-      <div className={`${caveat.variable} flex min-h-dvh flex-1 flex-col overflow-x-clip bg-[#FDDAA6] font-[family-name:var(--font-q-sans)] text-[#1d2838]`}>
+      <div className={`flex min-h-dvh flex-1 flex-col overflow-x-clip bg-[#FDDAA6] font-[family-name:var(--font-q-sans)] text-[#1d2838]`}>
         {/* Header hides while scrolling down, comes back on scroll up. */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(STRUCTURED) }} />
+        {/* First visit: a short motion story of what KutuBooku does, handing over to the hero. */}
+        <HomeIntro />
         <GlobalHeader />
         {/* REVEAL_ABOVE: rounded bottom corners; slides up off the sticky footer.
             Opaque bg: the footer waits underneath, so any see-through part of main would show it early. */}
@@ -67,6 +69,8 @@ export default function HomePage() {
             <BookHero />
           </div>
           <HomeBookList />
+          {/* Seasonal / monthly collections from the CMS (app/_data/collections.ts for now) */}
+          <HomeCollections />
           <HomeHowItWorks />
           <HomeFaq />
           {/* last in main: peeks over the footer. relative z-10 + cream: covers the sticky hero, matches the FAQ. */}

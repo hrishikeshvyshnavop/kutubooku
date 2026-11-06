@@ -72,7 +72,12 @@ export function signIn(): Session {
   return s;
 }
 
+/** When the last sign-out happened (this tab), so the header can say "You've signed out" even if the page changes. */
+let signedOutAt = 0;
+export const lastSignOut = () => signedOutAt;
+
 export function signOut() {
+  signedOutAt = Date.now();
   try {
     localStorage.removeItem(KEY);
     sessionStorage.removeItem(LEGACY_KEY);

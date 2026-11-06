@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Caveat } from "next/font/google";
 import { getImageProps } from "next/image";
 import { notFound } from "next/navigation";
 import { abs, jsonLd } from "../../_lib/site";
@@ -12,7 +11,6 @@ import { BookPdp, bookTheme } from "./BookPdp";
 // Book product page (PDP), /books/[id]. Layout from Figma node 1431:6 (Hrishi's Workspace).
 
 // Handwritten "At a glance" heading. Only this page uses it, so it is loaded here, not in the root layout.
-const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"] });
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -82,7 +80,7 @@ export default async function BookPage({ params }: Props) {
 
   return (
     <PageTransition>
-      <div style={theme} className={`${caveat.variable} flex min-h-dvh flex-1 flex-col overflow-x-clip bg-white font-[family-name:var(--font-q-sans)] text-black`}>
+      <div style={theme} className={`flex min-h-dvh flex-1 flex-col overflow-x-clip bg-white font-[family-name:var(--font-q-sans)] text-black`}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(bookData(book)) }} />
         <GlobalHeader background="bg-[var(--book-tint)]" />
         <BookPdp book={book} />

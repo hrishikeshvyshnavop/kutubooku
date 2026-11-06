@@ -4,10 +4,12 @@
 // Query flags: ?demo=1 fills the box with sample books; ?shared=… shows a read-only shared box (C21).
 
 import Image from "next/image";
+import { Toast } from "../_components/Toast";
 import Link from "next/link";
+import { IntentLink } from "../_components/IntentLink";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { localTransition } from "../_lib/local-transition";
 import { book3DFor } from "../_components/Book3D";
 import { childNameOf, readAnswers } from "../_components/curation/ui";
 import { isSignedIn, useSession } from "../_lib/session";
@@ -44,7 +46,7 @@ const INK = "#1d2838";
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 const AMBER_BLOCK = "bg-[#f9a220] text-black transition-colors group-hover:bg-[#e8900c]";
 const QUIET_BTN = `inline-flex h-11 items-center justify-center gap-2 rounded-full border-2 border-black/15 px-4 text-[15px] font-semibold transition-colors hover:border-black hover:bg-black/5 ${FOCUS}`;
-const SIDE_PAD = "px-5 sm:px-10 lg:px-[6%]";
+const SIDE_PAD = "px-page";
 
 /* ------------------------------- Derived data ------------------------------ */
 
@@ -214,7 +216,7 @@ export function Box() {
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
-  return <div className={`mx-auto w-full max-w-[1920px] pb-16 pt-6 sm:pt-10 ${SIDE_PAD}`}>{children}</div>;
+  return <div className={`mx-auto w-full max-w-[1920px] pb-16 pt-8 sm:pt-12 ${SIDE_PAD}`}>{children}</div>;
 }
 
 /* ------------------------------- Filled box ------------------------------- */
@@ -300,7 +302,11 @@ function BoxBody({
       {!readOnly && signedIn && merged && <MergedToast count={state.items.length} />}
 
       {!readOnly && state.pendingCheckout && (
-        <DidYouOrder onYes={onOrdered} child={"child" in state.pendingCheckout ? state.pendingCheckout.child ?? "anyone" : undefined} />
+        <DidYouOrder
+          onYes={onOrdered}
+          child={"child" in state.pendingCheckout ? state.pendingCheckout.child ?? "anyone" : undefined}
+          book={state.pendingCheckout.bookId ? bookById(state.pendingCheckout.bookId)?.title : undefined}
+        />
       )}
 
       {!readOnly && stale.length > 0 && staleMonth && (
@@ -322,7 +328,8 @@ function BoxBody({
               <section
                 key={g.child ?? "anyone"}
                 aria-labelledby={id}
-                style={{ viewTransitionName: vtName("group", g.child ?? "anyone"), viewTransitionClass: "box-group" } as React.CSSProperties}
+                data-vt-name={vtName("group", g.child ?? "anyone")}
+                data-vt-class="box-group"
                 className="rounded-[28px] bg-white p-4 shadow-[0_24px_70px_rgba(29,40,56,0.08)] sm:rounded-[36px] sm:p-6"
               >
                 <div className={`flex flex-wrap items-center gap-x-4 gap-y-3 px-1 ${flat ? "sr-only" : ""}`}>
@@ -420,11 +427,11 @@ function Row({
 
   return (
     // A stable name per row (survives a move between children), so View Transitions can glide it.
-    <li className="py-4 first:pt-2 last:pb-1" style={{ viewTransitionName: vtName("row", `${item.bookId}-${item.addedAt}`), viewTransitionClass: "box-row" } as React.CSSProperties}>
+    <li className="py-4 first:pt-2 last:pb-1" data-vt-name={vtName("row", `${item.bookId}-${item.addedAt}`)} data-vt-class="box-row">
       <div className={`-mx-2 rounded-2xl px-2 ${arrived ? "animate-[row-arrive_1.2s_ease-out_0.35s_both]" : ""}`}>
       <div className="flex gap-4">
         {/* Fixed 96px box so titles line up whatever the cover's shape. */}
-        <Link href={`/books/${book.id}`} className="flex size-24 shrink-0 items-end justify-center" tabIndex={-1} aria-hidden>
+        <IntentLink href={`/books/${book.id}`} className="flex size-24 shrink-0 items-end justify-center" tabIndex={-1} aria-hidden>
           <Image
             src={book.cover}
             alt=""
@@ -432,13 +439,13 @@ function Row({
             height={96}
             className={`max-h-24 w-auto max-w-24 rounded-r-md rounded-l-[3px] object-contain shadow-[0_10px_20px_-12px_rgba(29,40,56,0.6)] ${unavailable ? "opacity-40 grayscale" : ""}`}
           />
-        </Link>
+        </IntentLink>
 
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-start sm:gap-4">
           <div className="min-w-0 flex-1">
-            <Link href={`/books/${book.id}`} className={`rounded text-lg font-bold leading-tight tracking-[-0.01em] hover:underline ${FOCUS} ${unavailable ? "text-black/45" : ""}`}>
+            <IntentLink href={`/books/${book.id}`} className={`rounded text-lg font-bold leading-tight tracking-[-0.01em] link-underline ${FOCUS} ${unavailable ? "text-black/45" : ""}`}>
               {book.title}
-            </Link>
+            </IntentLink>
             <p className="text-[15px] text-black/60">{book.author}</p>
             <p className="mt-0.5 text-sm text-black/45">
               Ages {book.ageMin}–{book.ageMax} · {book.format}
@@ -480,7 +487,7 @@ function Row({
                       setNotice(`Removed ${book.title}`);
                     })
                   }
-                  className={`rounded text-sm font-semibold text-black/55 underline-offset-2 hover:text-black hover:underline ${FOCUS}`}
+                  className={`rounded text-sm font-semibold text-black/55 hover:text-black link-underline ${FOCUS}`}
                   aria-label={`${covered ? "Clear" : "Remove"} ${book.title}${item.child && !flat ? ` for ${item.child}` : ""}`}
                 >
                   {covered ? "Clear" : "Remove"}
@@ -550,16 +557,11 @@ const ARRIVING = new Set<string>();
 const vtName = (kind: string, id: string) => `${kind}-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
 
 /**
- * Remove / Move to… as one seamless motion (View Transitions): a moved row glides from its
- * spot into the other child's group, a removed one fades away while the rows below slide up,
- * and the group cards resize smoothly. Falls back to an instant change (older browsers,
- * reduced motion).
+ * Remove / Move to… as one seamless motion (View Transitions, app/_lib/local-transition.ts): a moved
+ * row glides from its spot into the other child's group, a removed one fades away while the rows
+ * below slide up, and the group cards resize smoothly.
  */
-function animateBox(update: () => void) {
-  const d = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-  if (!d.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return update();
-  d.startViewTransition(() => flushSync(update));
-}
+const animateBox = localTransition;
 
 /** B4: "Move to…": the book belongs to another child (or "For anyone"). */
 function MoveMenu({ item, title, targets, onMove }: { item: BoxItem; title: string; targets: string[]; onMove: (to: string | null) => void }) {
@@ -588,7 +590,7 @@ function MoveMenu({ item, title, targets, onMove }: { item: BoxItem; title: stri
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={`Move ${title} to another child`}
-        className={`rounded text-sm font-semibold text-black/55 underline-offset-2 hover:text-black hover:underline ${FOCUS}`}
+        className={`rounded text-sm font-semibold text-black/55 hover:text-black link-underline ${FOCUS}`}
       >
         Move to…
       </button>
@@ -691,7 +693,7 @@ function Summary({ lines, copies, total, readOnly, state, autoCheckout }: { line
 
 function MobileBar({ copies, total, lines, readOnly }: { copies: number; total: number; lines: Line[]; readOnly: boolean }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-black/10 bg-white/95 px-5 py-3 backdrop-blur lg:hidden">
+    <div data-toast-avoid className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-black/10 bg-white/95 px-5 py-3 backdrop-blur lg:hidden">
       <div className="min-w-0 flex-1">
         <p className="text-sm text-black/55"><AnimatedCount value={copies} one="book" /></p>
         <p className="text-xl font-bold leading-tight"><AnimatedTotal value={total} /></p>
@@ -725,8 +727,13 @@ function AmazonButton({
   variant?: "amber" | "quiet";
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // ?checkout=1 opens the handoff once, on arrival. Only once: this used to re-run whenever the
+  // number of books changed, so removing a book popped "Opening Amazon.in…" open again.
+  const autoOpened = useRef(false);
   useEffect(() => {
-    if (autoOpen && lines.length > 0 && !ref.current?.open) ref.current?.showModal();
+    if (!autoOpen || autoOpened.current || lines.length === 0) return;
+    autoOpened.current = true;
+    if (!ref.current?.open) ref.current?.showModal();
   }, [autoOpen, lines.length]);
   const disabled = lines.length === 0;
   if (variant === "quiet") {
@@ -861,22 +868,33 @@ function MergedToast({ count }: { count: number }) {
     return () => clearTimeout(t);
   }, []);
   return (
-    <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 lg:bottom-8">
-      {shown && (
-        <p className="flex animate-q-in items-center gap-2.5 rounded-full bg-[#1d2838] py-2.5 pl-4 pr-5 text-[15px] font-semibold text-white shadow-lg">
-          <CheckIcon className="size-5 text-[#8fe0b8]" />
-          Added {plural(count, "book")} from this browser to your account
-        </p>
-      )}
-    </div>
+    <Toast toast={shown ? { text: `Added ${plural(count, "book")} from this browser to your account` } : null} />
   );
 }
 
 /* --------------------------- "Did you order?" (C17) -------------------------- */
 
 /** `child`: only that child's books went to Amazon (B3); "anyone" for the For-anyone group. */
-function DidYouOrder({ onYes, child }: { onYes: () => void; child?: string }) {
-  const whose = child === undefined ? "" : child === "anyone" ? " for the For anyone books" : ` for ${child}'s books`;
+function DidYouOrder({ onYes, child, book }: { onYes: () => void; child?: string; book?: string }) {
+  // book: a single "Buy now" from that book's page.
+  const whose = book ? "" : child === undefined ? "" : child === "anyone" ? " for the For anyone books" : ` for ${child}'s books`;
+  if (book)
+    return (
+      <section aria-labelledby="did-you-order" className="mt-6 flex flex-col gap-4 rounded-[28px] bg-[#96D7C8] p-5 sm:flex-row sm:items-center sm:p-6">
+        <div className="flex-1">
+          <h2 id="did-you-order" className="text-xl font-bold tracking-[-0.01em]">Did you order &ldquo;{book}&rdquo; on Amazon?</h2>
+          <p className="mt-1 text-[15px] text-black/70">We&apos;ll mark it as bought, so we don&apos;t pick it again. The rest of your box stays.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={onYes} className={`h-12 rounded-full bg-black px-5 text-[15px] font-semibold text-white hover:bg-black/85 ${FOCUS}`}>
+            Yes, mark it bought
+          </button>
+          <button type="button" onClick={keepBox} className={`${QUIET_BTN} h-12 border-black/25`}>
+            Not yet
+          </button>
+        </div>
+      </section>
+    );
   return (
     <section aria-labelledby="did-you-order" className="mt-6 flex flex-col gap-4 rounded-[28px] bg-[#96D7C8] p-5 sm:flex-row sm:items-center sm:p-6">
       <div className="flex-1">
@@ -931,7 +949,7 @@ function Empty({ childName, signedIn }: { childName: string; signedIn: boolean }
       {!signedIn && (
         <p className="mt-8 text-[15px] text-black/60">
           Started a box on another device?{" "}
-          <Link href={SIGN_IN_HREF} className={`rounded font-semibold text-black underline underline-offset-2 ${FOCUS}`}>
+          <Link href={SIGN_IN_HREF} className={`rounded font-semibold text-black link-underline-on ${FOCUS}`}>
             Sign in to see it
           </Link>
         </p>

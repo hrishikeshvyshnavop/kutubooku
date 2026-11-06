@@ -4,8 +4,8 @@
 // peach social icons, and the wordmark full width along the bottom.
 // Same max width and side padding as the header, so the edges line up.
 
-import Image from "next/image";
 import Link from "next/link";
+import { NavLink } from "./NavLink";
 import { NAV, PILL } from "../_data/nav";
 import { SplitCta } from "./HomeHeader";
 import { SectionTitle } from "./SectionTitle";
@@ -37,7 +37,7 @@ export function GlobalFooter({ className = "" }: { className?: string }) {
       {/* Same glow as the home hero (hero-bg.ts) */}
       <div aria-hidden className={HERO_GLOW} />
       {/* Kept compact (about 880px at 1440 wide) so the whole footer fits a laptop screen and can be pinned (see StickyFooterShell). */}
-      <div className="relative mx-auto w-full max-w-[1920px] px-4 pt-28 sm:px-6 sm:pt-32">
+      <div className="relative mx-auto w-full max-w-[1920px] px-page pt-28 sm:pt-32">
         {/* Closing line + CTA */}
         <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
           <SectionTitle id="footer-title" eyebrow="one last thing" className="max-w-[900px]">
@@ -53,9 +53,9 @@ export function GlobalFooter({ className = "" }: { className?: string }) {
             <ul className="mt-5 flex flex-wrap gap-2">
               {NAV.map((n) => (
                 <li key={n.href}>
-                  <Link href={n.href} prefetch={n.live ? undefined : false} className={PILL}>
+                  <NavLink href={n.href} prefetch={n.live ? undefined : false} className={PILL}>
                     {n.label}
-                  </Link>
+                  </NavLink>
                 </li>
               ))}
             </ul>
@@ -65,12 +65,12 @@ export function GlobalFooter({ className = "" }: { className?: string }) {
             <p className={COL_TITLE}>your account</p>
             <ul className="mt-5 flex flex-col gap-3 text-xl font-semibold tracking-[-0.02em]">
               <li>
-                <Link href="/sign-in" className="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                <Link href="/sign-in" className="link-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                   Log in / Sign up
                 </Link>
               </li>
               <li>
-                <Link href="/reading-preferences" className="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                <Link href="/reading-preferences" className="link-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                   Update reading preferences
                 </Link>
               </li>
@@ -88,7 +88,7 @@ export function GlobalFooter({ className = "" }: { className?: string }) {
                     className="grid size-12 place-items-center rounded-full bg-black transition-[background-color,scale] duration-200 hover:bg-[#3f309b] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={s.icon} alt="" width={24} height={24} />
+                    <img src={s.icon} alt="" width={24} height={24} loading="lazy" />
                   </a>
                 </li>
               ))}
@@ -96,14 +96,12 @@ export function GlobalFooter({ className = "" }: { className?: string }) {
           </div>
         </div>
 
-        {/* Wordmark, edge to edge of the content width, in its own mint + amber (as in the header, on the same peach). */}
-        <Image
-          src="/brand/kutubooku-logo.svg"
-          alt=""
+        {/* Wordmark, edge to edge of the content width, as a quiet watermark: one tone a step darker
+            than the peach (the logo used as a mask), so it signs off the page without the bright
+            mint + amber clashing on peach. Decorative: the header logo carries the name. */}
+        <div
           aria-hidden
-          width={1674}
-          height={275}
-          className="mt-12 h-auto w-full select-none sm:mt-14"
+          className="mt-12 aspect-[3348/550] w-full select-none bg-[#F3BE78] [mask:url(/brand/kutubooku-logo.svg)_center/contain_no-repeat] sm:mt-14"
         />
 
         {/* Legal */}

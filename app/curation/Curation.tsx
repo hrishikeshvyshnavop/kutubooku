@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Toast } from "../_components/Toast";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { INTEREST_LABELS, MOCK_BOOKS } from "../_data/curation-mock";
@@ -289,7 +290,7 @@ export function Curation() {
       </dl>
       <Link
         href={activeKid ? `/reading-preferences?child=${activeKid.id}` : "/"}
-        className="mt-5 inline-block type-label underline underline-offset-4 sm:mt-8"
+        className="mt-5 inline-block type-label link-underline-on sm:mt-8"
       >
         Edit {name ? `${name}'s` : ""} answers
       </Link>
@@ -397,15 +398,11 @@ export function Curation() {
         onClose={() => setOpenId(null)}
       />
 
-      {/* Toast */}
-      <div aria-live="polite" className="pointer-events-none sticky bottom-[104px] z-20 flex justify-center sm:bottom-[92px]">
-        {toast ? (
-          <p className="animate-q-in rounded-full bg-[#1d2838] px-5 py-2.5 type-body-sm text-white shadow-lg">{toast}</p>
-        ) : null}
-      </div>
+      {/* Toast (top-right, under the header) */}
+      <Toast toast={toast ? { text: toast, tone: "info" } : null} />
 
       {/* Sticky action bar — always in view */}
-      <div className="sticky bottom-0 z-10 -mx-2 mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-t-[24px] bg-[#fffdf8]/90 px-2 pb-3 pt-3 backdrop-blur">
+      <div data-toast-avoid className="sticky bottom-0 z-10 -mx-2 mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-t-[24px] bg-[#fffdf8]/90 px-2 pb-3 pt-3 backdrop-blur">
         <p className="type-body tabular-nums">
           <span className="font-semibold">
             {chosen.length} in {name ? `${name}'s` : "your"} box
@@ -500,7 +497,7 @@ function Frame({
         >
           {side}
         </aside>
-        <main className="flex min-w-0 flex-col rounded-[36px] bg-[#fffdf8] px-5 pb-0 pt-8 sm:rounded-[56px] sm:px-10 sm:pt-12 lg:rounded-b-none lg:rounded-t-[64px] lg:px-[6%] lg:pt-16">
+        <main className="flex min-w-0 flex-col rounded-[36px] bg-[#fffdf8] px-page-inset pb-0 pt-8 sm:rounded-[56px] sm:pt-12 lg:rounded-b-none lg:rounded-t-[64px] lg:pt-16">
           {children}
         </main>
       </div>

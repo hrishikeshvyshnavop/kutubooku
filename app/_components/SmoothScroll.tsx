@@ -1,40 +1,51 @@
 "use client";
 
-// Site-wide smooth scrolling: Lenis eases the real window scroll on its own rAF loop.
-// Native scroll stays in charge, so `position: sticky` and the window "scroll"
-// listeners keep working.
-// GSAP + ScrollTrigger used to drive this, but nothing used ScrollTrigger, so they
-// were removed (2026-11-03): ~45 KB gzipped less JS on every page. If a scroll-linked
-// GSAP animation is added later, drive Lenis from gsap.ticker again and call
-// ScrollTrigger.update on Lenis's "scroll" event.
+// Page scrolling (2026-11-05): native browser scrolling. Lenis (smooth scroll driven from a
+// main-thread rAF loop) was removed: whenever the page was busy (images decoding, a book page
+// prefetching, the hero's 3D books), the scroll froze with it, which read as the site getting
+// "stuck". Native scrolling runs on the compositor, so it stays smooth even then.
+// Kept from before, with the same API:
+// - pageScroll: scroll the page to a position, smoothly or instantly; target() is where an
+//   in-flight smooth scroll is heading (the home book row adds to it, gesture after gesture).
+// - Freeze the page behind an open modal dialog (html.kb-scroll-lock; scrollbar-gutter keeps
+//   the layout from shifting when the scrollbar goes).
 
 import { useEffect } from "react";
-import Lenis from "lenis";
-import "lenis/dist/lenis.css";
+
+let heading: number | null = null; // target of the current smooth scroll, if any
+
+export const pageScroll = {
+  target: () => heading ?? window.scrollY,
+  to: (top: number, immediate = false) => {
+    const smooth = !immediate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    heading = smooth ? top : null;
+    window.scrollTo({ top, behavior: smooth ? "smooth" : "instant" });
+  },
+};
 
 export function SmoothScroll() {
   useEffect(() => {
-    // Respect reduced motion: keep plain native scrolling.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const done = () => (heading = null);
+    // A wheel / touch scroll by the user takes over from any scroll we started, unless a handler
+    // took the gesture for itself (the home book row turns sideways swipes into page scroll).
+    const userScroll = (e: Event) => {
+      if (!e.defaultPrevented) heading = null;
+    };
+    window.addEventListener("scrollend", done);
+    window.addEventListener("wheel", userScroll, { passive: true });
+    window.addEventListener("touchstart", userScroll, { passive: true });
 
-    const lenis = new Lenis({
-      autoRaf: true,
-      lerp: 0.1,
-      anchors: true, // smooth in-page #links
-      allowNestedScroll: true, // inner scroll areas scroll themselves
-      stopInertiaOnNavigate: true,
-      // Dialogs (book details, shelf) scroll natively.
-      prevent: (node) => !!node.closest("dialog, [data-lenis-prevent]"),
-    });
-
-    // Freeze the page behind an open modal dialog.
-    const syncDialogs = () => (document.querySelector("dialog[open]:modal") ? lenis.stop() : lenis.start());
+    const html = document.documentElement;
+    const syncDialogs = () => html.classList.toggle("kb-scroll-lock", !!document.querySelector("dialog[open]:modal"));
     const mo = new MutationObserver(syncDialogs);
     mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["open"] });
 
     return () => {
+      window.removeEventListener("scrollend", done);
+      window.removeEventListener("wheel", userScroll);
+      window.removeEventListener("touchstart", userScroll);
       mo.disconnect();
-      lenis.destroy();
+      html.classList.remove("kb-scroll-lock");
     };
   }, []);
 

@@ -2,9 +2,9 @@
 
 // Floating buy tray on the book page (grey tray, bottom-right), now box-aware (docs/CONTEXT.md §15):
 // - "Add to box" → toast "Added · View box" + header badge (C6); turns into "In box".
-// - "Buy on Amazon" adds the book, then sends the whole box (C3). Label follows the box (C4):
-//   empty box → "Buy on Amazon · ₹399" straight to Amazon; otherwise "Add & buy all N on Amazon",
-//   which opens the box's handoff screen (batches, shared copies, unavailable books all handled there).
+// - Primary: "Buy now · ₹399" buys only this book, straight to Amazon (2026-11-05), whatever else is
+//   in the box (the box is left as it is and later asks "Did you order …?" about this book).
+//   Buying everything together happens from the box.
 // - "Who's this for?" is asked once per visit when we know a child (C9): every reader in the
 //   account (app/_lib/children.ts), or the questionnaire's name before signing in.
 //   "+ Someone new" runs the questions for a new reader, puts this book in their box and
@@ -19,7 +19,7 @@ import { childNameOf, readAnswers } from "../../_components/curation/ui";
 import { MAX_CHILDREN, activeOf, displayName, readFor, setFor, useChildren } from "../../_lib/children";
 import { useSession } from "../../_lib/session";
 import { rupees } from "../../_lib/amazon";
-import { addToBox, boxKey, buyLabel, buyNow, moveItem, useBox } from "../../_lib/box";
+import { addToBox, boxKey, buyThisBook, moveItem, useBox } from "../../_lib/box";
 import { flyToBox } from "../../_lib/fly";
 import { book3DFor } from "../../_components/Book3D";
 import { CheckIcon } from "../../_components/CheckIcon";
@@ -28,8 +28,8 @@ import type { MockBook } from "../../_data/curation-mock";
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 const VIOLET = "bg-[#9a83de] text-white transition-colors group-hover:bg-[#8670cc]";
 
-/** What the "Who's this for?" chooser is for: a new add/buy, moving the last add (Change), or adding for another child. */
-type Action = "add" | "buy" | "change" | "another";
+/** What the "Who's this for?" chooser is for: a new add, moving the last add (Change), or adding for another child. */
+type Action = "add" | "change" | "another";
 
 const whose = (child: string | null) => (child ? `${child}'s box` : "the box");
 
@@ -94,14 +94,9 @@ export function BuyTray({
       setToast({ child, n: (toast?.n ?? 0) + 1 });
       return;
     }
-    if (action === "add" || action === "another") {
-      addToBox(book.id, child, "book");
-      flyToBox({ bookId: book.id, cover: book.cover, from: trayRef.current, ratio: book3DFor(book.cover, book.title, book.tone).ratio });
-      setToast({ child, n: (toast?.n ?? 0) + 1 });
-      return;
-    }
-    // Only this book: straight to Amazon (C3), and the box asks "Did you order?" later (C17).
-    if (buyNow(book, child, "book") === "box") router.push("/box?checkout=1");
+    addToBox(book.id, child, "book");
+    flyToBox({ bookId: book.id, cover: book.cover, from: trayRef.current, ratio: book3DFor(book.cover, book.title, book.tone).ratio });
+    setToast({ child, n: (toast?.n ?? 0) + 1 });
   };
 
   const start = (action: Action) => {
@@ -210,9 +205,15 @@ export function BuyTray({
           )}
           </span>
 
-          <button type="button" onClick={() => start("buy")} className={`group flex h-14 min-w-0 flex-1 items-stretch gap-0.5 ${FOCUS}`}>
+          {/* Primary: buy just this book now (opens Amazon in a new tab). */}
+          <button
+            type="button"
+            onClick={() => buyThisBook(book, "book")}
+            aria-label={`Buy now on Amazon, ${rupees(book.price)}`}
+            className={`group flex h-14 min-w-0 flex-1 items-stretch gap-0.5 ${FOCUS}`}
+          >
             <span className={`flex min-w-0 flex-1 items-center justify-center truncate rounded-lg px-5 text-xl font-bold leading-none tracking-[-0.48px] max-sm:px-3 max-sm:text-lg ${VIOLET}`}>
-              {buyLabel(box, book.id, rupees(book.price))}
+              Buy now · {rupees(book.price)}
             </span>
             <span className={`grid w-14 shrink-0 place-items-center rounded-lg ${VIOLET}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -226,7 +227,7 @@ export function BuyTray({
           <button
             type="button"
             onClick={() => (missing.length === 1 ? run("another", missing[0]) : setAsking("another"))}
-            className={`mt-2 rounded px-1 text-[15px] font-semibold underline underline-offset-4 hover:text-black/70 ${FOCUS}`}
+            className={`mt-2 rounded px-1 text-[15px] font-semibold link-underline-on hover:text-black/70 ${FOCUS}`}
           >
             + Add for {missing.length === 1 ? `${missing[0]} too` : "another child"}
           </button>
