@@ -171,10 +171,12 @@ function CollectionSection({
           </SectionTitle>
           <div className="flex max-w-md flex-col gap-3 lg:items-end lg:text-right">
             <p className={`type-body-lg ${dark ? "text-white/75" : "text-[#1d2838]/70"}`}>{c.description}</p>
-            <p
-              className="w-fit rounded-full px-3.5 py-1.5 text-[14px] font-semibold"
-              style={{ background: c.theme.accent, color: dark ? "#1d2838" : "#fff" }}
-            >
+            {/* Plain meta line, not a pill: a filled chip read as a button. */}
+            <p className={`flex items-center gap-2 text-[14px] font-medium ${dark ? "text-white/75" : "text-[#1d2838]/70"}`}>
+              <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke={c.theme.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
+                <path d="M3.5 10h17M8 3v4M16 3v4" />
+              </svg>
               {untilLabel(c.endsAt)} · {items.length} books
             </p>
           </div>

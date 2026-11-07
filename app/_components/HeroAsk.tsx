@@ -11,20 +11,23 @@
 // While open, the hero carousel pauses and dims (onOpenChange).
 // Look: the box is one white pill with the amber send button inline at its right end;
 // suggestions and follow-ups are amber pills like the header nav; picks use the book page colours.
-// Focus: the box lifts 2px, the field gets a 3px amber ring + soft amber glow, the sparkle
+// Focus: the box lifts 2px, the field gets a 3px AI-gradient ring + soft gradient glow, the sparkle
 // turns, the placeholder dims; the arrow stays pale until there is text to send;
-// while the AI is "thinking" an amber bar sweeps along the bottom of the field.
+// while the AI is "thinking" an AI-gradient bar sweeps along the bottom of the field.
 // Answers are MOCK for now (app/_data/ask-mock.ts).
 // Reduced motion: no shimmer, typing or entrance animations; answers show at once.
 
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { askMock, type AskAnswer } from "../_data/ask-mock";
+import { askMock } from "../_data/ask-mock";
 import { ChatScrollArea } from "./ChatScrollArea";
 import { KutuAvatar } from "./KutuAvatar";
 import { useCardBox } from "./useCardBox";
 import { BoxToggleButton } from "./BoxToggleButton";
+import { useSession } from "../_lib/session";
+import { activeOf, displayName, useChildren } from "../_lib/children";
+import { loadThread, saveThread, threadKey, type AskTurn } from "../_lib/ask-history";
 
 const SUGGESTIONS = ["My 6-year-old loves animals", "A brave book for a shy 5-year-old", "Something funny for bedtime"];
 // Cycling placeholder examples
@@ -48,13 +51,23 @@ const CHARS_PER_MS = 0.1;
 const CLOSE_MS = 240;
 const TILTS = [-2.5, 1.5, -1]; // resting tilt (deg) of the three picks
 
-/** `question` is what the bubble shows; `query` is the full question the answer was built from. */
-type Turn = { id: number; question: string; query: string; answer: AskAnswer };
+type Turn = AskTurn;
 type Stage = "thinking" | "typing" | "done";
 
-export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => void }) {
+/** `docked`: floating over the page below the hero (AskDock): just the pill, with a shadow. */
+export function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boolean) => void; docked?: boolean }) {
   const [value, setValue] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
+  // The chat is saved per account + child (app/_lib/ask-history.ts). Closing the card only hides
+  // it; "Clear" ends it. `shown`: the card is open.
+  const [shown, setShown] = useState(false);
+  const session = useSession();
+  const kids = useChildren();
+  const child = session ? activeOf(kids) : null;
+  const childName = child ? displayName(child.name) : "";
+  // undefined until we know who's signed in (server render / hydration)
+  const key = session === undefined ? undefined : threadKey(session?.email ?? null, child?.id ?? null);
+  const [loadedKey, setLoadedKey] = useState<string | undefined>(undefined);
   const [stage, setStage] = useState<Stage>("done");
   const [typed, setTyped] = useState(0);
   const [closing, setClosing] = useState(false);
@@ -68,9 +81,21 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
   const [example, setExample] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const reduced = useRef(false);
-  const nextId = useRef(1);
 
-  const open = turns.length > 0;
+  // Who's asking changed (first load, sign in/out, another child picked): show that thread, closed.
+  if (key !== loadedKey) {
+    setLoadedKey(key);
+    const saved = key ? loadThread(key) : [];
+    setTurns(saved);
+    setShown(false);
+    setStage("done");
+  }
+  // Save every change to the thread it belongs to.
+  useEffect(() => {
+    if (key && key === loadedKey) saveThread(key, turns);
+  }, [key, loadedKey, turns]);
+
+  const open = shown && turns.length > 0;
   const latest = turns[turns.length - 1];
 
   useEffect(() => {
@@ -94,24 +119,25 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
     const shown = turns.flatMap((t) => t.answer.picks.map((p) => p.book.id));
     const query = context ? `${context.query} ${extra ?? question}`.trim() : question;
     const answer = askMock(query, context ? shown : [], context ? question : undefined);
-    setTurns((ts) => [...ts, { id: nextId.current++, question, query, answer }]);
+    setTurns((ts) => [...ts, { id: ts.reduce((m, t) => Math.max(m, t.id), 0) + 1, question, query, answer }]);
+    setShown(true);
     setValue("");
     setTyped(0);
     setStage(reduced.current ? "done" : "thinking");
   };
 
-  const close = useCallback(() => {
-    if (reduced.current) {
-      setTurns([]);
-      return;
-    }
-    setClosing(true);
-    setTimeout(() => {
-      setTurns([]);
+  /** Close the card; the chat stays saved. `clear` also ends it. */
+  const close = useCallback((clear = false) => {
+    const finish = () => {
+      setShown(false);
       setClosing(false);
       setStage("done");
-    }, CLOSE_MS);
+      if (clear) setTurns([]);
+    };
     inputRef.current?.focus();
+    if (reduced.current) return finish();
+    setClosing(true);
+    setTimeout(finish, CLOSE_MS);
   }, []);
 
   // thinking → typing → done (latest turn only)
@@ -166,14 +192,25 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
       {/* Amber pills, like the header nav (smaller). The last one or two hide on phones to keep one row. */}
       <ul
         aria-label="Try asking"
-        className={`mb-3 flex flex-wrap items-center justify-center gap-1.5 transition-[opacity,translate] duration-300 ${open ? "pointer-events-none translate-y-2 opacity-0" : ""}`}
-        aria-hidden={open || undefined}
+        className={`mb-3 flex flex-wrap items-center justify-center gap-1.5 transition-[opacity,translate] duration-300 ${docked ? "hidden" : open ? "pointer-events-none translate-y-2 opacity-0" : ""}`}
+        aria-hidden={open || docked || undefined}
       >
+        {/* A saved chat: pick up where you left off (first, so it's the one phones keep). */}
+        {turns.length > 0 && (
+          <li className="animate-[ask-ph-in_500ms_cubic-bezier(0.22,1,0.36,1)_both]">
+            <button type="button" tabIndex={open ? -1 : 0} onClick={() => setShown(true)} className={`${SUGGEST_PILL} gap-2 !bg-black !text-white hover:!bg-black/80`}>
+              <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" />
+              </svg>
+              {childName ? `Continue ${childName}'s chat` : "Continue your chat"}
+            </button>
+          </li>
+        )}
         {SUGGESTIONS.map((s, i) => (
           <li
             key={s}
             style={{ animationDelay: `${i * 80}ms` }}
-            className={`animate-[ask-ph-in_500ms_cubic-bezier(0.22,1,0.36,1)_both] ${i > 0 ? "max-sm:hidden" : ""}`}
+            className={`animate-[ask-ph-in_500ms_cubic-bezier(0.22,1,0.36,1)_both] ${i > (turns.length > 0 ? -1 : 0) ? "max-sm:hidden" : ""}`}
           >
             <button
               type="button"
@@ -205,11 +242,21 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
                 {/* the assistant's face: the KutuBooku mascot (wiggles while it reads) */}
                 <KutuAvatar size={40} thinking={thinkingNow} />
                 KutuBooku AI
-                <span className="-rotate-3 font-[family-name:var(--font-caveat)] text-[22px] font-normal text-[#3b308f]">book finder</span>
+                <span className="-rotate-3 font-[family-name:var(--font-caveat)] text-[22px] font-normal text-[#3b308f]">{childName ? `for ${childName}` : "book finder"}</span>
               </p>
+              <div className="flex items-center gap-1.5">
+              {/* Ends the saved chat (closing only hides it). */}
               <button
                 type="button"
-                onClick={close}
+                onClick={() => close(true)}
+                disabled={stage !== "done"}
+                className="h-10 rounded-full px-3.5 text-base font-semibold text-black/60 transition-colors hover:bg-black/5 hover:text-black disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-black"
+              >
+                Clear chat
+              </button>
+              <button
+                type="button"
+                onClick={() => close()}
                 aria-label="Close chat"
                 className="grid size-10 place-items-center rounded-full bg-[#fbbe63] text-black transition-[background-color,rotate] duration-300 hover:rotate-90 hover:bg-[#f9a220] focus-visible:outline-2 focus-visible:outline-black"
               >
@@ -217,6 +264,7 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
                   <path d="M6 6l12 12M18 6L6 18" />
                 </svg>
               </button>
+              </div>
             </div>
 
             {/* thread: our own scrollbar (inset pill + edge fades); follows the newest message */}
@@ -344,18 +392,24 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
             focused ? "-translate-y-0.5" : ""
           }`}
         >
-          {/* Focus: a 3px amber ring with a soft amber glow under it (box-shadow, so it isn't clipped by overflow-hidden). */}
-          <div
-            className={`relative flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-[32px] bg-white pl-[14px] pr-2 transition-shadow duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              focused ? "shadow-[0_0_0_3px_#f9a220,0_14px_30px_-12px_rgba(249,162,32,0.6)]" : "shadow-[0_0_0_0_rgba(249,162,32,0),0_0_0_0_rgba(249,162,32,0)]"
-            }`}
-          >
-            {/* while the AI is thinking, an amber bar sweeps along the bottom of the field */}
+          {/* Focus (and while thinking): the field's usual focus pattern, a still 3px ring with a soft
+              glow just under it, in the AI gradient instead of brand amber (--ai-gradient-line,
+              globals.css). Both are layers behind the pill that only fade in and out (opacity). */}
+          <span
+            aria-hidden
+            className={`pointer-events-none absolute inset-x-8 -bottom-2.5 top-1/2 rounded-full bg-[image:var(--ai-gradient-line)] blur-[14px] transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${focused || thinkingNow ? "opacity-50" : "opacity-0"}`}
+          />
+          <span
+            aria-hidden
+            className={`pointer-events-none absolute -inset-[3px] rounded-[35px] bg-[image:var(--ai-gradient-line)] transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${focused || thinkingNow ? "opacity-100" : "opacity-0"}`}
+          />
+          <div className={`relative flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-[32px] bg-white pl-[14px] pr-2 transition-shadow duration-300 ${docked ? "shadow-[0_18px_40px_-16px_rgba(29,40,56,0.45),0_0_0_1px_rgba(29,40,56,0.06)]" : ""}`}>
+            {/* while the AI is thinking, an AI-gradient bar sweeps along the bottom of the field */}
             {/* Moves with transform (GPU, no repaint) and only runs while thinking: it used to animate
                 background-position forever, repainting every frame even while invisible. */}
             <span aria-hidden className={`absolute inset-x-0 bottom-0 h-1 overflow-hidden transition-opacity duration-300 ${thinkingNow ? "opacity-100" : "opacity-0"}`}>
               <span
-                className={`absolute inset-y-0 left-0 w-[250%] animate-[ai-sweep_1.2s_linear_infinite] bg-[linear-gradient(90deg,transparent_0%,transparent_35%,#f9a220_50%,transparent_65%,transparent_100%)] ${thinkingNow ? "" : "[animation-play-state:paused]"}`}
+                className={`absolute inset-y-0 left-0 w-[250%] animate-[ai-sweep_1.2s_linear_infinite] bg-[linear-gradient(90deg,transparent_0%,transparent_30%,#7c5cff_40%,#4f8bff_47%,#22c7d6_53%,#ff6ac1_60%,transparent_70%,transparent_100%)] ${thinkingNow ? "" : "[animation-play-state:paused]"}`}
               />
             </span>
             {/* who you're asking: the mascot, concentric in the pill's round end (48px in a 64px pill) */}
@@ -383,7 +437,7 @@ export function HeroAsk({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
                 }}
                 aria-describedby={!value && !open ? "hero-ask-tab" : undefined}
                 autoComplete="off"
-                // No outline on the input itself: the field around it shows the amber focus ring.
+                // No outline on the input itself: the field around it shows the AI gradient focus ring.
                 className="w-full bg-transparent text-lg font-semibold tracking-[-0.02em] text-black outline-none sm:text-xl"
               />
               {/* animated placeholder */}

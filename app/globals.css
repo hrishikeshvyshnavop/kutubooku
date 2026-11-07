@@ -355,6 +355,11 @@
     transform: translateX(0);
   }
 }
+/* AI colours: the KutuBooku AI chat's focus ring and thinking bar use these instead of the brand
+   amber, so anything AI-driven reads as AI. Edit here to retune. */
+:root {
+  --ai-gradient-line: linear-gradient(90deg, #7c5cff, #4f8bff, #22c7d6, #ff6ac1);
+}
 @keyframes book-float {
   0%,
   100% {
@@ -584,8 +589,16 @@
   }
 }
 
+/* Smooth in-page scrolling on every page (anchor links like /#faq, "back to top", scrollTo calls).
+   Wheel / touch scrolling is the browser's own (fast, on the compositor; see SmoothScroll.tsx).
+   Page changes jump to the top instantly (data-scroll-behavior on <html>, app/layout.tsx). */
 html {
   scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /* ------------------------------------------------------------------------- */

@@ -39,7 +39,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-IN" className={`${grotesk.variable} ${calSans.variable} ${caveat.variable} h-full antialiased`}>
+    <html
+      lang="en-IN"
+      // Smooth scrolling for in-page jumps (globals.css), but page changes start at the top instantly:
+      // Next 16 only switches smooth off during navigation when this attribute is set.
+      data-scroll-behavior="smooth"
+      className={`${grotesk.variable} ${calSans.variable} ${caveat.variable} h-full antialiased`}>
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans">
         <SmoothScroll />
         {children}

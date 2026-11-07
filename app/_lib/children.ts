@@ -19,6 +19,7 @@ import { AVATARS } from "../_data/avatars";
 import { ageOf } from "../_data/questions";
 import { moveChildInBox } from "./box";
 import { isSignedIn } from "./session";
+import { dropChildThreads } from "./ask-history";
 
 export type ChildAnswers = Record<string, string | string[]>;
 export type ChildProfile = { id: string; name: string; answers: ChildAnswers; createdAt: number };
@@ -149,6 +150,7 @@ export function removeChild(id: string) {
   const list = s.list.filter((c) => c.id !== id);
   write({ list, active: s.active === id ? list[0]?.id ?? null : s.active });
   moveChildInBox(displayName(cur.name), null);
+  dropChildThreads(id); // their saved AI chat goes too
 }
 
 export function setActiveChild(id: string) {

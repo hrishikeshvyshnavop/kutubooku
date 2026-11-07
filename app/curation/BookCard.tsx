@@ -6,7 +6,7 @@
 
 import { IntentLink } from "../_components/IntentLink";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { MockBook } from "../_data/curation-mock";
 import { buyLabel, buyNow, useBox } from "../_lib/box";
 import { bookIdFromHref, openBook, rememberMorph } from "../_lib/book-sheet";
@@ -152,13 +152,21 @@ export function BookCard({
         <p className="mt-2 line-clamp-3 type-body-sm opacity-90">{book.description}</p>
 
         {book.reason ? (
-        <p className="mt-3 rounded-[14px] px-3 py-2 type-body-sm" style={{ backgroundColor: card.dark ? "rgb(255 253 248 / 0.12)" : "rgb(255 253 248 / 0.55)" }}>
-          <span className="font-semibold">
-            <SparkleIcon className="-mt-0.5 mr-1 inline size-3.5" />
-            Why we picked it:{" "}
-          </span>
-          <TypeReason key={book.id} text={book.reason} delay={(deal === "in" ? 750 : 450) + index * 110} />
-        </p>
+        // The AI's note, in the AI look used across the site (--ai-gradient-line, globals.css; the
+        // home chat's focus ring): a thin gradient border, gradient sparkle and caret; the words
+        // stay in the card's own text colour so they read easily.
+        <div className="mt-3 rounded-[15px] bg-[image:var(--ai-gradient-line)] p-[1.5px]">
+          <p
+            className="rounded-[13.5px] px-3 py-2 type-body-sm"
+            style={{ backgroundColor: card.dark ? `color-mix(in srgb, ${card.bg} 86%, #fff)` : "#fffdf8" }}
+          >
+            <span className="font-semibold">
+              <AiSparkle className="-mt-0.5 mr-1 inline size-4" />
+              Why we picked it:{" "}
+            </span>
+            <TypeReason key={book.id} text={book.reason} delay={(deal === "in" ? 750 : 450) + index * 110} />
+          </p>
+        </div>
         ) : null}
 
         {/* price · thumbs · menu */}
@@ -307,6 +315,25 @@ export function SparkleIcon({ className = "size-4" }: { className?: string }) {
   );
 }
 
+/** SparkleIcon filled with the AI gradient (the "Why we picked it" note). */
+function AiSparkle({ className }: { className?: string }) {
+  const id = `ai-sparkle-${useId().replace(/:/g, "")}`;
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#7c5cff" />
+          <stop offset="0.4" stopColor="#4f8bff" />
+          <stop offset="0.7" stopColor="#22c7d6" />
+          <stop offset="1" stopColor="#ff6ac1" />
+        </linearGradient>
+      </defs>
+      <path fill={`url(#${id})`} d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9z" />
+      <path fill={`url(#${id})`} d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z" opacity="0.75" />
+    </svg>
+  );
+}
+
 /** Types the reason out after a delay, like the AI explaining its pick. */
 function TypeReason({ text, delay }: { text: string; delay: number }) {
   const [shown, setShown] = useState(0);
@@ -339,7 +366,7 @@ function TypeReason({ text, delay }: { text: string; delay: number }) {
       <span aria-hidden>
         {text.slice(0, shown)}
         {typing ? (
-          <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-[caret_0.9s_steps(1)_infinite] bg-current" />
+          <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-[caret_0.9s_steps(1)_infinite] bg-[image:linear-gradient(#7c5cff,#ff6ac1)]" />
         ) : null}
       </span>
     </>

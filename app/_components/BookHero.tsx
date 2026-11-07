@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { openBook, preloadCover, preloadSheet } from "../_lib/book-sheet";
 import { MOCK_BOOKS, type MockBook } from "../_data/curation-mock";
 import { BOOKS, Book3D } from "./Book3D";
-import { HeroAsk } from "./HeroAsk";
+import { AskDock } from "./AskDock";
 import { HERO_GLOW } from "./hero-bg";
 
 const H = 440; // book height (px) at full size; scaled per breakpoint below
@@ -465,9 +465,8 @@ export function BookHero() {
       </div>
 
       {/* Ask KutuBooku AI: prompt box along the bottom; its reply opens above it, over the carousel. */}
-      <div className="relative z-20 flex-none px-page pb-6 sm:pb-10">
-        <HeroAsk onOpenChange={setAskOpen} />
-      </div>
+      {/* Floats on down the page too, hiding while you scroll (AskDock). */}
+      <AskDock onOpenChange={setAskOpen} />
 
       {/* No visible hero text (removed 2026-11-03). Hidden heading kept for screen readers and SEO. */}
       <h1 id="hero-title" className="sr-only">

@@ -93,7 +93,7 @@ export function HomeHowItWorks() {
     const inner = innerRef.current;
     if (!section || !inner) return;
     const lg = window.matchMedia("(min-width: 64rem)");
-    const PAD = 80; // breathing room above + below the pinned content
+    const PAD = 24; // breathing room above + below the pinned content (sizes below shrink with screen height)
 
     const sync = () => {
       if (!section.style.height || !stepPx.current) return;
@@ -163,7 +163,7 @@ export function HomeHowItWorks() {
       <div className={pinned ? "sticky top-0 flex h-dvh flex-col justify-center" : "pb-24 pt-20 sm:pb-32 sm:pt-28"}>
       <div ref={innerRef} className="mx-auto w-full max-w-[1920px] px-page">
         {/* Heading */}
-        <SectionTitle id="how-title" eyebrow="How it works" align="center" className="mx-auto max-w-[1100px]">
+        <SectionTitle id="how-title" eyebrow="How it works" align="center" className="mx-auto max-w-[1100px] lg:max-w-[1500px]">
           The right books for your child, in three steps.
         </SectionTitle>
 
@@ -176,9 +176,9 @@ export function HomeHowItWorks() {
             if (e.key === "ArrowRight") go(active + 1);
             if (e.key === "ArrowLeft") go(active - 1);
           }}
-          className="mt-12 sm:mt-14"
+          className="mt-12 sm:mt-14 lg:mt-[clamp(20px,4.5vh,56px)]"
         >
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,640px)_minmax(0,1fr)] lg:gap-[4vw]">
+          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,min(640px,60vh))_minmax(0,1fr)] lg:gap-[4vw]">
             {/* Left: the big number (with the step tag beside it on phones) */}
             <div aria-hidden className="flex items-end justify-between gap-4 lg:justify-center">
               {/* Odometer: the numbers sit in a column inside a one-number window, which rolls to the active one. */}
@@ -208,7 +208,7 @@ export function HomeHowItWorks() {
             <div
               aria-hidden
               // pb: room for the stack peeking out below the top card
-              className="relative grid touch-pan-y pb-9"
+              className="relative grid touch-pan-y pb-9 lg:pb-[clamp(24px,3.6vh,36px)]"
               onPointerDown={(e) => (swipeX.current = e.clientX)}
               onPointerUp={(e) => {
                 if (swipeX.current === null) return;
@@ -220,7 +220,7 @@ export function HomeHowItWorks() {
               {STEPS.map((s, i) => (
                 <div
                   key={s.title}
-                  className={`col-start-1 row-start-1 grid origin-bottom place-items-center rounded-[32px] p-6 shadow-[0_24px_48px_-30px_rgba(0,0,0,0.5)] transition-[transform,opacity] duration-700 motion-reduce:transition-none sm:p-10 lg:min-h-[420px] ${PANEL_TONES[i]} ${
+                  className={`col-start-1 row-start-1 grid origin-bottom place-items-center rounded-[32px] p-6 shadow-[0_24px_48px_-30px_rgba(0,0,0,0.5)] transition-[transform,opacity] duration-700 motion-reduce:transition-none sm:p-10 lg:min-h-[min(420px,44vh)] lg:p-[clamp(20px,3.6vh,40px)] ${PANEL_TONES[i]} ${
                     i === active ? "" : "pointer-events-none"
                   }`}
                   style={{ ...deckStyle(i, active), transitionTimingFunction: DECK_EASE }}
@@ -265,7 +265,7 @@ export function HomeHowItWorks() {
               Pinned (scroll-driven): a progress bar that fills as you scroll + a "scroll" hint;
               no arrows, since scrolling is the control.
               Otherwise (phones, short screens): arrows, the visible hint that this is a carousel. */}
-          <div className="mt-8 flex flex-col items-center gap-6 sm:mt-10">
+          <div className="mt-8 flex flex-col items-center gap-6 sm:mt-10 lg:mt-[clamp(12px,2.8vh,40px)] lg:gap-[clamp(10px,2.2vh,24px)]">
           {pinned ? (
             <div className="flex flex-col items-center gap-3">
               <div className="flex items-center gap-4">
