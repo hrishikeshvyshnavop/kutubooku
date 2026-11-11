@@ -1,7 +1,7 @@
 "use client";
 
-// Home intro (2026-11-05): the hero has no text, so a ~4.4s motion graphic explains KutuBooku first,
-// in three beats (~1.4s each, ~4.4s in all), then hands over to the hero.
+// Home intro (2026-11-05): the hero has no text, so a ~7s motion graphic explains KutuBooku first,
+// in three beats (~2.2s each, ~7s in all), then hands over to the hero.
 //   1. "Tell us about your child": a child card fills in (name, age, what they love).
 //   2. "We pick books just for them": three covers deal onto a fan.
 //   3. "Delivered via Amazon": the books drop into a KutuBooku box and the flaps close.
@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { BOOKS } from "./Book3D";
 import { MascotVideo } from "./MascotVideo";
 
-const HANDOFF_MS = 4400; // when the hand-off starts on its own (~1.4s a beat)
+const HANDOFF_MS = 7040; // when the hand-off starts on its own (~2.2s a beat, slowed so each line can be read)
 const EXIT_MS = 500; // fade-out length
 
 // Before paint: skip for reduced motion.
@@ -116,7 +116,7 @@ export function HomeIntro() {
             <p className="mt-4 text-[13px] font-semibold uppercase tracking-[0.1em] text-[#1d2838]/45">Loves</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {CHIPS.map((c, i) => (
-                <span key={c} className="hi-chip rounded-full bg-[#ffe75e] px-3 py-1 text-[14px] font-semibold" style={{ animationDelay: `${760 + i * 150}ms` }}>
+                <span key={c} className="hi-chip rounded-full bg-[#ffe75e] px-3 py-1 text-[14px] font-semibold" style={{ animationDelay: `${1216 + i * 240}ms` }}>
                   {c}
                 </span>
               ))}
@@ -136,7 +136,7 @@ export function HomeIntro() {
               <span
                 key={src}
                 className="hi-cover absolute aspect-[3/4] w-[96px] overflow-hidden rounded-r-[8px] rounded-l-[3px] bg-white shadow-[0_18px_30px_-14px_rgba(29,40,56,0.55)] sm:w-[108px]"
-                style={{ "--i": i - 1, animationDelay: `${1460 + i * 140}ms` } as React.CSSProperties}
+                style={{ "--i": i - 1, animationDelay: `${2336 + i * 224}ms` } as React.CSSProperties}
               >
                 <Image src={src} alt="" fill sizes="108px" className="object-cover" />
               </span>

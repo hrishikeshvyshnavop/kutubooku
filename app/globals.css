@@ -41,10 +41,10 @@
 
 /* ------------------------------------------------------------------------- */
 /* Home intro (HomeIntro.tsx, 2026-11-05): three beats, then the hero.         */
-/* ~4.4s, about 1.4s a beat: brisk, but each line and picture still lands.   */
-/* Times (ms from load): card 380-1680, chips 760/910/1060, covers deal       */
-/* 1460-1900 and drop ~2900-3610, box 2810, flaps close 3620-3890, hop 3940,  */
-/* lines 320 / 1510 / 2860, hand-off 4400.                                    */
+/* ~7s, about 2.2s a beat: slowed 2026-11-11 so parents can read each line.  */
+/* Times (ms from load): card 608-2688, chips 1216/1456/1696, covers deal     */
+/* 2336-3040 and drop ~4640-5780, box 4496, flaps close 5790-6226, hop 6304,  */
+/* lines 512 / 2416 / 4576, hand-off 7040.                                    */
 /* Performance: transform and opacity only (all compositor-run), layers       */
 /* promoted up front (will-change) so nothing rasterises mid-animation, no    */
 /* backdrop blur over moving content. The overlay is removed after it fades.  */
@@ -74,7 +74,7 @@
   from { opacity: 0; transform: translateY(14px); }
 }
 /* 1. child card fills in, then steps aside */
-.hi-card { animation: hi-card 1300ms cubic-bezier(0.22, 1, 0.36, 1) 380ms both; }
+.hi-card { animation: hi-card 2080ms cubic-bezier(0.22, 1, 0.36, 1) 608ms both; }
 @keyframes hi-card {
   0% { opacity: 0; transform: translateY(24px) scale(0.94); }
   22%, 82% { opacity: 1; transform: none; }
@@ -85,7 +85,7 @@
   from { opacity: 0; transform: scale(0.4); }
 }
 /* 2. covers deal onto a fan (--i: -1, 0, 1), hold, gather, drop into the box */
-.hi-cover { animation: hi-cover 1870ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hi-cover { animation: hi-cover 2990ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 @keyframes hi-cover {
   0% { opacity: 0; transform: translate(calc(var(--i) * 40px), -90px) rotate(calc(var(--i) * -25deg - 12deg)) scale(0.8); }
   24% { opacity: 1; transform: translate(calc(var(--i) * 86px), 0) rotate(calc(var(--i) * 9deg)); }
@@ -98,8 +98,8 @@
 .hi-box,
 .hi-box-front {
   animation:
-    hi-box 500ms cubic-bezier(0.34, 1.4, 0.64, 1) 2810ms both,
-    hi-hop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) 3940ms;
+    hi-box 500ms cubic-bezier(0.34, 1.4, 0.64, 1) 4496ms both,
+    hi-hop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) 6304ms;
 }
 @keyframes hi-box {
   from { opacity: 0; transform: translateY(46px); }
@@ -107,8 +107,8 @@
 @keyframes hi-hop {
   50% { transform: translateY(-10px); }
 }
-.hi-flap-l { animation: hi-flap-l 1080ms cubic-bezier(0.65, 0, 0.35, 1) 2810ms both; }
-.hi-flap-r { animation: hi-flap-r 1080ms cubic-bezier(0.65, 0, 0.35, 1) 2810ms both; }
+.hi-flap-l { animation: hi-flap-l 1730ms cubic-bezier(0.65, 0, 0.35, 1) 4496ms both; }
+.hi-flap-r { animation: hi-flap-r 1730ms cubic-bezier(0.65, 0, 0.35, 1) 4496ms both; }
 @keyframes hi-flap-l {
   0%, 75% { transform: rotate(-125deg); }
   100% { transform: rotate(0); }
@@ -123,9 +123,9 @@
 @keyframes hi-burst-l { to { transform: rotate(-150deg); } }
 @keyframes hi-burst-r { to { transform: rotate(150deg); } }
 /* the line for each beat */
-.hi-line-1 { animation: hi-line 1220ms cubic-bezier(0.22, 1, 0.36, 1) 320ms both; }
-.hi-line-2 { animation: hi-line 1550ms cubic-bezier(0.22, 1, 0.36, 1) 1510ms both; }
-.hi-line-3 { animation: hi-line-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 2860ms both; }
+.hi-line-1 { animation: hi-line 1950ms cubic-bezier(0.22, 1, 0.36, 1) 512ms both; }
+.hi-line-2 { animation: hi-line 2480ms cubic-bezier(0.22, 1, 0.36, 1) 2416ms both; }
+.hi-line-3 { animation: hi-line-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 4576ms both; }
 @keyframes hi-line {
   0% { opacity: 0; transform: translateY(105%); }
   22%, 85% { opacity: 1; transform: none; }
@@ -136,9 +136,9 @@
 }
 /* progress dots: solid ink at 20% opacity, lit to full (opacity: compositor-only) */
 .hi-dot { opacity: 0.2; }
-.hi-dot-1 { animation: hi-dot 1220ms ease 320ms both; }
-.hi-dot-2 { animation: hi-dot 1550ms ease 1510ms both; }
-.hi-dot-3 { animation: hi-dot-on 300ms ease 2860ms both; }
+.hi-dot-1 { animation: hi-dot 1950ms ease 512ms both; }
+.hi-dot-2 { animation: hi-dot 2480ms ease 2416ms both; }
+.hi-dot-3 { animation: hi-dot-on 300ms ease 4576ms both; }
 @keyframes hi-dot {
   0%, 100% { opacity: 0.2; }
   12%, 88% { opacity: 1; }
@@ -147,12 +147,15 @@
 /* The hero's books fly out of the box into the carousel (BookHero sets --ix/--iy/--d). */
 /* Only the books on screen get it (data-intro-on, set per book): marking all ~60 at once built
    60 compositing layers in one frame and froze the hand-off. */
+/* Transform only, no opacity: opacity on these preserve-3d items flattens the 3D books while it
+   runs, and they snapped back into 3D when the attribute was cleared (a visible jump after the
+   hand-off). They start tiny inside the box, which still hides them as the intro fades. */
 [data-intro-on] {
-  will-change: transform, opacity;
+  will-change: transform;
   animation: hero-intro 900ms cubic-bezier(0.33, 1, 0.68, 1) var(--d, 0ms) both;
 }
 @keyframes hero-intro {
-  from { opacity: 0; transform: translate(var(--ix, 0), var(--iy, 0)) scale(0.2) rotate(-12deg); }
+  from { transform: translate(var(--ix, 0), var(--iy, 0)) scale(0.2) rotate(-12deg); }
 }
 
 /* Intro preloader: waves rise, books tumble in, wordmark pops */

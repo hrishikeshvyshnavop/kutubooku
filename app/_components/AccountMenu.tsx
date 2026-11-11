@@ -77,11 +77,11 @@ export function AccountMenu({ session }: { session: Session }) {
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={active ? `Adding books for ${name}. Profile and account` : "Account"}
-        // Fixed width: switching child (names of any length) never shifts the header.
-        className={`flex h-12 items-center gap-2 rounded-full bg-[#fbbe63] p-1 text-xl font-semibold tracking-[-0.16px] text-black transition-colors hover:bg-[#f9a220] sm:w-[184px] sm:pr-4 xl:h-14 xl:py-2 xl:pl-2 ${FOCUS}`}
+        // Hugs the name (short names left a big empty pill); capped so long names truncate.
+        className={`flex h-12 max-w-[220px] items-center gap-2 rounded-full bg-[#fbbe63] p-1 text-xl font-semibold tracking-[-0.16px] text-black transition-colors hover:bg-[#f9a220] sm:pr-4 xl:h-14 xl:py-2 xl:pl-2 ${FOCUS}`}
       >
         {active ? <ReaderAvatar child={active} index={list.indexOf(active)} size={40} round /> : <Initial session={session} size={40} />}
-        <span className="min-w-0 flex-1 truncate text-left max-sm:hidden">{active ? name : "Account"}</span>
+        <span className="min-w-0 truncate text-left max-sm:hidden">{active ? name : "Account"}</span>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden className={`shrink-0 transition-transform max-sm:hidden ${open ? "rotate-180" : ""}`}>
           <path d="M6 9l6 6 6-6" />
         </svg>

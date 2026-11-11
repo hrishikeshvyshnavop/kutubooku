@@ -23,6 +23,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { askMock } from "../_data/ask-mock";
 import { ChatScrollArea } from "./ChatScrollArea";
 import { KutuAvatar } from "./KutuAvatar";
+import { ReaderAvatar } from "./ReaderAvatar";
 import { useCardBox } from "./useCardBox";
 import { BoxToggleButton } from "./BoxToggleButton";
 import { useSession } from "../_lib/session";
@@ -198,10 +199,15 @@ export function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open
         {/* A saved chat: pick up where you left off (first, so it's the one phones keep). */}
         {turns.length > 0 && (
           <li className="animate-[ask-ph-in_500ms_cubic-bezier(0.22,1,0.36,1)_both]">
-            <button type="button" tabIndex={open ? -1 : 0} onClick={() => setShown(true)} className={`${SUGGEST_PILL} gap-2 !bg-black !text-white hover:!bg-black/80`}>
+            <button type="button" tabIndex={open ? -1 : 0} onClick={() => setShown(true)} className={`${SUGGEST_PILL} gap-2 !bg-black !text-white hover:!bg-black/80 ${child ? "!pl-1 sm:!pl-1.5" : ""}`}>
+              {/* Whose chat it is: the child's picture (same as the header profile pill). */}
+              {child ? (
+                <ReaderAvatar child={child} index={kids?.list.indexOf(child) ?? 0} size={32} round />
+              ) : (
               <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" />
               </svg>
+              )}
               {childName ? `Continue ${childName}'s chat` : "Continue your chat"}
             </button>
           </li>

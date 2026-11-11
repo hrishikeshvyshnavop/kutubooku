@@ -8,7 +8,7 @@
 //            → track (marquee: translateX 0 → -50%, items duplicated for a seamless loop)
 //              → item (fixed slot) → book (slow float) → 6 faces
 // Interactions: slow auto-drift left; drag/swipe with momentum; trackpad/shift-wheel;
-// hover, hold and keyboard focus pause; arrow keys step books; click lifts the book and opens its page (/books/[id]).
+// hovering a book (not the band around it), hold and keyboard focus pause; arrow keys step books; click lifts the book and opens its page (/books/[id]).
 // Reduced motion: no drift/float/parallax, but dragging, scrolling and clicking still work.
 // Performance: the loop and the float animations pause while the hero is off screen,
 // covered by the next section, or the tab is hidden.
@@ -99,12 +99,28 @@ export function BookHero() {
       return r;
     };
 
+    // Hover pause: only while the mouse is over a book, not the gaps or the band around them.
+    // Hit-tested from the loop (not pointerover), because books drift under a still cursor.
+    const mouse = { x: 0, y: 0, inside: false };
+    let lastHit = 0;
+    const hitTest = (now: number) => {
+      if (!mouse.inside) {
+        st.hover = false;
+        return;
+      }
+      if (now - lastHit < 80) return;
+      lastHit = now;
+      const el = document.elementFromPoint(mouse.x, mouse.y);
+      st.hover = !!el?.closest("button[data-book]") && scene.contains(el);
+    };
+
     let raf = 0;
     let prev = performance.now();
     let lastX = NaN; // last transform written, to skip no-op style writes while paused
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - prev) / 1000);
       prev = now;
+      hitTest(now);
       if (!st.dragging) {
         if (st.target !== null) {
           // glide to a centred book: keep the target inside the loop and take the shortest way round
@@ -271,9 +287,19 @@ export function BookHero() {
       st.v = 0;
     };
     const onEnter = (e: PointerEvent) => {
-      if (e.pointerType === "mouse") st.hover = true;
+      if (e.pointerType !== "mouse") return;
+      mouse.inside = true;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      lastHit = 0; // test straight away
+    };
+    const onMouseTrack = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
     };
     const onLeave = () => {
+      mouse.inside = false;
       st.hover = false;
       scene.style.setProperty("--mx", "0");
       scene.style.setProperty("--my", "0");
@@ -287,8 +313,10 @@ export function BookHero() {
     scene.addEventListener("click", onClickCapture, true);
     scene.addEventListener("wheel", onWheel, { passive: false });
     scene.addEventListener("pointerenter", onEnter);
+    scene.addEventListener("pointermove", onMouseTrack);
     scene.addEventListener("pointerleave", onLeave);
     return () => {
+      scene.removeEventListener("pointermove", onMouseTrack);
       cancelAnimationFrame(raf);
       cancelAnimationFrame(parallaxRaf);
       seen.disconnect();

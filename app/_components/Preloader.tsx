@@ -8,8 +8,8 @@ import { useEffect, useState } from "react";
 // Plays once per browser session; any click/key skips; reduced motion skips.
 
 const SEEN_KEY = "kb:intro-seen";
-const TOTAL_MS = 3000; // total time visible, including the exit transition
-const EXIT_MS = 550;
+const TOTAL_MS = 5500; // total time visible, including the exit transition — long enough to read
+const EXIT_MS = 750;
 const EXIT_START_MS = TOTAL_MS - EXIT_MS;
 
 type Book = { cover: string; spine: string; emblem: string; w: number; h: number; style: React.CSSProperties; mobile?: string };
@@ -61,7 +61,7 @@ export function Preloader() {
     <div
       aria-hidden
       onClick={() => setPhase("exit")}
-      className={`fixed inset-0 z-[100] overflow-hidden bg-[#FDDAA6] transition-[translate,opacity] duration-[550ms] ease-[cubic-bezier(0.7,0,0.3,1)] ${
+      className={`fixed inset-0 z-[100] overflow-hidden bg-[#FDDAA6] transition-[translate,opacity] duration-[750ms] ease-[cubic-bezier(0.7,0,0.3,1)] ${
         phase === "exit" ? "-translate-y-full opacity-0" : ""
       }`}
     >
@@ -75,7 +75,7 @@ export function Preloader() {
           key={i}
           viewBox="0 0 1440 600"
           preserveAspectRatio="none"
-          className="absolute inset-x-0 h-[80%] w-full animate-[pre-wave_700ms_cubic-bezier(0.22,1,0.36,1)_backwards]"
+          className="absolute inset-x-0 h-[80%] w-full animate-[pre-wave_1000ms_cubic-bezier(0.22,1,0.36,1)_backwards]"
           style={{ top: w.top, animationDelay: `${w.delay}ms` }}
         >
           <path d={w.d} fill={w.fill} />
@@ -86,7 +86,7 @@ export function Preloader() {
       {BOOKS.map((b, i) => (
         <div
           key={i}
-          className={`absolute animate-[pre-book_900ms_cubic-bezier(0.34,1.4,0.64,1)_both] [perspective:900px] ${b.mobile ?? ""}`}
+          className={`absolute animate-[pre-book_1200ms_cubic-bezier(0.34,1.4,0.64,1)_both] [perspective:900px] ${b.mobile ?? ""}`}
           style={b.style}
         >
           <div
@@ -112,7 +112,7 @@ export function Preloader() {
 
       {/* wordmark tile */}
       <div className="absolute inset-0 grid place-items-center">
-        <span className="animate-[pre-mark_600ms_cubic-bezier(0.34,1.56,0.64,1)_250ms_backwards] rounded-[22px] bg-[#1d2838] px-7 py-4 text-3xl font-medium tracking-[-0.03em] text-white shadow-[0_20px_40px_-18px_rgba(29,40,56,0.7)] sm:text-4xl">
+        <span className="animate-[pre-mark_800ms_cubic-bezier(0.34,1.56,0.64,1)_300ms_backwards] rounded-[22px] bg-[#1d2838] px-7 py-4 text-3xl font-medium tracking-[-0.03em] text-white shadow-[0_20px_40px_-18px_rgba(29,40,56,0.7)] sm:text-4xl">
           kutubooku
         </span>
       </div>

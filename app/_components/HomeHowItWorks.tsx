@@ -21,6 +21,7 @@ import { rupees } from "../_lib/amazon";
 import { SplitCta } from "./HomeHeader";
 import { SectionTitle } from "./SectionTitle";
 import { KutuAvatar } from "./KutuAvatar";
+import { pageScroll } from "./SmoothScroll";
 
 const STEPS = [
   {
@@ -149,7 +150,7 @@ export function HomeHowItWorks() {
     const section = sectionRef.current;
     if (pinned && section) {
       const top = section.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: top + n * stepPx.current, behavior: "smooth" });
+      pageScroll.to(top + n * stepPx.current);
     } else {
       setActive(n);
     }
