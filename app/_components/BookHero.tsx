@@ -266,7 +266,8 @@ export function BookHero() {
       st.dragging = false;
       grabbed?.removeAttribute("data-grabbed");
       grabbed = null;
-      st.v = Math.max(-2400, Math.min(2400, st.v)); // throw, then eases back to the drift
+      // throw, then ease back to the drift; a cancelled pointer (the browser took the gesture) doesn't throw
+      st.v = e.type === "pointercancel" ? 0 : Math.max(-2400, Math.min(2400, st.v));
       if (scene.hasPointerCapture(e.pointerId)) scene.releasePointerCapture(e.pointerId);
     };
     // a real drag must not also click a book
@@ -277,6 +278,10 @@ export function BookHero() {
       }
       st.moved = 0;
     };
+    // No native drag-and-drop of the covers: pressing on a book hit its <img>, the browser started
+    // dragging a ghost of the image and cancelled our pointer, so the book dropped and the row jumped
+    // a few px mid-drag (the "book bobs up and down" glitch). Images are draggable={false} too.
+    const onDragStart = (e: DragEvent) => e.preventDefault();
     // trackpad / wheel: horizontal intent scrolls the row
     const onWheel = (e: WheelEvent) => {
       const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
@@ -311,6 +316,7 @@ export function BookHero() {
     scene.addEventListener("pointerup", onUp);
     scene.addEventListener("pointercancel", onUp);
     scene.addEventListener("click", onClickCapture, true);
+    scene.addEventListener("dragstart", onDragStart);
     scene.addEventListener("wheel", onWheel, { passive: false });
     scene.addEventListener("pointerenter", onEnter);
     scene.addEventListener("pointermove", onMouseTrack);
@@ -330,6 +336,7 @@ export function BookHero() {
       scene.removeEventListener("pointerup", onUp);
       scene.removeEventListener("pointercancel", onUp);
       scene.removeEventListener("click", onClickCapture, true);
+      scene.removeEventListener("dragstart", onDragStart);
       scene.removeEventListener("wheel", onWheel);
       scene.removeEventListener("pointerenter", onEnter);
       scene.removeEventListener("pointerleave", onLeave);
@@ -395,10 +402,11 @@ export function BookHero() {
   return (
     <section
       aria-labelledby="hero-title"
+      // svh, not dvh: the phone address bar showing/hiding on scroll must not resize the hero (page jump).
       // Exactly one screen tall below the header (80px tall, 88px from xl where the pill nav
       // shows), at every size: no max cap (it left a gap on 1080p+ screens) and phones too.
       // min-h keeps short windows usable.
-      className="relative flex h-[calc(100dvh-80px)] min-h-[560px] w-full flex-col overflow-hidden sm:min-h-[620px] xl:h-[calc(100dvh-88px)]"
+      className="relative flex h-[calc(100svh-80px)] min-h-[560px] w-full flex-col overflow-hidden sm:min-h-[620px] xl:h-[calc(100svh-88px)]"
     >
       <div aria-hidden className={HERO_GLOW} />
 

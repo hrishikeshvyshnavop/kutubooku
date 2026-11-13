@@ -22,6 +22,7 @@ import { SplitCta } from "./HomeHeader";
 import { SectionTitle } from "./SectionTitle";
 import { KutuAvatar } from "./KutuAvatar";
 import { pageScroll } from "./SmoothScroll";
+import { stableVh } from "../_lib/viewport";
 
 const STEPS = [
   {
@@ -110,9 +111,12 @@ export function HomeHowItWorks() {
       });
     };
     const layout = () => {
-      const fits = lg.matches && inner.offsetHeight + PAD <= window.innerHeight;
-      stepPx.current = window.innerHeight * 0.7;
-      section.style.height = fits ? `${window.innerHeight + (last + 0.5) * stepPx.current}px` : "";
+      // stableVh (100svh), not innerHeight: the phone address bar coming back on scroll up must not
+      // change the section height mid-scroll (the page jumped).
+      const vh = stableVh();
+      const fits = lg.matches && inner.offsetHeight + PAD <= vh;
+      stepPx.current = vh * 0.7;
+      section.style.height = fits ? `${vh + (last + 0.5) * stepPx.current}px` : "";
       setPinned(fits);
       sync();
     };
@@ -161,7 +165,7 @@ export function HomeHowItWorks() {
     // overflow-x-clip: cards flicked off the deck must not widen the page.
     <section ref={sectionRef} aria-labelledby="how-title" className="relative z-10 overflow-x-clip bg-[#FDDAA6] text-black">
       {/* pinned: sticks for the scroll distance and centres the content in the screen */}
-      <div className={pinned ? "sticky top-0 flex h-dvh flex-col justify-center" : "pb-24 pt-20 sm:pb-32 sm:pt-28"}>
+      <div className={pinned ? "sticky top-0 flex h-svh flex-col justify-center" : "pb-24 pt-20 sm:pb-32 sm:pt-28"}>
       <div ref={innerRef} className="mx-auto w-full max-w-[1920px] px-page">
         {/* Heading */}
         <SectionTitle id="how-title" eyebrow="How it works" align="center" className="mx-auto max-w-[1100px] lg:max-w-[1500px]">

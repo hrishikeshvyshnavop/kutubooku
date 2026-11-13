@@ -154,7 +154,7 @@ export function HomeBookList() {
   }, []);
 
   // Card width follows the viewport height so a whole card fits on screen.
-  const cardW = "w-[min(78vw,max(260px,min(40dvh,360px)))]";
+  const cardW = "w-[min(78vw,max(260px,min(40svh,360px)))]";
 
   return (
     <section
@@ -164,7 +164,7 @@ export function HomeBookList() {
       data-covers-hero
       className="relative z-10 rounded-t-[32px] bg-[#fffdf8] shadow-[0_-24px_60px_-28px_rgba(29,40,56,0.45)] sm:rounded-t-[48px] lg:rounded-t-[64px]"
     >
-      <div ref={pinRef} className="sticky top-0 flex h-dvh min-h-[560px] flex-col justify-center overflow-clip overscroll-x-none">
+      <div ref={pinRef} className="sticky top-0 flex h-svh min-h-[560px] flex-col justify-center overflow-clip overscroll-x-none">
         <ul
           ref={rowRef}
           aria-label="Featured books"

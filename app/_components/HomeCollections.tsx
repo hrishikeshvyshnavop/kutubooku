@@ -22,6 +22,7 @@ import { amazonCartUrl, rupees } from "../_lib/amazon";
 import { SectionTitle } from "./SectionTitle";
 import { useCardBox } from "./useCardBox";
 import { BoxToggleButton } from "./BoxToggleButton";
+import { stableVh } from "../_lib/viewport";
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current";
 
@@ -95,7 +96,7 @@ function useDeck(count: number) {
     const layout = () => {
       cards.forEach((el, i) => {
         // Fits: pin near the top (stepped, so the cards behind peek out). Too tall: pin by the bottom.
-        pin[i] = Math.min(i * PEEK, window.innerHeight - el.offsetHeight);
+        pin[i] = Math.min(i * PEEK, stableVh() - el.offsetHeight); // svh: steady while the phone address bar moves
         el.style.top = `${pin[i]}px`;
       });
       update();

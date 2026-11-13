@@ -93,7 +93,7 @@ export const Book3D = memo(function Book3D({
     >
       {/* front cover */}
       <div className={`${face} overflow-hidden rounded-r-[8px] rounded-l-[3px]`} style={{ width: w, height: h, transform: `translate(-50%,-50%) translateZ(${d / 2}px)` }}>
-        <Image src={b.src} alt="" fill sizes={sizes} className="object-cover" {...(eager ? { loading: "eager", fetchPriority: "high" } : {})} />
+        <Image src={b.src} alt="" fill sizes={sizes} draggable={false} className="object-cover [-webkit-user-drag:none]" {...(eager ? { loading: "eager", fetchPriority: "high" } : {})} />
         <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgb(255_255_255/0.28)_0%,transparent_38%,transparent_70%,rgb(0_0_0/0.14)_100%)]" />
         <span className="pointer-events-none absolute inset-y-0 left-0 w-[6%] bg-gradient-to-r from-black/25 to-transparent" />
       </div>

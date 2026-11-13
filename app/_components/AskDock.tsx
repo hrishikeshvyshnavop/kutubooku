@@ -39,8 +39,11 @@ export function AskDock({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
     if (!client || !slot || !dock) return;
     // The placeholder holds the bar's height (suggestions + pill), so the carousel keeps its size.
     const bar = dock.firstElementChild as HTMLElement;
+    // Only while in the hero: once docked the suggestions hide and the bar shrinks, and the slot must
+    // keep its height or the carousel grows and its books jump down. hasAttribute, not
+    // dataset.docked: data-docked="" is an empty string, which is falsy, so that check never held.
     const ro = new ResizeObserver(() => {
-      if (!dock.dataset.docked) slot.style.height = `${bar.offsetHeight}px`;
+      if (!dock.hasAttribute("data-docked")) slot.style.height = `${bar.offsetHeight}px`;
     });
     ro.observe(bar);
 
@@ -99,7 +102,10 @@ export function AskDock({ onOpenChange }: { onOpenChange?: (open: boolean) => vo
             ref={dockRef}
             data-toast-avoid
             // pointer-events-none on the full-width strip; the bar inside takes clicks.
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-page pb-6 transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[hidden]:pointer-events-none data-[hidden]:translate-y-[calc(100%+16px)] data-[hidden]:opacity-0 motion-reduce:transition-none sm:pb-10 [&[data-hidden]_*]:!pointer-events-none"
+            // In the hero (not docked): sit on the hero's bottom, which is sized by 100svh (BookHero),
+            // so it lines up with its slot whether the phone address bar is shown or hidden;
+            // docked: the screen's bottom.
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-30 [&:not([data-docked])]:bottom-[calc(100dvh-100svh)] px-page pb-6 transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[hidden]:pointer-events-none data-[hidden]:translate-y-[calc(100%+16px)] data-[hidden]:opacity-0 motion-reduce:transition-none sm:pb-10 [&[data-hidden]_*]:!pointer-events-none"
           >
             <div className="pointer-events-auto mx-auto w-full max-w-[760px]">{ask}</div>
           </div>,
