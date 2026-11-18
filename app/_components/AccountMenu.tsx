@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { signOut, type Session } from "../_lib/session";
 import { useBox } from "../_lib/box";
+import { useGiftOrders } from "../_lib/gift-orders";
 import { MAX_CHILDREN, activeOf, displayName, switchChild, useChildren } from "../_lib/children";
 import { ChildAvatar } from "./ChildAvatar";
 
@@ -27,6 +28,7 @@ function Initial({ session, size }: { session: Session; size: number }) {
 export function AccountMenu({ session }: { session: Session }) {
   const router = useRouter();
   const box = useBox();
+  const giftOrders = useGiftOrders();
   const kids = useChildren();
   const [open, setOpen] = useState(false);
   const [said, setSaid] = useState("");
@@ -58,6 +60,7 @@ export function AccountMenu({ session }: { session: Session }) {
   const active = activeOf(kids);
   const name = active ? displayName(active.name) : "";
   const n = box?.items.length ?? 0;
+  const gifts = giftOrders?.length ?? 0;
   const done = () => setOpen(false);
 
   return (
@@ -143,6 +146,10 @@ export function AccountMenu({ session }: { session: Session }) {
           <Link href="/box" onClick={done} className={`${ITEM} justify-between`}>
             My box
             {n > 0 && <span className="rounded-full bg-black px-2 py-0.5 text-sm text-white">{n}</span>}
+          </Link>
+          <Link href="/gifting/orders" onClick={done} className={`${ITEM} justify-between`}>
+            My gifts
+            {gifts > 0 && <span className="rounded-full bg-black px-2 py-0.5 text-sm text-white">{gifts}</span>}
           </Link>
           <div className="px-3 pb-1 pt-2">
             <p className="text-sm font-semibold text-black/50">Signed in with Google</p>

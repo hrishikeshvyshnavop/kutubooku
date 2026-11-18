@@ -42,6 +42,24 @@ const BOTTOM_PAGES = "#d9cfbd";
 const COVER_SHINE =
   "pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgb(255_255_255/0.28)_0%,transparent_38%,transparent_70%,rgb(0_0_0/0.14)_100%)]";
 const COVER_HINGE = "pointer-events-none absolute inset-y-0 left-0 w-[6%] bg-gradient-to-r from-black/25 to-transparent";
+function Ribbon({ color, bow = false }: { color: string; bow?: boolean }) {
+  return (
+    <span aria-hidden className="pointer-events-none absolute inset-0">
+      <span className="absolute inset-y-0 left-[58%] w-[11%] shadow-[0_0_6px_rgb(0_0_0/0.18)]" style={{ background: color }} />
+      <span className="absolute inset-x-0 top-[44%] h-[11%] shadow-[0_0_6px_rgb(0_0_0/0.18)]" style={{ background: color }} />
+      {bow && (
+        <svg viewBox="0 0 120 80" className="absolute left-[63.5%] top-[49.5%] w-[46%] -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_4px_6px_rgb(0_0_0/0.25)]">
+          <path d="M60 40 C40 8 6 10 10 34 C13 52 40 50 60 40Z" fill={color} />
+          <path d="M60 40 C80 8 114 10 110 34 C107 52 80 50 60 40Z" fill={color} />
+          <path d="M60 40 L42 76 L50 74 L56 78 Z M60 40 L78 76 L70 74 L64 78 Z" fill={color} />
+          <path d="M60 40 C46 22 22 20 22 33 M60 40 C74 22 98 20 98 33" stroke="rgb(0 0 0/0.18)" strokeWidth="3" fill="none" />
+          <circle cx="60" cy="40" r="9" fill={color} stroke="rgb(0 0 0/0.2)" strokeWidth="2" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
 const FOCUS_RING = "pointer-events-none rounded-r-[14px] rounded-l-[9px] shadow-[0_0_0_8px_#fffdf8,0_0_0_16px_#1d2838] transition-opacity duration-200";
 
 function Face({
@@ -75,6 +93,7 @@ type Book3DProps = {
   focused?: boolean;
   eager?: boolean;
   sizes?: string;
+  ribbon?: string;
 };
 
 export const Book3D = memo(function Book3D({
@@ -86,6 +105,7 @@ export const Book3D = memo(function Book3D({
   focused = false,
   eager = false,
   sizes = "(min-width: 1536px) 460px, 300px",
+  ribbon,
 }: Book3DProps) {
   const w = Math.round(h * b.ratio);
   const t = tilt ?? TILTS[i % TILTS.length];
@@ -120,6 +140,7 @@ export const Book3D = memo(function Book3D({
         />
         <span className={COVER_SHINE} />
         <span className={COVER_HINGE} />
+        {ribbon && <Ribbon color={ribbon} bow />}
       </Face>
 
       <Face
@@ -135,7 +156,9 @@ export const Book3D = memo(function Book3D({
         transform={`rotateY(180deg) translateZ(${d / 2}px)`}
         className="rounded-l-[8px] rounded-r-[3px]"
         style={{ background: b.spine, filter: "brightness(0.8)" }}
-      />
+      >
+        {ribbon && <Ribbon color={ribbon} />}
+      </Face>
 
       <Face
         width={d}

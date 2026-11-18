@@ -54,6 +54,11 @@ export function Footer({ className = "" }: { className?: string }) {
                   Update reading preferences
                 </Link>
               </li>
+              <li>
+                <Link href="/gifting/orders" className="link-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                  My gifts
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: abs("/books"), changeFrequency: "weekly", priority: 0.9 },
     { url: abs("/reading-preferences"), changeFrequency: "monthly", priority: 0.8 },
     { url: abs("/curators"), changeFrequency: "monthly", priority: 0.6 },
+    { url: abs("/gifting"), changeFrequency: "monthly", priority: 0.7 },
     ...MOCK_BOOKS.map((b) => ({
       url: abs(`/books/${b.id}`),
       changeFrequency: "monthly" as const,
