@@ -1,30 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { Toast } from "../_components/Toast";
+import { Toast } from "../_components/ui/Toast";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { INTEREST_LABELS, MOCK_BOOKS } from "../_data/curation-mock";
 import { dropFromBox, toggleInBox, useBox } from "../_lib/box";
 import { isSignedIn } from "../_lib/session";
 import { MAX_CHILDREN, activeOf, commitDraft, displayName, switchChild, useChildren, type ChildProfile } from "../_lib/children";
-import { ChildAvatar } from "../_components/ChildAvatar";
+import { ChildAvatar } from "../_components/child/ChildAvatar";
 import { flyToBox } from "../_lib/fly";
-import {
-  ArrowIcon,
-  BTN_PRIMARY,
-  Button,
-  OutlineButton,
-  childNameOf,
-  readAnswers,
-  rupeesFmt,
-  type Answers,
-} from "../_components/curation/ui";
-import { BookCard } from "./BookCard";
+import { ArrowIcon, BTN_PRIMARY, Button, OutlineButton } from "../_components/ui/Button";
+import { childNameOf, readAnswers, type Answers } from "../_lib/answers";
+import { rupeesFmt } from "../_lib/format";
+import { BookCard } from "../_components/book/BookCard";
 import { BookDetails } from "./BookDetails";
 import { CURATION_SIZE, profileOf, rankBooks, type Pick } from "./pick";
 import { ageOf } from "../_data/questions";
-import { AiAvatar } from "../_components/AiAvatar";
+import { AiAvatar } from "../_components/ai/AiAvatar";
 
 type Phase = "init" | "empty" | "loading" | "slow" | "results";
 

@@ -5,9 +5,9 @@ import { MOCK_BOOKS } from "../_data/curation-mock";
 import { toggleInBox, useBox } from "../_lib/box";
 import { activeOf, displayName, readFor, useChildren } from "../_lib/children";
 import { flyToBox } from "../_lib/fly";
-import type { BookCardBox } from "../curation/BookCard";
+import type { BookCardBox } from "./book/BookCard";
 import { useSession } from "../_lib/session";
-import { Toast, type ToastData } from "./Toast";
+import { Toast, type ToastData } from "./ui/Toast";
 
 export function useAddToBox() {
   const session = useSession();

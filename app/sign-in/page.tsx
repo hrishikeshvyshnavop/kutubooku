@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SignIn } from "./SignIn";
-import { Header } from "../_components/Header";
-import { PageTransition } from "../_components/PageTransition";
+import { Header } from "../_components/layout/Header";
+import { PageTransition } from "../_components/layout/PageTransition";
 
 export const metadata: Metadata = {
   title: "Sign in — KutuBooku",

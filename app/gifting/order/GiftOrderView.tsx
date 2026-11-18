@@ -3,9 +3,9 @@
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Button } from "../../_components/Button";
-import { CtaButton } from "../../_components/CtaButton";
-import { rupeesFmt } from "../../_components/curation/ui";
+import { Button } from "../../_components/ui/Button";
+import { CtaButton } from "../../_components/ui/CtaButton";
+import { rupeesFmt } from "../../_lib/format";
 import { ORDER_STAGES, PAYMENT_METHODS, arrivalLabel, shortDate, stageOf, wrapOf, type GiftOrder, type Wrap } from "../../_data/gift-checkout";
 import { useGiftOrders } from "../../_lib/gift-orders";
 

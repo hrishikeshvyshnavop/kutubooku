@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Collections } from "../_components/Collections";
-import { BookList } from "../_components/BookList";
-import { Faq } from "../_components/Faq";
-import { HowItWorks } from "../_components/HowItWorks";
-import { Intro } from "../_components/Intro";
-import { Footer } from "../_components/Footer";
-import { FooterMascot } from "../_components/FooterMascot";
+import { Collections } from "../_components/home/Collections";
+import { BookList } from "../_components/home/BookList";
+import { Faq } from "../_components/ui/Faq";
+import { HowItWorks } from "../_components/home/HowItWorks";
+import { Intro } from "../_components/home/Intro";
+import { Footer } from "../_components/layout/Footer";
+import { FooterMascot } from "../_components/layout/FooterMascot";
 import { REVEAL_ABOVE } from "../_data/footer";
 import { HERO_PEACH } from "../_data/theme";
-import { Header } from "../_components/Header";
-import { Hero } from "../_components/Hero";
-import { PageTransition } from "../_components/PageTransition";
-import { Reviews } from "../_components/Reviews";
+import { Header } from "../_components/layout/Header";
+import { Hero } from "../_components/home/Hero";
+import { PageTransition } from "../_components/layout/PageTransition";
+import { Reviews } from "../_components/home/Reviews";
 import { SITE_NAME, SITE_URL, abs, jsonLd } from "../_lib/site";
 
 // Home page. This is also exported from app/page.tsx as the root route.

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { getImageProps } from "next/image";
 import { notFound } from "next/navigation";
 import { abs, jsonLd } from "../../_lib/site";
-import { Footer } from "../../_components/Footer";
-import { Header } from "../../_components/Header";
-import { PageTransition } from "../../_components/PageTransition";
+import { Footer } from "../../_components/layout/Footer";
+import { Header } from "../../_components/layout/Header";
+import { PageTransition } from "../../_components/layout/PageTransition";
 import { MOCK_BOOKS } from "../../_data/curation-mock";
 import { BookPdp, bookTheme } from "./BookPdp";
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Header } from "../../_components/Header";
-import { PageTransition } from "../../_components/PageTransition";
+import { Header } from "../../_components/layout/Header";
+import { PageTransition } from "../../_components/layout/PageTransition";
 import { HERO_PEACH } from "../../_data/theme";
 import { GiftCheckout } from "./GiftCheckout";
 

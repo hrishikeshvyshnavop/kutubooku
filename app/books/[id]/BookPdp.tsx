@@ -12,13 +12,13 @@ import reviewsJson from "../../../public/covers/reviews.json";
 import { THEME_LABEL, TOPIC_LABEL, detailsFor, similarTo } from "../../_data/book-details";
 import type { MockBook } from "../../_data/curation-mock";
 import { AiSummary, type AiBlock } from "./AiSummary";
-import { BookCard } from "../../curation/BookCard";
+import { BookCard } from "../../_components/book/BookCard";
 import { BookCover3D } from "./BookCover3D";
-import { book3DFor } from "../../_components/Book3D";
-import { ReviewWall } from "../../_components/ReviewWall";
+import { book3DFor } from "../../_components/book/Book3D";
+import { ReviewWall } from "../../_components/book/ReviewWall";
 import { BuyTray } from "./BuyTray";
-import { SectionTitle } from "../../_components/SectionTitle";
-import { FooterMascot } from "../../_components/FooterMascot";
+import { SectionTitle } from "../../_components/ui/SectionTitle";
+import { FooterMascot } from "../../_components/layout/FooterMascot";
 import { REVEAL_ABOVE } from "../../_data/footer";
 
 const TOPIC_EMOJI: Record<string, string> = {

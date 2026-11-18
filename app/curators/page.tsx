@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Footer } from "../_components/Footer";
-import { FooterMascot } from "../_components/FooterMascot";
+import { Footer } from "../_components/layout/Footer";
+import { FooterMascot } from "../_components/layout/FooterMascot";
 import { REVEAL_ABOVE } from "../_data/footer";
-import { Header } from "../_components/Header";
-import { CtaButton } from "../_components/CtaButton";
-import { PageTransition } from "../_components/PageTransition";
-import { SECTION_TITLE, SectionTitle } from "../_components/SectionTitle";
+import { Header } from "../_components/layout/Header";
+import { CtaButton } from "../_components/ui/CtaButton";
+import { PageTransition } from "../_components/layout/PageTransition";
+import { SECTION_TITLE, SectionTitle } from "../_components/ui/SectionTitle";
 import { SITE_NAME, abs, jsonLd } from "../_lib/site";
 
 // Curators page (2026-11-05). Hero from Figma "Section / Experts / Meet Our Curators"

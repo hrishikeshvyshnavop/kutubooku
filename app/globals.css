@@ -253,7 +253,7 @@
 }
 
 /* Home hero: 3D books float slowly from their resting angle, and fly in on load. */
-/* Hero "Ask KutuBooku AI" (app/_components/AiChat.tsx) */
+/* Hero "Ask KutuBooku AI" (app/_components/ai/AiChat.tsx) */
 /* reply card grows up out of the ask box, and shrinks back into it */
 @keyframes ask-pop-in {
   from {
@@ -1028,7 +1028,7 @@ button:focus-visible .link-underline-on {
   }
 }
 
-/* Toast (app/_components/Toast.tsx): drops in under the header, lifts back out. */
+/* Toast (app/_components/ui/Toast.tsx): drops in under the header, lifts back out. */
 /* Toast sits bottom-centre (2026-11-05): rises in from below, sinks back out. */
 @keyframes toast-in {
   from {

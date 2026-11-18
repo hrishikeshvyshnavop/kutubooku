@@ -2,8 +2,8 @@
 // To restore, move this file back to app/editions/page.tsx.
 import { Anton, Fraunces, Nunito_Sans } from "next/font/google";
 import Link from "next/link";
-import { Shelf } from "../_components/Shelf";
-import { LegacyHeader } from "../_components/LegacyHeader";
+import { Shelf } from "./Shelf";
+import { LegacyHeader } from "./LegacyHeader";
 import { editions } from "../_data/editions";
 
 // Fonts only the Editions shelf and covers use (moved out of the root layout so other pages do not preload them).

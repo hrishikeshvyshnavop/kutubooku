@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Footer } from "./_components/Footer";
-import { FooterMascot } from "./_components/FooterMascot";
+import { Footer } from "./_components/layout/Footer";
+import { FooterMascot } from "./_components/layout/FooterMascot";
 import { REVEAL_ABOVE } from "./_data/footer";
-import { Header } from "./_components/Header";
-import { PageTransition } from "./_components/PageTransition";
+import { Header } from "./_components/layout/Header";
+import { PageTransition } from "./_components/layout/PageTransition";
 
 // Handwritten footer label.
 

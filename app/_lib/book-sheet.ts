@@ -78,12 +78,12 @@ export function preloadCover(src: string) {
   img.decode?.().catch(() => {});
 }
 
-type ContentModule = typeof import("../_components/BookSheetContent");
+type ContentModule = typeof import("../_components/book/BookSheetContent");
 let chunk: Promise<ContentModule> | null = null;
 let loaded: ContentModule["default"] | null = null;
 /** Load the sheet's code (it isn't in every page's bundle). Idle time, hover, focus and touch call this. */
 export function preloadSheet() {
-  chunk ??= import("../_components/BookSheetContent").then((m) => {
+  chunk ??= import("../_components/book/BookSheetContent").then((m) => {
     loaded = m.default;
     return m;
   });

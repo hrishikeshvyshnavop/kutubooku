@@ -7,7 +7,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowIcon, Button, GoogleButton, OutlineButton, childNameOf, readAnswers } from "../_components/curation/ui";
+import { ArrowIcon, Button, GoogleButton, OutlineButton } from "../_components/ui/Button";
+import { childNameOf, readAnswers } from "../_lib/answers";
+
 import { safeNext, signIn, signOut, useSession } from "../_lib/session";
 
 type Reason = "curation" | "box" | "general";

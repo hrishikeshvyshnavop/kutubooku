@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { CtaButton } from "../../_components/CtaButton";
-import { rupeesFmt } from "../../_components/curation/ui";
+import { CtaButton } from "../../_components/ui/CtaButton";
+import { rupeesFmt } from "../../_lib/format";
 import { ORDER_STAGES, arrivalLabel, shortDate, stageOf, wrapOf, type GiftOrder, type Wrap } from "../../_data/gift-checkout";
 import { useGiftOrders } from "../../_lib/gift-orders";
 import { Tracker } from "../order/GiftOrderView";

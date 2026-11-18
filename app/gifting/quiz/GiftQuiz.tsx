@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AddToBoxButton } from "../../_components/AddToBoxButton";
-import { ArrowIcon, Button, OutlineButton } from "../../_components/Button";
-import { rupeesFmt } from "../../_components/curation/ui";
+import { AddToBoxButton } from "../../_components/ui/AddToBoxButton";
+import { ArrowIcon, Button, OutlineButton } from "../../_components/ui/Button";
+import { rupeesFmt } from "../../_lib/format";
 import { MOCK_BOOKS } from "../../_data/curation-mock";
 import {
   EMPTY_GIFT_ANSWERS,

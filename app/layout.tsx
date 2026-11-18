@@ -3,9 +3,9 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./_lib/site";
 import { Cal_Sans, Caveat, Figtree } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
-import { BookSheetHost } from "./_components/BookSheetHost";
-import { SmoothScroll } from "./_components/SmoothScroll";
-import { SplashOrigin } from "./_components/SplashOrigin";
+import { BookSheetHost } from "./_components/book/BookSheetHost";
+import { SmoothScroll } from "./_components/layout/SmoothScroll";
+import { SplashOrigin } from "./_components/layout/SplashOrigin";
 
 // The site's two typefaces, loaded once here. Which text gets which (and every size) is set in
 // globals.css, "Typography": swap a face there or here, not per page.

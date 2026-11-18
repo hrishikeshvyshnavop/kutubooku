@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { playMorph } from "../_lib/book-sheet";
 import { BookPdp, bookTheme } from "../books/[id]/BookPdp";
 import type { MockBook } from "../_data/curation-mock";
-import { SHEET_CLOSE_BTN, SHEET_DIALOG } from "../_components/sheet";
+import { SHEET_CLOSE_BTN, SHEET_DIALOG } from "../_data/sheet";
 
 type Props = {
   /** Book to show; null closes the sheet. */

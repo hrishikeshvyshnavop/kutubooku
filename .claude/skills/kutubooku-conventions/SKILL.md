@@ -31,10 +31,20 @@ description: House rules for working on the KutuBooku Next.js app — code style
 
 | What | Where |
 |---|---|
-| Shared components | `app/_components/` |
-| Plain values imported by server *and* client code | `app/_data/` (`theme.ts`, `footer.ts`, `nav.ts`, `gifting.ts`, `gift-checkout.ts`) |
-| Browser state stores (`useSyncExternalStore` + localStorage) | `app/_lib/` (`box.ts`, `gift-basket.ts`, `gift-orders.ts`) |
-| The book card | `app/curation/BookCard.tsx` (use it for every book card; don't make one-off tiles) |
+| Buttons, toast, date picker, FAQ, nav links, section title | `app/_components/ui/` |
+| Header, footer, page transition, smooth scroll, preloader | `app/_components/layout/` |
+| Home page sections | `app/_components/home/` |
+| Book card, cover, 3D book, book sheet, review wall | `app/_components/book/` |
+| AI chat and avatar | `app/_components/ai/` |
+| Child avatars and questionnaire art | `app/_components/child/` |
+| Mascot video | `app/_components/media/` |
+| Components used by only one route | Next to that route (e.g. `app/gifting/quiz/GiftQuiz.tsx`) |
+| Plain values imported by server *and* client code | `app/_data/` (`theme.ts`, `footer.ts`, `nav.ts`, `card-style.ts`, `sheet.ts`, `gifting.ts`…) |
+| Browser state stores and helpers | `app/_lib/` (`box.ts`, `gift-basket.ts`, `gift-orders.ts`, `answers.ts`, `format.ts`…) |
+| Parked pages and their components | `app/_held/` |
+| The book card | `app/_components/book/BookCard.tsx` (use it for every book card; don't make one-off tiles) |
+
+Put a new component in the folder for its role; don't add files to the top of `app/_components/`.
 
 A server component **cannot** import a plain value from a `"use client"` file. Put shared
 constants (class strings, colours, data) in `app/_data/` instead.
@@ -47,7 +57,7 @@ constants (class strings, colours, data) in `app/_data/` instead.
 - Buttons: `CtaButton` (split amber CTA with arrow chip), `Button`, `OutlineButton`, `AddToBoxButton`.
 - Option rows and tiles: cream `#f4eee3`, navy fill that grows from the press point, tilted
   coral/amber accent when selected (see `app/reading-preferences/Questionnaire.tsx`,
-  `app/gifting/quiz/GiftQuiz.tsx`, `app/_components/DatePicker.tsx`).
+  `app/gifting/quiz/GiftQuiz.tsx`, `app/_components/ui/DatePicker.tsx`).
 - Cards: rounded 28–40px, colour from `cardColourFor`, slight alternating hover tilt.
 - Motion: `animate-q-in` for entrances; respect `motion-reduce`.
 - Type: the `type-*` utilities in `app/globals.css` (`type-display`, `type-title`, `type-body`…).

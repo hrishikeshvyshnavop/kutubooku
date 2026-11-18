@@ -15,14 +15,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { childNameOf, readAnswers } from "../../_components/curation/ui";
+import { childNameOf, readAnswers } from "../../_lib/answers";
+
 import { MAX_CHILDREN, activeOf, displayName, readFor, setFor, useChildren } from "../../_lib/children";
 import { useSession } from "../../_lib/session";
 import { rupees } from "../../_lib/amazon";
 import { addToBox, boxKey, buyThisBook, moveItem, useBox } from "../../_lib/box";
 import { flyToBox } from "../../_lib/fly";
-import { book3DFor } from "../../_components/Book3D";
-import { CheckIcon } from "../../_components/CheckIcon";
+import { book3DFor } from "../../_components/book/Book3D";
+import { CheckIcon } from "../../_components/ui/CheckIcon";
 import type { MockBook } from "../../_data/curation-mock";
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";

@@ -5,7 +5,7 @@
 // Reduced motion: no float, no tilt.
 
 import { useEffect, useRef } from "react";
-import { Book3D, book3DFor } from "../../_components/Book3D";
+import { Book3D, book3DFor } from "../../_components/book/Book3D";
 import type { MockBook } from "../../_data/curation-mock";
 
 const H = 600; // book height at full size (the design's cover slot is 624px wide)

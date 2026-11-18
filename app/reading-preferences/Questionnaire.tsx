@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useRef, useState, ViewTransition } from "react";
 import { MAX_AGE, MONTHS, NAME_TOKEN, ageFromDob, ageInWords, dobParts, dobProblem, formatDob, type Option, type Question } from "../_data/questions";
-import { answerArt } from "../_components/AnswerArt";
-import { ArrowIcon, BTN_PRIMARY, Button, OutlineButton } from "../_components/Button";
+import { answerArt } from "../_components/child/AnswerArt";
+import { ArrowIcon, BTN_PRIMARY, Button, OutlineButton } from "../_components/ui/Button";
 import {
   DRAFT_KEY,
   MAX_CHILDREN,
@@ -24,8 +24,8 @@ import {
   type ChildProfile,
 } from "../_lib/children";
 import { addToBox } from "../_lib/box";
-import { ChildAvatar } from "../_components/ChildAvatar";
-import { AvatarChooser } from "../_components/AvatarChooser";
+import { ChildAvatar } from "../_components/child/ChildAvatar";
+import { AvatarChooser } from "../_components/child/AvatarChooser";
 import { isSignedIn, safeNext } from "../_lib/session";
 
 type Answers = Record<string, string | string[]>;

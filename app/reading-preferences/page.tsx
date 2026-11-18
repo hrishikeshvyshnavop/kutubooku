@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { questions } from "../_data/questions";
 import { Questionnaire } from "./Questionnaire";
-import { Preloader } from "../_components/Preloader";
-import { Header } from "../_components/Header";
-import { PageTransition } from "../_components/PageTransition";
+import { Preloader } from "../_components/layout/Preloader";
+import { Header } from "../_components/layout/Header";
+import { PageTransition } from "../_components/layout/PageTransition";
 
 export const metadata: Metadata = {
   title: "Tell us about your child — KutuBooku",

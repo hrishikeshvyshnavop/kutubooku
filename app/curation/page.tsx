@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Curation } from "./Curation";
-import { Header } from "../_components/Header";
-import { PageTransition } from "../_components/PageTransition";
+import { Header } from "../_components/layout/Header";
+import { PageTransition } from "../_components/layout/PageTransition";
 
 // Handwritten labels in the book sheet (the book page's section titles).
 

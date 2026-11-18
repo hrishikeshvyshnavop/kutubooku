@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { MAX_CHILDREN, commitDraft, displayName, switchChild, useChildren, type ChildProfile } from "../_lib/children";
 import { useSession, lastSignOut } from "../_lib/session";
 import { useBox } from "../_lib/box";
-import { ChildAvatar } from "../_components/ChildAvatar";
+import { ChildAvatar } from "../_components/child/ChildAvatar";
 
 const FOCUS = "focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#1d2838]";
 

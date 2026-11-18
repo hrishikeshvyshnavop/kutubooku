@@ -17,12 +17,12 @@ import { useEffect, useRef, useState } from "react";
 import { MOCK_BOOKS, type BookFormat } from "../_data/curation-mock";
 import { rupees } from "../_lib/amazon";
 import { ageBand, ageOf } from "../_data/questions";
-import { BookCard } from "../curation/BookCard";
-import { TAG_SHORT } from "../curation/card-style";
+import { BookCard } from "../_components/book/BookCard";
+import { TAG_SHORT } from "../_data/card-style";
 import { activeOf, displayName, useChildren } from "../_lib/children";
 import { useAddToBox } from "../_components/useAddToBox";
 import { useSession } from "../_lib/session";
-import { CheckIcon } from "../_components/CheckIcon";
+import { CheckIcon } from "../_components/ui/CheckIcon";
 import { localTransition } from "../_lib/local-transition";
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]";

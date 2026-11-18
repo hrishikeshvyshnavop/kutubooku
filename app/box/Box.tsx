@@ -4,18 +4,19 @@
 // Query flags: ?demo=1 fills the box with sample books; ?shared=… shows a read-only shared box (C21).
 
 import Image from "next/image";
-import { Toast } from "../_components/Toast";
+import { Toast } from "../_components/ui/Toast";
 import Link from "next/link";
-import { IntentLink } from "../_components/IntentLink";
+import { IntentLink } from "../_components/ui/IntentLink";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { localTransition } from "../_lib/local-transition";
-import { book3DFor } from "../_components/Book3D";
-import { childNameOf, readAnswers } from "../_components/curation/ui";
+import { book3DFor } from "../_components/book/Book3D";
+import { childNameOf, readAnswers } from "../_lib/answers";
+
 import { isSignedIn, useSession } from "../_lib/session";
 import { activeOf, displayName, useChildren } from "../_lib/children";
-import { ChildAvatar } from "../_components/ChildAvatar";
-import { CheckIcon } from "../_components/CheckIcon";
+import { ChildAvatar } from "../_components/child/ChildAvatar";
+import { CheckIcon } from "../_components/ui/CheckIcon";
 import { amazonCartUrl, rupees } from "../_lib/amazon";
 import {
   BATCH_SIZE,

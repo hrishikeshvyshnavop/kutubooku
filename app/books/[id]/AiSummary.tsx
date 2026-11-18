@@ -9,7 +9,7 @@
 // - Reduced motion: everything is shown at once.
 
 import { useEffect, useRef, useState } from "react";
-import { AiAvatar } from "../../_components/AiAvatar";
+import { AiAvatar } from "../../_components/ai/AiAvatar";
 
 export type AiBlock = { kind: "lead" | "cue" | "activity"; title?: string; text: string };
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Header } from "../../_components/Header";
-import { PageTransition } from "../../_components/PageTransition";
+import { Header } from "../../_components/layout/Header";
+import { PageTransition } from "../../_components/layout/PageTransition";
 import { HERO_PEACH } from "../../_data/theme";
 import { GiftQuiz } from "./GiftQuiz";
 

@@ -1,0 +1,364 @@
+"use client";
+
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import { MOCK_BOOKS } from "../../_data/curation-mock";
+import { rupees } from "../../_lib/amazon";
+import { CtaButton } from "../ui/CtaButton";
+import { SectionTitle } from "../ui/SectionTitle";
+import { AiAvatar } from "../ai/AiAvatar";
+import { pageScroll } from "../layout/SmoothScroll";
+import { stableVh } from "../../_lib/viewport";
+
+const STEPS = [
+  {
+    title: "Tell us about your child",
+    text: "A few quick questions: their age, how they read, what they love and anything they just can't stand. No account needed to start.",
+  },
+  {
+    title: "Get books picked for them",
+    text: "KutuBooku AI picks books for your child and tells you why each one fits. Swap one, remove one, or ask for a fresh set any time.",
+  },
+  {
+    title: "Add them all to your Amazon cart",
+    text: "One tap puts every book you keep into your Amazon.in cart, and Amazon delivers. Fresh picks arrive every month.",
+  },
+];
+
+const PICKS = MOCK_BOOKS.slice(0, 3);
+const PICK_TONES = ["bg-[#ffe75e]", "bg-[#b6beff]", "bg-[#ffd0b2]"];
+const PANEL_TONES = ["bg-[#b6beff]", "bg-[#ffe75e]", "bg-[#3f309b]"];
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+const DECK_EASE = "cubic-bezier(0.22,1,0.36,1)";
+const DECK_TILT = [0, 4, -3];
+function deckStyle(i: number, active: number): React.CSSProperties {
+  const d = i - active;
+  if (d < 0)
+    return { transform: "translate(-125%, -8%) rotate(-16deg)", opacity: 0, zIndex: 20 };
+  return {
+    transform: `translateY(${d * 18}px) scale(${1 - d * 0.06}) rotate(${DECK_TILT[d] ?? 0}deg)`,
+    opacity: d > 2 ? 0 : 1,
+    zIndex: 10 - d,
+  };
+}
+
+const lineClass = (on: boolean) =>
+  `transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${on ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`;
+const lineDelay = (on: boolean, k: number): React.CSSProperties => ({ transitionDelay: on ? `${180 + k * 90}ms` : "0ms" });
+
+const ARROW_BTN =
+  "grid size-12 place-items-center rounded-full border-2 border-black text-black transition-[background-color,color,scale,opacity] duration-200 hover:bg-black hover:text-[#FDDAA6] active:scale-95 disabled:pointer-events-none disabled:opacity-25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
+
+export function HowItWorks() {
+  const [active, setActive] = useState(0);
+  const [pinned, setPinned] = useState(false);
+  const swipeX = useRef<number | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const stepPx = useRef(0);
+  const fillRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const last = STEPS.length - 1;
+  const clampStep = (i: number) => Math.max(0, Math.min(last, i));
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    const inner = innerRef.current;
+    if (!section || !inner) return;
+    const lg = window.matchMedia("(min-width: 64rem)");
+    const PAD = 24;
+
+    const sync = () => {
+      if (!section.style.height || !stepPx.current) return;
+      const s = Math.max(0, -section.getBoundingClientRect().top / stepPx.current);
+      setActive(clampStep(Math.round(s)));
+      fillRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const f = i === 0 ? s / 0.5 : s - (i - 0.5);
+        el.style.transform = `scaleX(${Math.max(0, Math.min(1, f))})`;
+      });
+    };
+    const layout = () => {
+      const vh = stableVh();
+      const fits = lg.matches && inner.offsetHeight + PAD <= vh;
+      stepPx.current = vh * 0.7;
+      section.style.height = fits ? `${vh + (last + 0.5) * stepPx.current}px` : "";
+      setPinned(fits);
+      sync();
+    };
+
+    let raf = 0;
+    let near = false;
+    const onScroll = () => {
+      if (!near) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(sync);
+    };
+    const io = new IntersectionObserver(([e]) => (near = e.isIntersecting), { rootMargin: "50% 0px" });
+    io.observe(section);
+    const ro = new ResizeObserver(layout);
+    ro.observe(inner);
+    lg.addEventListener("change", layout);
+    window.addEventListener("resize", layout);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      ro.disconnect();
+      lg.removeEventListener("change", layout);
+      window.removeEventListener("resize", layout);
+      window.removeEventListener("scroll", onScroll);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const go = (i: number) => {
+    const n = clampStep(i);
+    const section = sectionRef.current;
+    if (pinned && section) {
+      const top = section.getBoundingClientRect().top + window.scrollY;
+      pageScroll.to(top + n * stepPx.current);
+    } else {
+      setActive(n);
+    }
+  };
+
+  return (
+    <section ref={sectionRef} aria-labelledby="how-title" className="relative z-10 overflow-x-clip bg-[#FDDAA6] text-black">
+      <div className={pinned ? "sticky top-0 flex h-svh flex-col justify-center" : "pb-24 pt-20 sm:pb-32 sm:pt-28"}>
+      <div ref={innerRef} className="mx-auto w-full max-w-[1920px] px-page">
+        <SectionTitle id="how-title" eyebrow="How it works" align="center" className="mx-auto max-w-[1100px] lg:max-w-[1500px]">
+          The right books for your child, in three steps.
+        </SectionTitle>
+
+        <div
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="How it works, step by step"
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight") go(active + 1);
+            if (e.key === "ArrowLeft") go(active - 1);
+          }}
+          className="mt-12 sm:mt-14 lg:mt-[clamp(20px,4.5vh,56px)]"
+        >
+          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,min(640px,60vh))_minmax(0,1fr)] lg:gap-[4vw]">
+            <div aria-hidden className="flex items-end justify-between gap-4 lg:justify-center">
+              <span className="block h-[0.9em] overflow-hidden text-[clamp(96px,11vw,210px)] font-bold leading-[0.9] tracking-[-0.05em] tabular-nums">
+                <span
+                  className="block transition-transform duration-700 motion-reduce:transition-none"
+                  style={{ transform: `translateY(${-active * 0.9}em)`, transitionTimingFunction: "cubic-bezier(0.34,1.4,0.64,1)" }}
+                >
+                  {STEPS.map((s, i) => (
+                    <span key={s.title} className="block h-[0.9em]">
+                      {pad(i + 1)}
+                    </span>
+                  ))}
+                </span>
+              </span>
+              <span className="mb-2 grid text-sm font-bold uppercase tracking-[0.12em] text-black/60 lg:hidden">
+                {STEPS.map((s, i) => (
+                  <span key={s.title} className={`col-start-1 row-start-1 ${lineClass(i === active)}`} style={lineDelay(i === active, 0)}>
+                    Step {pad(i + 1)} of {pad(STEPS.length)}
+                  </span>
+                ))}
+              </span>
+            </div>
+
+            <div
+              aria-hidden
+              className="relative grid touch-pan-y pb-9 lg:pb-[clamp(24px,3.6vh,36px)]"
+              onPointerDown={(e) => (swipeX.current = e.clientX)}
+              onPointerUp={(e) => {
+                if (swipeX.current === null) return;
+                const dx = e.clientX - swipeX.current;
+                swipeX.current = null;
+                if (Math.abs(dx) > 40) go(active + (dx < 0 ? 1 : -1));
+              }}
+            >
+              {STEPS.map((s, i) => (
+                <div
+                  key={s.title}
+                  className={`col-start-1 row-start-1 grid origin-bottom place-items-center rounded-[32px] p-6 shadow-[0_24px_48px_-30px_rgba(0,0,0,0.5)] transition-[transform,opacity] duration-700 motion-reduce:transition-none sm:p-10 lg:min-h-[min(420px,44vh)] lg:p-[clamp(20px,3.6vh,40px)] ${PANEL_TONES[i]} ${
+                    i === active ? "" : "pointer-events-none"
+                  }`}
+                  style={{ ...deckStyle(i, active), transitionTimingFunction: DECK_EASE }}
+                >
+                  <div className="w-full max-w-[520px]">
+                    <StepVisual step={i} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid" aria-live="polite">
+              {STEPS.map((s, i) => (
+                <div
+                  key={s.title}
+                  aria-hidden={i !== active}
+                  inert={i !== active}
+                  className={`col-start-1 row-start-1 ${i === active ? "" : "pointer-events-none"}`}
+                >
+                  <p className={`hidden text-sm font-bold uppercase tracking-[0.12em] text-black/60 lg:block ${lineClass(i === active)}`} style={lineDelay(i === active, 0)}>
+                    Step {pad(i + 1)} of {pad(STEPS.length)}
+                  </p>
+                  <h3
+                    className={`text-[clamp(32px,2.8vw,52px)] font-bold leading-[0.95] tracking-[-0.02em] lg:mt-4 ${lineClass(i === active)}`}
+                    style={lineDelay(i === active, 1)}
+                  >
+                    {s.title}
+                  </h3>
+                  <p
+                    className={`mt-4 max-w-[40ch] text-lg font-medium leading-[1.3] tracking-[-0.01em] text-black/80 sm:text-xl ${lineClass(i === active)}`}
+                    style={lineDelay(i === active, 2)}
+                  >
+                    {s.text}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center gap-6 sm:mt-10 lg:mt-[clamp(12px,2.8vh,40px)] lg:gap-[clamp(10px,2.2vh,24px)]">
+          {pinned ? (
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center gap-4">
+                <ol aria-label="Steps" className="flex items-center gap-2">
+                  {STEPS.map((s, i) => (
+                    <li key={s.title}>
+                      <button
+                        type="button"
+                        onClick={() => go(i)}
+                        aria-label={`Step ${i + 1}: ${s.title}`}
+                        aria-current={i === active ? "step" : undefined}
+                        className="group grid h-8 place-items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                      >
+                        <span className="block h-2.5 w-20 overflow-hidden rounded-full bg-black/15 transition-colors group-hover:bg-black/25">
+                          <span
+                            ref={(el) => {
+                              fillRefs.current[i] = el;
+                            }}
+                            className="block h-full origin-left rounded-full bg-black"
+                            style={{ transform: "scaleX(0)" }}
+                          />
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+                <span aria-hidden className="text-base font-bold tabular-nums">
+                  {pad(active + 1)} / {pad(STEPS.length)}
+                </span>
+              </div>
+            </div>
+          ) : (
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => go(active - 1)} disabled={active === 0} aria-label="Previous step" className={ARROW_BTN}>
+              <Chevron dir="left" />
+            </button>
+            <span className="w-16 text-center text-base font-bold tabular-nums">
+              {pad(active + 1)} / {pad(STEPS.length)}
+            </span>
+            <button type="button" onClick={() => go(active + 1)} disabled={active === last} aria-label="Next step" className={ARROW_BTN}>
+              <Chevron dir="right" />
+            </button>
+          </div>
+          )}
+          <CtaButton href="/reading-preferences" label="Find books for my child" className="w-fit" />
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+  );
+}
+
+function Chevron({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d={dir === "left" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"} />
+    </svg>
+  );
+}
+
+function StepVisual({ step }: { step: number }) {
+  if (step === 0) {
+    return (
+      <div className="rounded-[28px] bg-[#fffdf8] p-6 shadow-[0_24px_48px_-28px_rgba(0,0,0,0.4)] sm:p-8">
+        <p className="text-sm font-semibold text-black/50">Question 2 of 7</p>
+        <p className="mt-2 text-[clamp(28px,2.4vw,40px)] font-bold leading-[0.95] tracking-[-0.02em]">How old is Meera?</p>
+        <ul className="mt-6 grid grid-cols-4 gap-2">
+          {[4, 5, 6, 7].map((n) => (
+            <li
+              key={n}
+              className={`grid aspect-square place-items-center rounded-2xl text-2xl font-bold tabular-nums sm:text-3xl ${
+                n === 6 ? "bg-[#f9a220]" : "bg-black/5"
+              }`}
+            >
+              {n}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 flex flex-wrap gap-1.5">
+          {["🦕 Dinosaurs", "🪐 Space", "😂 Funny"].map((t) => (
+            <span key={t} className="rounded-full bg-[#fbbe63] px-3.5 py-2 text-base font-semibold leading-none">
+              {t}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 1) {
+    const reasons = ["Loves animals", "Brave stories", "Bedtime read"];
+    return (
+      <div className="flex flex-col gap-5">
+        <p className="flex w-fit items-center gap-2 rounded-full bg-black py-1.5 pl-1.5 pr-4 text-base font-semibold leading-none text-white">
+          <AiAvatar size={28} />
+          Picked for Meera by KutuBooku AI
+        </p>
+        <ul className="grid grid-cols-3 gap-3">
+          {PICKS.map((b, i) => (
+            <li
+              key={b.id}
+              className={`rounded-[20px] p-2.5 ${PICK_TONES[i]} ${["-rotate-3", "rotate-2 translate-y-3", "-rotate-1"][i]}`}
+            >
+              <span className="relative block aspect-[3/4] overflow-hidden rounded-r-[8px] rounded-l-[3px]">
+                <Image src={b.cover} alt="" fill sizes="180px" className="object-cover" />
+              </span>
+              <span className="mt-2 block w-fit rounded-full bg-black px-2.5 py-1 text-xs font-semibold leading-none text-white">{reasons[i]}</span>
+              <span className="mt-1.5 line-clamp-1 block text-sm font-bold tracking-[-0.01em]">{b.title}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  const total = PICKS.reduce((n, b) => n + b.price, 0);
+  return (
+    <div className="flex flex-col items-center gap-8">
+      <div className="relative h-[clamp(160px,14vw,240px)] w-full">
+        {PICKS.map((b, i) => (
+          <span
+            key={b.id}
+            className="absolute top-0 aspect-[3/4] h-full overflow-hidden rounded-r-[10px] rounded-l-[3px] shadow-[0_20px_40px_-20px_rgba(0,0,0,0.6)]"
+            style={{ left: `calc(50% - 22% + ${(i - 1) * 26}%)`, rotate: `${(i - 1) * 7}deg`, zIndex: i === 1 ? 2 : 1 }}
+          >
+            <Image src={b.cover} alt="" fill sizes="200px" className="object-cover" />
+          </span>
+        ))}
+      </div>
+      <div className="flex h-14 w-full max-w-[420px] items-stretch gap-0.5">
+        <span className="flex flex-1 items-center justify-center whitespace-nowrap rounded-lg bg-[#f9a220] px-5 text-lg font-bold leading-none tracking-[-0.02em] sm:text-xl">
+          Add 3 to Amazon cart · {rupees(total)}
+        </span>
+        <span className="grid w-14 shrink-0 place-items-center rounded-lg bg-[#f9a220]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons/arrow-right.svg" alt="" width={18.6562} height={16} />
+        </span>
+      </div>
+    </div>
+  );
+}

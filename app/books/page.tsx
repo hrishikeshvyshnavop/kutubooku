@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Header } from "../_components/Header";
-import { PageTransition } from "../_components/PageTransition";
+import { Header } from "../_components/layout/Header";
+import { PageTransition } from "../_components/layout/PageTransition";
 import { Catalogue } from "./Catalogue";
 import { MOCK_BOOKS } from "../_data/curation-mock";
 import { abs, jsonLd } from "../_lib/site";

@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowIcon, Button } from "../../_components/Button";
-import { CtaButton } from "../../_components/CtaButton";
-import { DatePicker } from "../../_components/DatePicker";
-import { rupeesFmt } from "../../_components/curation/ui";
+import { ArrowIcon, Button } from "../../_components/ui/Button";
+import { CtaButton } from "../../_components/ui/CtaButton";
+import { DatePicker } from "../../_components/ui/DatePicker";
+import { rupeesFmt } from "../../_lib/format";
 import {
   BANKS,
   EMPTY_DRAFT,
