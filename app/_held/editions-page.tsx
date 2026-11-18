@@ -3,7 +3,7 @@
 import { Anton, Fraunces, Nunito_Sans } from "next/font/google";
 import Link from "next/link";
 import { Shelf } from "../_components/Shelf";
-import { SiteHeader } from "../_components/SiteHeader";
+import { LegacyHeader } from "../_components/LegacyHeader";
 import { editions } from "../_data/editions";
 
 // Fonts only the Editions shelf and covers use (moved out of the root layout so other pages do not preload them).
@@ -14,7 +14,7 @@ const anton = Anton({ variable: "--font-anton-src", weight: "400", subsets: ["la
 export default function EditionsPage() {
   return (
     <div className={`${fraunces.variable} ${nunito.variable} ${anton.variable} relative flex min-h-dvh flex-1 flex-col bg-[radial-gradient(ellipse_at_50%_35%,#ffffff_0%,#efefed_55%,#e2e2df_100%)] font-[family-name:var(--font-nunito)] text-ink`}>
-      <SiteHeader />
+      <LegacyHeader />
 
       <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4 sm:px-[18px]">
         <h1 className="text-sm leading-snug text-ink-soft sm:text-base">

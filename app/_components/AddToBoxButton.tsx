@@ -1,29 +1,15 @@
 "use client";
 
-// "Add to box" ↔ "In box" toggle, shared by every place a book can go into the box (book cards,
-// the AI chat's picks, the home collections), so it looks and moves the same everywhere:
-// - One continuous change, not a swap: the fill fades out as the outline fades in, "Add to …"
-//   slides up and out while "In …" rises in (reversed when taken out), the check draws itself,
-//   and the button gives a small pop when a book goes in.
-// - Hover / keyboard focus on an added book (buy-peek, globals.css) rolls "In …" to "Take it out"
-//   and turns the check into a minus; held back right after a click (data-fresh) until the
-//   pointer leaves, so you never see "Take it out" the moment you add a book.
-// - Labels share one grid cell, so the button never changes width.
-// Reduced motion: instant swaps.
-
 import { useState } from "react";
 
-/** One shared, gently eased timing for every moving part. */
 const ROLL = "transition-[translate,rotate,scale,opacity] duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
 
 const SIZES = {
-  // book cards
   md: { btn: "h-12", face: "rounded-[14px] group-hover/buy:rounded-[24px] type-button-sm", icon: "size-5", gap: "gap-2" },
-  // AI chat picks, collection tiles
   sm: { btn: "h-10", face: "rounded-[12px] group-hover/buy:rounded-[20px] text-[13px] font-semibold leading-none sm:text-sm", icon: "size-4", gap: "gap-1.5" },
 } as const;
 
-export function BoxToggleButton({
+export function AddToBoxButton({
   selected,
   onToggle,
   title,
@@ -36,15 +22,12 @@ export function BoxToggleButton({
 }: {
   selected: boolean;
   onToggle: () => void;
-  /** Book title, for the screen-reader label. */
   title: string;
   whoseBox: string;
   addLabel?: string;
   inLabel?: string;
-  /** Colours of the filled "Add" state; "In box" is an outline in the surrounding text colour. */
   fill: { bg: string; fg: string };
   size?: keyof typeof SIZES;
-  /** Width / margins of the button. */
   className?: string;
 }) {
   const [peekOff, setPeekOff] = useState(false);
@@ -57,7 +40,7 @@ export function BoxToggleButton({
       aria-label={selected ? `“${title}” is in ${whoseBox}. Take it out` : `Add “${title}” to ${whoseBox}`}
       data-fresh={peekOff || undefined}
       onClick={(e) => {
-        e.stopPropagation(); // cards open the book on click
+        e.stopPropagation();
         setPeekOff(true);
         onToggle();
       }}
@@ -71,7 +54,6 @@ export function BoxToggleButton({
         }`}
         style={selected ? { backgroundColor: "transparent", color: "inherit", borderColor: "currentColor" } : { backgroundColor: fill.bg, color: fill.fg, borderColor: "transparent" }}
       >
-        {/* Not in the box yet */}
         <span aria-hidden={selected} className={`${ROLL} flex items-center whitespace-nowrap ${z.gap} ${selected ? "-translate-y-[160%] opacity-0" : ""}`}>
           <svg viewBox="0 0 24 24" className={z.icon} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M3.5 8.5 12 4l8.5 4.5v9L12 22l-8.5-4.5z" />
@@ -79,11 +61,9 @@ export function BoxToggleButton({
           </svg>
           {addLabel}
         </span>
-        {/* In the box */}
         <span aria-hidden={!selected} className={`${ROLL} flex items-center whitespace-nowrap ${z.gap} ${selected ? "" : "translate-y-[160%] opacity-0"}`}>
           <span aria-hidden className={`relative shrink-0 ${z.icon}`}>
             <svg viewBox="0 0 24 24" className={`${ROLL} absolute inset-0 ${z.icon} buy-peek:-rotate-90 buy-peek:scale-50 buy-peek:opacity-0`} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-              {/* draws itself in once the label has landed */}
               <path
                 d="M5 12l5 5L20 7"
                 pathLength={1}

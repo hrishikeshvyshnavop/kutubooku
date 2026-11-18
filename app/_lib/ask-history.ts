@@ -1,6 +1,6 @@
 "use client";
 
-// Saved KutuBooku AI chats (home hero, app/_components/HeroAsk.tsx).
+// Saved KutuBooku AI chats (home hero, app/_components/AiChat.tsx).
 // - Signed in: one thread per child in the account (and one for "no child yet"), kept in
 //   localStorage, so a parent can come back to it after a reload, on another visit, or after
 //   switching child and back. Signing out keeps it for the next sign-in.

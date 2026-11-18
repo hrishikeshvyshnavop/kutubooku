@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { MAX_CHILDREN, commitDraft, displayName, switchChild, useChildren, type ChildProfile } from "../_lib/children";
 import { useSession, lastSignOut } from "../_lib/session";
 import { useBox } from "../_lib/box";
-import { ReaderAvatar } from "../_components/ReaderAvatar";
+import { ChildAvatar } from "../_components/ChildAvatar";
 
 const FOCUS = "focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#1d2838]";
 
@@ -76,7 +76,7 @@ export function ChildPicker() {
                 className={`group flex w-[132px] flex-col items-center gap-3 rounded-[32px] sm:w-[150px] ${FOCUS}`}
               >
                 <span className="relative transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-1 group-hover:scale-105 motion-reduce:transition-none">
-                  <ReaderAvatar child={c} index={i} size={132} />
+                  <ChildAvatar child={c} index={i} size={132} />
                   {manage ? (
                     <span aria-hidden className="absolute inset-0 grid place-items-center rounded-[28%] bg-[#1d2838]/55 text-white">
                       <svg viewBox="0 0 24 24" className="size-9" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

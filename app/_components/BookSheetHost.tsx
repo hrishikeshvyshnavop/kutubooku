@@ -1,9 +1,5 @@
 "use client";
 
-// Mounted once in the root layout. Shows the book sheet when the URL has ?book=<id>, and turns
-// clicks on plain /books/<id> links anywhere in the app into the sheet (see app/_lib/book-sheet.ts).
-// Hovering, focusing or touching a book link warms the sheet's code and the cover image.
-
 import { usePathname, useSearchParams } from "next/navigation";
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { MOCK_BOOKS } from "../_data/curation-mock";
@@ -12,8 +8,6 @@ import { BookSheet } from "./BookSheet";
 
 const LazyContent = lazy(() => import("./BookSheetContent"));
 
-/** The sheet's content: rendered directly once its code is loaded (idle or hover), so opening
- *  never waits; lazy (with a fallback) only if someone is faster than the preload. */
 function SheetContent({ id }: { id: string }) {
   const Loaded = loadedSheetContent();
   // eslint-disable-next-line react-hooks/static-components -- a module-level component, loaded once and never recreated
@@ -34,7 +28,6 @@ export function BookSheetHost() {
   const pathname = usePathname();
   const id = params.get(BOOK_PARAM);
 
-  // Tell the page when the sheet has closed, so it can put things back (e.g. the hero's lifted book).
   const wasOpen = useRef(false);
   useEffect(() => {
     if (id) wasOpen.current = true;
@@ -44,7 +37,6 @@ export function BookSheetHost() {
     }
   }, [id]);
 
-  // Load the sheet's code once the page is idle, so the first click opens it without waiting.
   useEffect(() => {
     const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
     ric(() => preloadSheet());
@@ -53,7 +45,6 @@ export function BookSheetHost() {
   useEffect(() => {
     const linkOf = (e: Event) => (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
 
-    // Capture phase on window: runs before Next's <Link> handler, so the link opens the sheet instead.
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = linkOf(e);
@@ -81,7 +72,6 @@ export function BookSheetHost() {
     };
   }, []);
 
-  // A full book page shows the book already; ?book on it opens "Read more like this" picks.
   if (!id) return null;
   return (
     <BookSheet key={pathname} bookId={id} onClose={closeBook}>

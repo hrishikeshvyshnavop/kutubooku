@@ -1,13 +1,5 @@
 "use client";
 
-// The one toast for the whole site (box adds, sign-out, curation changes, box notes).
-// - Where: top-right, just under the header's box and account buttons (what most toasts are
-//   about: the box, signing out), lined up with the header's right edge. Same on phones.
-// - Look: a light card, a round icon (tick for done, info otherwise), the message, an optional
-//   action ("View box"). Drops in from the header; lifts back out. Reduced motion: just appears/disappears.
-// - Rendered into <body>, so a transformed parent (sticky/pinned sections) can't trap it.
-// - Announced politely to screen readers (role="status").
-
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -15,7 +7,6 @@ import { CheckIcon } from "./CheckIcon";
 
 export type ToastData = {
   text: React.ReactNode;
-  /** Bump to replay the entrance for a new message with the same text. */
   n?: number;
   tone?: "done" | "info";
   action?: { label: string; href?: string; onClick?: () => void };
@@ -24,12 +15,9 @@ export type ToastData = {
 const OUT_MS = 220;
 
 export function Toast({ toast }: { toast: ToastData | null }) {
-  // Keep the last toast on screen while it fades out.
   const [shown, setShown] = useState<ToastData | null>(toast);
   const [leaving, setLeaving] = useState(false);
   const [mounted, setMounted] = useState(false);
-  // Bottom-centre, but above any bar pinned to the bottom of the screen (marked data-toast-avoid:
-  // curation's summary bar, the box's phone total bar), measured when a toast appears.
   const [lift, setLift] = useState(0);
   useEffect(() => setMounted(true), []); // eslint-disable-line react-hooks/set-state-in-effect -- portal target exists only after hydration
 

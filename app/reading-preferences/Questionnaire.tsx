@@ -24,7 +24,7 @@ import {
   type ChildProfile,
 } from "../_lib/children";
 import { addToBox } from "../_lib/box";
-import { ReaderAvatar } from "../_components/ReaderAvatar";
+import { ChildAvatar } from "../_components/ChildAvatar";
 import { AvatarChooser } from "../_components/AvatarChooser";
 import { isSignedIn, safeNext } from "../_lib/session";
 
@@ -658,7 +658,7 @@ function Summary({
             aria-label={`Change ${who}'s picture`}
             className="group relative mb-6 self-start rounded-[28%] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#1d2838]"
           >
-            <ReaderAvatar child={{ name: childName, answers: { ...answers, avatar } }} size={104} />
+            <ChildAvatar child={{ name: childName, answers: { ...answers, avatar } }} size={104} />
             <span aria-hidden className="absolute -bottom-1 -right-1 grid size-10 place-items-center rounded-full bg-[#1d2838] text-white shadow-md transition-transform group-hover:scale-110">
               <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" />

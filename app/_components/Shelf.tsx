@@ -6,10 +6,6 @@ import type { Edition } from "../_data/editions";
 import { amazonCartUrl, rupees } from "../_lib/amazon";
 import { EditionCover } from "./EditionCover";
 
-/* ------------------------------------------------------------------------ */
-/* Shelf                                                                     */
-/* ------------------------------------------------------------------------ */
-
 export function Shelf({ editions }: { editions: Edition[] }) {
   const [active, setActive] = useState<Edition | null>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -30,9 +26,6 @@ export function Shelf({ editions }: { editions: Edition[] }) {
         {editions.map((e) => (
           <li key={e.slug} className="relative flex flex-col items-center px-[7%] sm:px-[9%]">
             <ShelfBook edition={e} onOpen={open} />
-            {/* Shelf segment: plank + soft shadow below. Segments in a row
-                butt together into one continuous shelf (no negative spread,
-                so the shadow has no gaps at the joins). */}
             <span aria-hidden className="pointer-events-none absolute -bottom-2.5 inset-x-0 h-2.5 bg-gradient-to-b from-white to-[#f1f1ef]" />
             <span aria-hidden className="pointer-events-none absolute -bottom-7 inset-x-0 h-[18px] bg-gradient-to-b from-black/15 via-black/5 to-transparent" />
           </li>
@@ -43,10 +36,6 @@ export function Shelf({ editions }: { editions: Edition[] }) {
     </>
   );
 }
-
-/* ------------------------------------------------------------------------ */
-/* Book on the shelf — leans against the wall, tips up and follows cursor   */
-/* ------------------------------------------------------------------------ */
 
 const REST = { rx: 8, ry: 0, ty: 0, s: 1 };
 
@@ -72,7 +61,7 @@ function ShelfBook({
   const onMove = (ev: React.PointerEvent<HTMLButtonElement>) => {
     if (ev.pointerType !== "mouse") return;
     const r = ev.currentTarget.getBoundingClientRect();
-    const x = (ev.clientX - r.left) / r.width - 0.5; // -0.5..0.5
+    const x = (ev.clientX - r.left) / r.width - 0.5;
     const y = (ev.clientY - r.top) / r.height - 0.5;
     set({ rx: -y * 10, ry: x * 14, ty: -14, s: 1.05 }, true);
   };
@@ -97,7 +86,6 @@ function ShelfBook({
         <span className="block size-full overflow-hidden rounded-[2px]">
           <EditionCover art={edition.art} title={edition.title} />
         </span>
-        {/* glossy light sweep on hover */}
         <span className="pointer-events-none absolute inset-0 rounded-[2px] bg-gradient-to-tr from-transparent via-white/25 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       </span>
       <span className="pointer-events-none absolute inset-x-0 -bottom-10 text-center text-xs font-semibold text-ink-soft opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
@@ -107,11 +95,7 @@ function ShelfBook({
   );
 }
 
-/* ------------------------------------------------------------------------ */
-/* Pop-up: book appears, cover flips open, inside page has the buy button   */
-/* ------------------------------------------------------------------------ */
-
-const FLIP_DELAY = 350; // ms after the pop-up appears before the cover opens
+const FLIP_DELAY = 350;
 const CLOSE_MS = 650;
 
 function EditionDialog({ edition, onClose }: { edition: Edition | null; onClose: () => void }) {
@@ -120,7 +104,6 @@ function EditionDialog({ edition, onClose }: { edition: Edition | null; onClose:
   const [flipped, setFlipped] = useState(false);
   const [visible, setVisible] = useState(false);
 
-  // Open when an edition is chosen.
   useEffect(() => {
     if (!edition) return;
     const d = dialogRef.current;
@@ -182,14 +165,11 @@ function EditionDialog({ edition, onClose }: { edition: Edition | null; onClose:
             </svg>
           </button>
 
-          {/* The book. On wider screens it slides right as it opens so the
-              two-page spread ends up centred. */}
           <div
             className={`relative aspect-[3/4] w-[min(86vw,380px,calc((100dvh-6rem)*0.75))] [perspective:1800px] transition-[transform,opacity] duration-700 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none ${
               visible ? "opacity-100" : "opacity-0"
             } ${flipped ? "sm:translate-x-1/2" : ""} ${visible ? "scale-100" : "scale-90"}`}
           >
-            {/* Inside right page */}
             <section className="absolute inset-0 flex flex-col overflow-hidden rounded-r-md bg-card shadow-2xl">
               <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-black/10 to-transparent" />
               <div className="flex-1 overflow-y-auto p-5 pl-7 sm:p-6 sm:pl-8">
@@ -244,7 +224,6 @@ function EditionDialog({ edition, onClose }: { edition: Edition | null; onClose:
               </div>
             </section>
 
-            {/* Front cover: flips open around its left edge */}
             <div
               className={`absolute inset-0 origin-left [transform-style:preserve-3d] transition-[transform,opacity] duration-[900ms] ease-[cubic-bezier(.6,.05,.25,1)] motion-reduce:transition-none ${
                 flipped ? "[transform:rotateY(-178deg)] max-sm:opacity-0 max-sm:delay-500" : "[transform:rotateY(0deg)]"
@@ -253,7 +232,6 @@ function EditionDialog({ edition, onClose }: { edition: Edition | null; onClose:
               <div className="absolute inset-0 overflow-hidden rounded-r-md shadow-2xl [backface-visibility:hidden]">
                 <EditionCover art={e.art} title={e.title} />
               </div>
-              {/* Inside of the cover (left page once open) */}
               <div className="absolute inset-0 flex flex-col justify-between overflow-hidden rounded-l-md bg-paper-deep p-6 [backface-visibility:hidden] [transform:rotateY(180deg)]">
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-black/10 to-transparent" />
                 <div className="flex items-center gap-2">

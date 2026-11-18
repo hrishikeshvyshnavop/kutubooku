@@ -8,7 +8,7 @@ import { INTEREST_LABELS, MOCK_BOOKS } from "../_data/curation-mock";
 import { dropFromBox, toggleInBox, useBox } from "../_lib/box";
 import { isSignedIn } from "../_lib/session";
 import { MAX_CHILDREN, activeOf, commitDraft, displayName, switchChild, useChildren, type ChildProfile } from "../_lib/children";
-import { ReaderAvatar } from "../_components/ReaderAvatar";
+import { ChildAvatar } from "../_components/ChildAvatar";
 import { flyToBox } from "../_lib/fly";
 import {
   ArrowIcon,
@@ -24,7 +24,7 @@ import { BookCard } from "./BookCard";
 import { BookDetails } from "./BookDetails";
 import { CURATION_SIZE, profileOf, rankBooks, type Pick } from "./pick";
 import { ageOf } from "../_data/questions";
-import { KutuAvatar } from "../_components/KutuAvatar";
+import { AiAvatar } from "../_components/AiAvatar";
 
 type Phase = "init" | "empty" | "loading" | "slow" | "results";
 
@@ -358,24 +358,24 @@ export function Curation() {
             <BookCard
               book={p}
               index={i}
-              swappingOut={swappingOut === p.id}
-              fresh={freshId === p.id}
-              deal={deal}
-              boxChild={child}
-              selected={selected.has(p.id)}
-              rating={ratings[p.id]}
-              menuOpen={menuFor === p.id}
-              onToggle={() => toggle(p.id)}
               onOpen={() => setOpenId(p.id)}
-              onRate={(r) => rate(p.id, r)}
-              onMenu={() => setMenuFor((m) => (m === p.id ? null : p.id))}
-              onSwap={() => swapBook(p.id)}
-              onRemove={() => dropBook(p.id, `Removed “${p.title}”.`)}
-              onOwn={() => dropBook(p.id, `Marked “${p.title}” as already owned — we won't suggest it again.`)}
-              onRead={() => dropBook(p.id, `Marked “${p.title}” as already read — we won't suggest it again.`)}
-              onReport={() => {
-                setMenuFor(null);
-                say(`Thanks — we'll review “${p.title}”.`);
+              box={{ child, selected: selected.has(p.id), onToggle: () => toggle(p.id) }}
+              curation={{
+                motion: { deal, fresh: freshId === p.id, swappingOut: swappingOut === p.id },
+                rating: ratings[p.id],
+                onRate: (r) => rate(p.id, r),
+                menu: {
+                  open: menuFor === p.id,
+                  onToggle: () => setMenuFor((m) => (m === p.id ? null : p.id)),
+                  onSwap: () => swapBook(p.id),
+                  onRemove: () => dropBook(p.id, `Removed “${p.title}”.`),
+                  onOwn: () => dropBook(p.id, `Marked “${p.title}” as already owned — we won't suggest it again.`),
+                  onRead: () => dropBook(p.id, `Marked “${p.title}” as already read — we won't suggest it again.`),
+                  onReport: () => {
+                    setMenuFor(null);
+                    say(`Thanks — we'll review “${p.title}”.`);
+                  },
+                },
               }}
             />
           </li>
@@ -454,7 +454,7 @@ function ReaderSwitch({ kids, activeId }: { kids: ChildProfile[]; activeId?: str
             onClick={() => switchChild(c.id)}
             className={`${chip} ${on ? "bg-[#1d2838] text-white" : "bg-[#f4eee3] hover:bg-[#ece3d3]"}`}
           >
-            <ReaderAvatar child={c} index={i} size={32} round />
+            <ChildAvatar child={c} index={i} size={32} round />
             {displayName(c.name)}
           </button>
         );
@@ -528,7 +528,7 @@ function AiLine({ who, thinking, count }: { who: string; thinking: boolean; coun
   }, [thinking]);
   return (
     <p aria-live="polite" className="mt-3 flex items-start gap-2 type-body-lg text-[#1d2838]/70">
-      <KutuAvatar size={32} thinking={thinking} className="-mt-0.5" />
+      <AiAvatar size={32} thinking={thinking} className="-mt-0.5" />
       {thinking ? (
         <span key={step} className="animate-q-in">{THINKING_STEPS[step](who)}</span>
       ) : (

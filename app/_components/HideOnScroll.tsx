@@ -2,13 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-/**
- * Sticky bar that slides up out of view while scrolling down and comes back on
- * any scroll up. Always shown near the top of the page, and while something
- * inside has keyboard focus (focus-within).
- * Shown / hidden by toggling a data attribute on the element (no React re-render while
- * scrolling); the slide is a CSS transform transition.
- */
 export function HideOnScroll({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -26,13 +19,12 @@ export function HideOnScroll({ children, className = "" }: { children: React.Rea
       raf = requestAnimationFrame(() => {
         const y = window.scrollY;
         const dy = y - last;
-        if (y < 80) setHidden(false); // near the top: always visible
-        else if (dy > 6) setHidden(true); // scrolling down
-        else if (dy < -6) setHidden(false); // scrolling up
+        if (y < 80) setHidden(false);
+        else if (dy > 6) setHidden(true);
+        else if (dy < -6) setHidden(false);
         if (Math.abs(dy) > 6 || y < 80) last = y;
       });
     };
-    // Something wants the header in view (a book flying into the header's box: app/_lib/fly.ts).
     const reveal = () => setHidden(false);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("kb:reveal-header", reveal);

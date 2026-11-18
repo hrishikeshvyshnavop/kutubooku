@@ -1,18 +1,15 @@
 "use client";
 
-// "Add to {child}'s box" on book cards outside /curation (home row, /books).
-// Who the books go to (B1/B6): this visit's "Who's this for?" answer, else the child in the
-// header, else "your box". Returns what a BookCard needs, plus a toast to render once.
-
 import { useEffect, useRef, useState } from "react";
 import { MOCK_BOOKS } from "../_data/curation-mock";
 import { toggleInBox, useBox } from "../_lib/box";
 import { activeOf, displayName, readFor, useChildren } from "../_lib/children";
 import { flyToBox } from "../_lib/fly";
+import type { BookCardBox } from "../curation/BookCard";
 import { useSession } from "../_lib/session";
 import { Toast, type ToastData } from "./Toast";
 
-export function useCardBox() {
+export function useAddToBox() {
   const session = useSession();
   const kids = useChildren();
   const box = useBox();
@@ -22,7 +19,6 @@ export function useCardBox() {
     if (timer.current) clearTimeout(timer.current);
   }, []);
 
-  // Only after hydration (session known), so server and first client render agree.
   const ready = session !== undefined && kids !== null;
   const active = session ? activeOf(kids) : null;
   const saved = ready ? readFor() : undefined;
@@ -47,8 +43,7 @@ export function useCardBox() {
 
   const toastEl = <Toast toast={toast} />;
 
-  /** Props for a BookCard: the main button becomes "Add to {child}'s box". */
-  const cardProps = (id: string) => ({ boxChild: child, selected: inBox.has(id), onToggle: () => toggle(id) });
+  const cardProps = (id: string): Required<BookCardBox> => ({ child, selected: inBox.has(id), onToggle: () => toggle(id) });
 
   return { child, whoseBox, cardProps, toastEl };
 }

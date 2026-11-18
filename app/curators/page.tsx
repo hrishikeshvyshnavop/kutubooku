@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { Footer } from "../_components/Footer";
 import { FooterMascot } from "../_components/FooterMascot";
-import { GlobalFooter, REVEAL_ABOVE } from "../_components/GlobalFooter";
-import { GlobalHeader } from "../_components/GlobalHeader";
-import { SplitCta } from "../_components/HomeHeader";
+import { REVEAL_ABOVE } from "../_data/footer";
+import { Header } from "../_components/Header";
+import { CtaButton } from "../_components/CtaButton";
 import { PageTransition } from "../_components/PageTransition";
 import { SECTION_TITLE, SectionTitle } from "../_components/SectionTitle";
 import { SITE_NAME, abs, jsonLd } from "../_lib/site";
@@ -11,7 +12,7 @@ import { SITE_NAME, abs, jsonLd } from "../_lib/site";
 // Curators page (2026-11-05). Hero from Figma "Section / Experts / Meet Our Curators"
 // (Kutubooku Website, node 1257:3815), restyled in the site's own language: Cal Sans + Figtree
 // (Figma's Cal Sans / Lora / Kalam → our type scale + the Caveat eyebrow), navy ink, amber
-// highlight, the shared SplitCta. Photo keeps Figma's crop and its two rounded corners.
+// highlight, the shared CtaButton. Photo keeps Figma's crop and its two rounded corners.
 // TODO(content): the three "How a book gets picked" principles are draft copy; confirm with Ria.
 
 export const metadata: Metadata = {
@@ -54,7 +55,7 @@ export default function CuratorsPage() {
     <PageTransition>
       <div className="flex min-h-dvh flex-1 flex-col bg-[#f4efe6] font-[family-name:var(--font-q-sans)] text-[#1d2838]">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(STRUCTURED) }} />
-        <GlobalHeader background="bg-[#f4efe6]" />
+        <Header background="bg-[#f4efe6]" />
         <main className={`flex-1 bg-[#f4efe6] ${REVEAL_ABOVE}`}>
           {/* Hero: copy left, curator photo right (stacks on phones, photo first) */}
           <section aria-labelledby="curators-title" className="mx-auto grid w-full max-w-[1920px] items-center gap-10 px-page pb-16 pt-8 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.75fr)] lg:gap-16 lg:pb-24 xl:gap-24">
@@ -81,7 +82,7 @@ export default function CuratorsPage() {
                 </figcaption>
               </figure>
 
-              <SplitCta href="/reading-preferences" label="Find books for my child" className="mt-10 w-fit" />
+              <CtaButton href="/reading-preferences" label="Find books for my child" className="mt-10 w-fit" />
             </div>
 
             {/* Photo: tl/br rounded like Figma, dark fade at the bottom for the name */}
@@ -124,7 +125,7 @@ export default function CuratorsPage() {
 
           <FooterMascot className="relative z-10 bg-[#fffdf8]" />
         </main>
-        <GlobalFooter />
+        <Footer />
       </div>
     </PageTransition>
   );

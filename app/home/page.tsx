@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
-import { BookHero } from "../_components/BookHero";
-import { HomeCollections } from "../_components/HomeCollections";
-import { HomeBookList } from "../_components/HomeBookList";
+import { Collections } from "../_components/Collections";
+import { BookList } from "../_components/BookList";
+import { Faq } from "../_components/Faq";
+import { HowItWorks } from "../_components/HowItWorks";
+import { Intro } from "../_components/Intro";
+import { Footer } from "../_components/Footer";
 import { FooterMascot } from "../_components/FooterMascot";
-import { HomeFaq } from "../_components/HomeFaq";
-import { HomeHowItWorks } from "../_components/HomeHowItWorks";
-import { HomeIntro } from "../_components/HomeIntro";
-import { GlobalFooter, REVEAL_ABOVE } from "../_components/GlobalFooter";
-import { GlobalHeader } from "../_components/GlobalHeader";
+import { REVEAL_ABOVE } from "../_data/footer";
+import { HERO_PEACH } from "../_data/theme";
+import { Header } from "../_components/Header";
+import { Hero } from "../_components/Hero";
 import { PageTransition } from "../_components/PageTransition";
+import { Reviews } from "../_components/Reviews";
 import { SITE_NAME, SITE_URL, abs, jsonLd } from "../_lib/site";
 
 // Home page. This is also exported from app/page.tsx as the root route.
@@ -54,30 +57,27 @@ const STRUCTURED = [
 export default function HomePage() {
   return (
     <PageTransition>
-      <div className={`flex min-h-dvh flex-1 flex-col overflow-x-clip bg-[#FDDAA6] font-[family-name:var(--font-q-sans)] text-[#1d2838]`}>
+      <div className={`flex min-h-dvh flex-1 flex-col overflow-x-clip ${HERO_PEACH} font-[family-name:var(--font-q-sans)] text-[#1d2838]`}>
         {/* Header hides while scrolling down, comes back on scroll up. */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(STRUCTURED) }} />
         {/* First visit: a short motion story of what KutuBooku does, handing over to the hero. */}
-        <HomeIntro />
-        <GlobalHeader />
+        <Intro />
+        <Header />
         {/* REVEAL_ABOVE: rounded bottom corners; slides up off the sticky footer.
             Opaque bg: the footer waits underneath, so any see-through part of main would show it early. */}
-        <main className={`flex-1 bg-[#FDDAA6] ${REVEAL_ABOVE}`}>
-          {/* Hero sticks just under the header (80px, 88px from xl, where the pill nav shows); the sections after it
-              scroll up over it. Later sections need `relative z-10` too. */}
-          <div className="sticky top-20 z-0 xl:top-[88px]">
-            <BookHero />
-          </div>
-          <HomeBookList />
+        <main className={`flex-1 ${HERO_PEACH} ${REVEAL_ABOVE}`}>
+          <Hero />
+          <BookList />
           {/* Seasonal / monthly collections from the CMS (app/_data/collections.ts for now) */}
-          <HomeCollections />
-          <HomeHowItWorks />
-          <HomeFaq />
+          <Collections />
+          <HowItWorks />
+          <Reviews />
+          <Faq />
           {/* last in main: peeks over the footer. relative z-10 + cream: covers the sticky hero, matches the FAQ. */}
           <FooterMascot className="relative z-10 bg-[#fffdf8]" />
           {/* Next sections come here (see the home page plan). */}
         </main>
-        <GlobalFooter />
+        <Footer />
       </div>
     </PageTransition>
   );

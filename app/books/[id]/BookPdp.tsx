@@ -1,6 +1,6 @@
 // Book product page sections — Figma node 1431:6 (Hrishi's Workspace).
 // The frame is 2560px wide; sizes are scaled ×0.75 to the app's 1920px layout
-// (same as HomeHeader), and big type scales down fluidly with clamp() on smaller screens.
+// (same as Header), and big type scales down fluidly with clamp() on smaller screens.
 // Cal Sans / Figtree (the site's type pair) stand in for the design's Champ/Degular; Caveat for the handwritten label.
 //
 // The Figma frame was laid out over a third-party book page, so only its LAYOUT is used:
@@ -15,11 +15,11 @@ import { AiSummary, type AiBlock } from "./AiSummary";
 import { BookCard } from "../../curation/BookCard";
 import { BookCover3D } from "./BookCover3D";
 import { book3DFor } from "../../_components/Book3D";
-import { ReviewWall } from "./ReviewWall";
+import { ReviewWall } from "../../_components/ReviewWall";
 import { BuyTray } from "./BuyTray";
 import { SectionTitle } from "../../_components/SectionTitle";
-import { REVEAL_ABOVE } from "../../_components/GlobalFooter";
 import { FooterMascot } from "../../_components/FooterMascot";
+import { REVEAL_ABOVE } from "../../_data/footer";
 
 const TOPIC_EMOJI: Record<string, string> = {
   animals: "🐾",

@@ -1,9 +1,5 @@
 "use client";
 
-// Header box icon with a count badge (C20). It's also the landing spot for books added to the
-// box (app/_lib/fly.ts): the lid opens when a book takes off, snaps shut when it lands, and the
-// count only goes up on landing.
-
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useBox } from "../_lib/box";
@@ -12,8 +8,8 @@ import { useSession } from "../_lib/session";
 export function BoxLink({ className = "" }: { className?: string }) {
   const box = useBox();
   const ref = useRef<HTMLAnchorElement>(null);
-  const [incoming, setIncoming] = useState(0); // books still in the air
-  const [pop, setPop] = useState(0); // bumps on each landing (restarts the badge pop)
+  const [incoming, setIncoming] = useState(0);
+  const [pop, setPop] = useState(0);
 
   useEffect(() => {
     const el = ref.current;
@@ -31,10 +27,9 @@ export function BoxLink({ className = "" }: { className?: string }) {
     };
   }, []);
 
-  // Signed out: one plain list (no children), so count each book once.
   const signedIn = Boolean(useSession());
   const total = signedIn ? box?.items.length ?? 0 : new Set(box?.items.map((i) => i.bookId)).size;
-  const n = Math.max(0, total - incoming); // hold the count until the book lands
+  const n = Math.max(0, total - incoming);
   const open = incoming > 0;
 
   return (
@@ -46,10 +41,8 @@ export function BoxLink({ className = "" }: { className?: string }) {
       className={`relative grid size-12 shrink-0 place-items-center rounded-full bg-[#fbbe63] text-black transition-[background-color,scale] duration-200 hover:bg-[#f9a220] active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black xl:size-14 ${className}`}
     >
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="overflow-visible">
-        {/* box body */}
         <path d="M4 10h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
         <path d="M10 14h4" />
-        {/* lid: hinged at the back-left corner, swings open while a book is on its way */}
         <g
           style={{ transformOrigin: "3px 10px", transformBox: "view-box" }}
           className={`transition-transform ${open ? "-rotate-[38deg] -translate-y-px duration-200 ease-out" : "rotate-0 duration-300 ease-[cubic-bezier(0.34,1.8,0.64,1)]"}`}

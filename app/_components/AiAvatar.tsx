@@ -1,21 +1,13 @@
 "use client";
 
-// The KutuBooku AI assistant's face: the same flat book worm clip as the header logo (Figma's
-// blinking clip, cropped to head + book), in a peach circle. Always plays (it glances around and
-// blinks; MascotVideo, transparent, paused off screen). Used wherever the AI speaks or works (hero chat, AI summaries, curation),
-// in place of the generic sparkle icon.
-// `thinking`: a gentle reading wiggle (bob + tilt) while the AI works. Driven by the
-// Web Animations API, so it needs no global CSS. Off with reduced motion.
-
 import { useEffect, useRef } from "react";
 import { MascotVideo } from "./MascotVideo";
 
-export function KutuAvatar({
+export function AiAvatar({
   size = 36,
   thinking = false,
   className = "",
 }: {
-  /** Diameter in px. */
   size?: number;
   thinking?: boolean;
   className?: string;
@@ -51,7 +43,6 @@ export function KutuAvatar({
           width={192}
           height={192}
           play="always"
-          // a touch larger than the circle and nudged down, so the face fills it and the sprout shows on top
           className="size-full translate-y-[6%] scale-[1.08] object-cover"
         />
       </span>

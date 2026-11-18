@@ -3,24 +3,15 @@
 import Link from "next/link";
 import React from "react";
 
-/* -------------------------------------------------------------------------- */
-/*                               Class Constants                              */
-/* -------------------------------------------------------------------------- */
-
 export const BTN_BASE =
   "group inline-flex h-14 shrink-0 items-center justify-center gap-2.5 rounded-[18px] text-lg font-medium tracking-[-0.01em] transition-[background-color,border-color,color,scale,border-radius] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:rounded-[28px] focus-visible:rounded-[28px] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838] disabled:pointer-events-none disabled:opacity-30";
 
-// Primary = amber #f1a903 (hover #d99500) with navy text: 7.4:1 contrast (6.1:1 on hover).
 export const BTN_PRIMARY = `${BTN_BASE} border-2 px-5 border-[#f1a903] bg-[#f1a903] text-[#1d2838] hover:border-[#d99500] hover:bg-[#d99500]`;
 
 export const BTN_SECONDARY = `${BTN_BASE} relative isolate overflow-hidden px-[22px] text-[#1d2838]`;
 
 export const BTN_GOOGLE =
   "group inline-flex h-14 shrink-0 items-center justify-center gap-3 rounded-[18px] border border-[#747775] bg-white px-6 text-lg font-medium text-[#1f1f1f] transition-[background-color,scale,border-radius] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:rounded-[28px] hover:bg-[#f2f2f2] focus-visible:rounded-[28px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60";
-
-/* -------------------------------------------------------------------------- */
-/*                                    Icons                                   */
-/* -------------------------------------------------------------------------- */
 
 export function ArrowIcon({
   dir,
@@ -70,10 +61,6 @@ export function GoogleIcon({ className = "size-5 shrink-0" }: { className?: stri
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                Component Types                             */
-/* -------------------------------------------------------------------------- */
-
 export type ButtonVariant = "primary" | "secondary" | "outline" | "google";
 
 export interface ButtonSharedProps {
@@ -97,10 +84,6 @@ export type ButtonAsAnchor = ButtonSharedProps &
 
 export type ButtonProps = ButtonAsButton | ButtonAsAnchor;
 
-/* -------------------------------------------------------------------------- */
-/*                             Main Button Component                          */
-/* -------------------------------------------------------------------------- */
-
 export function Button({
   variant = "primary",
   arrow,
@@ -113,7 +96,6 @@ export function Button({
   const isSecondary = variant === "secondary" || variant === "outline";
   const isGoogle = variant === "google";
 
-  // Outline pointer coordinates tracking for the circular ripple effect
   const handlePointerEnter = (e: React.PointerEvent<HTMLElement>) => {
     if (!isSecondary) return;
     const r = e.currentTarget.getBoundingClientRect();
@@ -136,21 +118,18 @@ export function Button({
     }
   };
 
-  // Resolve classes based on variant and text color
   let variantClass = BTN_PRIMARY;
   if (isSecondary) {
     variantClass = BTN_SECONDARY;
   } else if (isGoogle) {
     variantClass = BTN_GOOGLE;
   } else if (variant === "primary") {
-    // Amber primary (#f1a903): navy text by default — white on amber is only ~2:1 contrast.
     const textClass = textColor === "white" ? "text-white" : "text-[#1d2838]";
     variantClass = `${BTN_BASE} border-2 px-5 border-[#f1a903] bg-[#f1a903] ${textClass} hover:border-[#d99500] hover:bg-[#d99500]`;
   }
 
   const combinedClassName = `${variantClass} ${className}`.trim();
 
-  // Internal contents
   const content = isSecondary ? (
     <>
       <span
@@ -176,7 +155,6 @@ export function Button({
     </>
   );
 
-  // Polymorphic rendering: Next.js Link vs native anchor vs button
   if ("href" in props && props.href) {
     const { href, target, rel, ...restAnchorProps } = props as ButtonAsAnchor;
     const isInternal = href.startsWith("/") && !href.startsWith("//") && target !== "_blank";
@@ -232,14 +210,6 @@ export function Button({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               Specialized Buttons                          */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Outline button with navy entry-origin ripple animation.
- * Replaces and is 100% compatible with previous OutlineButton definitions.
- */
 export function OutlineButton({
   onClick,
   label,
@@ -269,7 +239,6 @@ export function OutlineButton({
   );
 }
 
-/** Google Sign-In button following official branding guidelines. */
 export function GoogleButton({
   onClick,
   busy,
@@ -293,7 +262,6 @@ export function GoogleButton({
   );
 }
 
-/** Split CTA button (action label + arrow chip), e.g. "Buy on Amazon" or "Read more". */
 export function SplitButton({
   href,
   onClick,
@@ -385,7 +353,6 @@ export function SplitButton({
   );
 }
 
-/** Thumbs reaction button with like-pop and like-ring burst animation. */
 export function ThumbButton({
   dark,
   pressed,

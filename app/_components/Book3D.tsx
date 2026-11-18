@@ -1,13 +1,9 @@
-// A real-looking 3D book in CSS (no WebGL): cover, back, spine, page block and
-// page edges, with a slow float. Shared by the home hero carousel and the book page.
-// Moved out of BookHero.tsx on 2026-11-03.
-
 import Image from "next/image";
 import { memo } from "react";
 
 export type Book3DData = { src: string; title: string; ratio: number; spine: string };
+export type Tilt = { rx: number; ry: number; rz: number };
 
-// Real cover proportions (width / height) read from the image files.
 export const BOOKS: Book3DData[] = [
   { src: "/covers/the-dot.jpg", title: "The Dot", ratio: 0.995, spine: "#e8553a" },
   { src: "/covers/lost-and-found.jpg", title: "Lost and Found", ratio: 0.983, spine: "#2f9e8f" },
@@ -26,16 +22,6 @@ export const BOOKS: Book3DData[] = [
   { src: "/covers/the-most-magnificent-thing.jpg", title: "The Most Magnificent Thing", ratio: 1, spine: "#e0782c" },
 ];
 
-const BY_COVER = new Map(BOOKS.map((b) => [b.src, b]));
-
-/** 3D data for a cover; unknown covers get a square book with the given spine colour. */
-export function book3DFor(cover: string, title: string, fallbackSpine: string): Book3DData {
-  return BY_COVER.get(cover) ?? { src: cover, title, ratio: 1, spine: fallbackSpine };
-}
-
-export type Tilt = { rx: number; ry: number; rz: number };
-
-// Resting tilt cycles so neighbours don't all face the same way.
 export const TILTS: Tilt[] = [
   { rx: 10, ry: 22, rz: 6 },
   { rx: 6, ry: -16, rz: -3 },
@@ -43,40 +29,71 @@ export const TILTS: Tilt[] = [
   { rx: 4, ry: -24, rz: -5 },
 ];
 
-// memo: clicking one book in the hero re-renders the carousel; unchanged books skip it.
+const BY_COVER = new Map(BOOKS.map((b) => [b.src, b]));
+
+export function book3DFor(cover: string, title: string, fallbackSpine: string): Book3DData {
+  return BY_COVER.get(cover) ?? { src: cover, title, ratio: 1, spine: fallbackSpine };
+}
+
+const FACE = "absolute left-1/2 top-1/2 [backface-visibility:hidden]";
+const SIDE_PAGES = "repeating-linear-gradient(90deg,#fffaf0 0 2px,#e9e1d1 2px 3px)";
+const TOP_PAGES = "repeating-linear-gradient(0deg,#fffaf0 0 2px,#ece4d4 2px 3px)";
+const BOTTOM_PAGES = "#d9cfbd";
+const COVER_SHINE =
+  "pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgb(255_255_255/0.28)_0%,transparent_38%,transparent_70%,rgb(0_0_0/0.14)_100%)]";
+const COVER_HINGE = "pointer-events-none absolute inset-y-0 left-0 w-[6%] bg-gradient-to-r from-black/25 to-transparent";
+const FOCUS_RING = "pointer-events-none rounded-r-[14px] rounded-l-[9px] shadow-[0_0_0_8px_#fffdf8,0_0_0_16px_#1d2838] transition-opacity duration-200";
+
+function Face({
+  width,
+  height,
+  transform,
+  className = "",
+  style,
+  children,
+}: {
+  width: number;
+  height: number;
+  transform: string;
+  className?: string;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className={`${FACE} ${className}`} style={{ width, height, transform: `translate(-50%,-50%) ${transform}`, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+type Book3DProps = {
+  b: Book3DData;
+  i: number;
+  height?: number;
+  depth?: number;
+  tilt?: Tilt;
+  focused?: boolean;
+  eager?: boolean;
+  sizes?: string;
+};
+
 export const Book3D = memo(function Book3D({
   b,
   i,
-  height = 440,
-  depth = 38,
+  height: h = 440,
+  depth: d = 38,
   tilt,
   focused = false,
   eager = false,
   sizes = "(min-width: 1536px) 460px, 300px",
-}: {
-  b: Book3DData;
-  /** Position in a list: picks the resting tilt and staggers the float. */
-  i: number;
-  /** Book height in px (width follows the cover ratio). */
-  height?: number;
-  /** Thickness in px. */
-  depth?: number;
-  /** Resting tilt; defaults to the cycle in TILTS. */
-  tilt?: Tilt;
-  /** Shows the keyboard focus ring. */
-  focused?: boolean;
-  /** Load the cover straight away (above the fold). */
-  eager?: boolean;
-  sizes?: string;
-}) {
-  const h = height;
+}: Book3DProps) {
   const w = Math.round(h * b.ratio);
-  const d = depth;
   const t = tilt ?? TILTS[i % TILTS.length];
-  const face = "absolute left-1/2 top-1/2 [backface-visibility:hidden]";
+  const rotation = `rotateX(${t.rx}deg) rotateY(${t.ry}deg) rotateZ(${t.rz}deg)`;
+
   return (
     <div
-      data-book3d // BookHero pauses this float while the book is off screen
+      data-book3d
       className="relative [transform-style:preserve-3d] motion-safe:animate-[book-float_var(--dur)_ease-in-out_infinite]"
       style={
         {
@@ -87,33 +104,54 @@ export const Book3D = memo(function Book3D({
           "--ry0": `${t.ry}deg`,
           "--rz0": `${t.rz}deg`,
           animationDelay: `-${(i % 5) * 1.7}s`,
-          transform: `rotateX(${t.rx}deg) rotateY(${t.ry}deg) rotateZ(${t.rz}deg)`,
+          transform: rotation,
         } as React.CSSProperties
       }
     >
-      {/* front cover */}
-      <div className={`${face} overflow-hidden rounded-r-[8px] rounded-l-[3px]`} style={{ width: w, height: h, transform: `translate(-50%,-50%) translateZ(${d / 2}px)` }}>
-        <Image src={b.src} alt="" fill sizes={sizes} draggable={false} className="object-cover [-webkit-user-drag:none]" {...(eager ? { loading: "eager", fetchPriority: "high" } : {})} />
-        <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgb(255_255_255/0.28)_0%,transparent_38%,transparent_70%,rgb(0_0_0/0.14)_100%)]" />
-        <span className="pointer-events-none absolute inset-y-0 left-0 w-[6%] bg-gradient-to-r from-black/25 to-transparent" />
-      </div>
-      {/* keyboard focus ring (sits just in front of the cover) */}
-      <span
-        aria-hidden
-        className={`${face} pointer-events-none rounded-r-[14px] rounded-l-[9px] shadow-[0_0_0_8px_#fffdf8,0_0_0_16px_#1d2838] transition-opacity duration-200 ${focused ? "opacity-100" : "opacity-0"}`}
-        style={{ width: w, height: h, transform: `translate(-50%,-50%) translateZ(${d / 2 + 1}px)` }}
+      <Face width={w} height={h} transform={`translateZ(${d / 2}px)`} className="overflow-hidden rounded-r-[8px] rounded-l-[3px]">
+        <Image
+          src={b.src}
+          alt=""
+          fill
+          sizes={sizes}
+          draggable={false}
+          className="object-cover [-webkit-user-drag:none]"
+          {...(eager && { loading: "eager", fetchPriority: "high" })}
+        />
+        <span className={COVER_SHINE} />
+        <span className={COVER_HINGE} />
+      </Face>
+
+      <Face
+        width={w}
+        height={h}
+        transform={`translateZ(${d / 2 + 1}px)`}
+        className={`${FOCUS_RING} ${focused ? "opacity-100" : "opacity-0"}`}
       />
-      {/* back cover */}
-      <div className={`${face} rounded-l-[8px] rounded-r-[3px]`} style={{ width: w, height: h, background: b.spine, transform: `translate(-50%,-50%) rotateY(180deg) translateZ(${d / 2}px)`, filter: "brightness(0.8)" }} />
-      {/* spine */}
-      <div className={`${face} grid place-items-center overflow-hidden`} style={{ width: d, height: h, background: `linear-gradient(90deg, ${b.spine}, color-mix(in srgb, ${b.spine} 70%, #000))`, transform: `translate(-50%,-50%) rotateY(-90deg) translateZ(${w / 2}px)` }}>
-        <span className="rotate-180 whitespace-nowrap text-[12px] font-semibold uppercase tracking-[0.12em] text-white/85 [writing-mode:vertical-rl]">{b.title}</span>
-      </div>
-      {/* page block */}
-      <div className={face} style={{ width: d, height: h - 6, background: "repeating-linear-gradient(90deg,#fffaf0 0 2px,#e9e1d1 2px 3px)", transform: `translate(-50%,-50%) rotateY(90deg) translateZ(${w / 2 - 2}px)` }} />
-      {/* top + bottom page edges */}
-      <div className={face} style={{ width: w - 4, height: d, background: "repeating-linear-gradient(0deg,#fffaf0 0 2px,#ece4d4 2px 3px)", transform: `translate(-50%,-50%) rotateX(90deg) translateZ(${h / 2 - 2}px)` }} />
-      <div className={face} style={{ width: w - 4, height: d, background: "#d9cfbd", transform: `translate(-50%,-50%) rotateX(-90deg) translateZ(${h / 2 - 2}px)` }} />
+
+      <Face
+        width={w}
+        height={h}
+        transform={`rotateY(180deg) translateZ(${d / 2}px)`}
+        className="rounded-l-[8px] rounded-r-[3px]"
+        style={{ background: b.spine, filter: "brightness(0.8)" }}
+      />
+
+      <Face
+        width={d}
+        height={h}
+        transform={`rotateY(-90deg) translateZ(${w / 2}px)`}
+        className="grid place-items-center overflow-hidden"
+        style={{ background: `linear-gradient(90deg, ${b.spine}, color-mix(in srgb, ${b.spine} 70%, #000))` }}
+      >
+        <span className="rotate-180 whitespace-nowrap text-[12px] font-semibold uppercase tracking-[0.12em] text-white/85 [writing-mode:vertical-rl]">
+          {b.title}
+        </span>
+      </Face>
+
+      <Face width={d} height={h - 6} transform={`rotateY(90deg) translateZ(${w / 2 - 2}px)`} style={{ background: SIDE_PAGES }} />
+      <Face width={w - 4} height={d} transform={`rotateX(90deg) translateZ(${h / 2 - 2}px)`} style={{ background: TOP_PAGES }} />
+      <Face width={w - 4} height={d} transform={`rotateX(-90deg) translateZ(${h / 2 - 2}px)`} style={{ background: BOTTOM_PAGES }} />
     </div>
   );
 });

@@ -1,138 +1,124 @@
 "use client";
 
-// Tall colour book card, shared by /curation (with select, rate, menu and the
-// AI reason) and the home page (plain: cover, tags, title, blurb, price, buy).
-// Moved out of Curation.tsx on 2026-11-03.
-
-import { IntentLink } from "../_components/IntentLink";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
-import type { MockBook } from "../_data/curation-mock";
-import { buyLabel, buyNow, useBox } from "../_lib/box";
-import { bookIdFromHref, openBook, rememberMorph } from "../_lib/book-sheet";
+import { AddToBoxButton } from "../_components/AddToBoxButton";
 import { BookCover, rupeesFmt } from "../_components/curation/ui";
-import { BoxToggleButton } from "../_components/BoxToggleButton";
+import { IntentLink } from "../_components/IntentLink";
+import type { MockBook } from "../_data/curation-mock";
+import { bookIdFromHref, openBook, rememberMorph } from "../_lib/book-sheet";
+import { buyLabel, buyNow, useBox } from "../_lib/box";
 import { CARD_TILTS, PILL_COLOURS, TAG_SHORT, cardColourFor } from "./card-style";
+
+type Rating = "up" | "down";
+type Deal = "out" | "in" | null;
+type CardColour = ReturnType<typeof cardColourFor>;
+
+export type BookCardBox = {
+  child?: string | null;
+  selected?: boolean;
+  onToggle?: () => void;
+};
+
+export type BookCardMenu = {
+  open: boolean;
+  onToggle: () => void;
+  onSwap: () => void;
+  onRemove: () => void;
+  onOwn: () => void;
+  onRead: () => void;
+  onReport: () => void;
+};
+
+export type BookCardCuration = {
+  motion?: { deal?: Deal; fresh?: boolean; swappingOut?: boolean };
+  rating?: Rating;
+  onRate?: (r: Rating) => void;
+  menu?: BookCardMenu;
+};
+
+type BookCardProps = {
+  book: MockBook & { reason?: string };
+  index: number;
+  titleAs?: "h2" | "h3";
+  href?: string;
+  onOpen?: () => void;
+  box?: BookCardBox;
+  curation?: BookCardCuration;
+};
+
+const SETTLE_MS = 900;
+const INTERACTIVE = "button, a, input, label, [role=menu]";
+
+function motionClass({ deal, fresh, swappingOut, settled }: { deal?: Deal; fresh?: boolean; swappingOut?: boolean; settled: boolean }) {
+  if (deal === "out") return "pointer-events-none animate-[deal-out_420ms_cubic-bezier(0.5,0,0.75,0)_both]";
+  if (deal === "in") return "animate-[deal-in_750ms_cubic-bezier(0.34,1.35,0.64,1)_both]";
+  if (fresh) return "animate-[card-flip-in_700ms_cubic-bezier(0.34,1.35,0.64,1)_both]";
+  if (swappingOut) return "pointer-events-none animate-[card-flip-out_300ms_cubic-bezier(0.5,0,0.75,0)_forwards]";
+  return settled ? "" : "animate-q-in";
+}
+
+const agesOf = (b: MockBook) => (b.ageMin === b.ageMax ? `Age ${b.ageMin}` : `Ages ${b.ageMin}–${b.ageMax}`);
 
 export function BookCard({
   book,
   index,
-  swappingOut,
-  fresh,
-  deal,
-  selected,
-  rating,
-  menuOpen,
-  onToggle,
-  onOpen,
-  href,
-  onRate,
-  onMenu,
-  onSwap,
-  onRemove,
-  onOwn,
-  onRead,
-  onReport,
   titleAs: Title = "h2",
-  boxChild = null,
-}: {
-  /** Child the book goes into the box for when bought from this card (curation: the child's name). */
-  boxChild?: string | null;
-  /** `reason` shows the "Why we picked it" line (curation only). */
-  book: MockBook & { reason?: string };
-  index: number;
-  /** Heading level for the title (h3 when the cards sit under a section h2). */
-  titleAs?: "h2" | "h3";
-  /** Opens the book details sheet (curation). Not needed when `href` is set. */
-  onOpen?: () => void;
-  /** Book page link (home): the title becomes a link and the whole card goes there. */
-  href?: string;
-  // Curation-only (each control is hidden when its handler is missing):
-  swappingOut?: boolean;
-  fresh?: boolean;
-  deal?: "out" | "in" | null;
-  selected?: boolean;
-  rating?: "up" | "down";
-  menuOpen?: boolean;
-  onToggle?: () => void;
-  onRate?: (r: "up" | "down") => void;
-  onMenu?: () => void;
-  onSwap?: () => void;
-  onRemove?: () => void;
-  onOwn?: () => void;
-  onRead?: () => void;
-  onReport?: () => void;
-}) {
-  // Tall colour card (2026-11-02), layout modelled on Aardvark's book cards:
-  // bold solid card, big cover, tag pills, big title, short blurb, split CTA,
-  // slight alternating tilt. KutuBooku's own colours, covers and copy.
-  const ages = book.ageMin === book.ageMax ? `Age ${book.ageMin}` : `Ages ${book.ageMin}–${book.ageMax}`;
-  // Entrance plays once. Without this, switching from the deal/flip animation
-  // back to the default class restarted the entrance (cards "loaded again").
+  href,
+  onOpen,
+  box: { child: boxChild = null, selected, onToggle } = {},
+  curation: { motion: { deal, fresh, swappingOut } = {}, rating, onRate, menu } = {},
+}: BookCardProps) {
   const router = useRouter();
   const box = useBox();
-  // Book links open the book sheet over the current screen (app/_lib/book-sheet.ts).
+  const [settled, setSettled] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSettled(true), SETTLE_MS);
+    return () => clearTimeout(t);
+  }, []);
+
+  const card = cardColourFor(book.tone, index);
+  const ink = { backgroundColor: card.dark ? "#fffdf8" : "#1d2838", color: card.dark ? "#1d2838" : "#fffdf8" };
+  const pills = [...book.tags.map((t) => TAG_SHORT[t] ?? t), agesOf(book)];
+
   const open = (e?: React.SyntheticEvent) => {
+    const from = e?.currentTarget as Element | undefined;
     const id = href ? bookIdFromHref(href) : null;
-    if (id) openBook(id, e?.currentTarget as Element | undefined);
+    if (id) openBook(id, from);
     else if (href) router.push(href);
     else {
-      rememberMorph(book.id, e?.currentTarget as Element | undefined); // the listing's sheet plays the flight too
+      rememberMorph(book.id, from);
       onOpen?.();
     }
   };
-  const [settled, setSettled] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setSettled(true), 900);
-    return () => clearTimeout(t);
-  }, []);
-  const card = cardColourFor(book.tone, index);
-  const whoseBox = boxChild ? `${boxChild}'s box` : "your box";
-  const tilt = CARD_TILTS[index % CARD_TILTS.length];
-  const pills = [...book.tags.map((t) => TAG_SHORT[t] ?? t), ages];
-  const pillColours = PILL_COLOURS.filter((c) => c.bg !== card.bg);
 
-  // Shared animated underline (globals.css link-underline), driven by the title link/button.
-  const titleText = (
-    <span className="link-underline">
-      {book.title}
-    </span>
-  );
+  const titleText = <span className="link-underline">{book.title}</span>;
 
   return (
     <article
       onClick={(e) => {
-        // Controls inside the card keep their own behaviour.
-        if ((e.target as HTMLElement).closest("button, a, input, label, [role=menu]")) return;
-        open(e);
+        if (!(e.target as HTMLElement).closest(INTERACTIVE)) open(e);
       }}
-      style={{
-        backgroundColor: card.bg,
-        color: card.fg,
-        ...(deal ? { animationDelay: `${index * (deal === "out" ? 40 : 70)}ms`, "--deal-r": index % 2 ? "9deg" : "-10deg" } : {}),
-      } as React.CSSProperties}
-      className={`group/card relative flex h-full cursor-pointer flex-col ${deal === "out" ? "pointer-events-none animate-[deal-out_420ms_cubic-bezier(0.5,0,0.75,0)_both]" : deal === "in" ? "animate-[deal-in_750ms_cubic-bezier(0.34,1.35,0.64,1)_both]" : fresh ? "animate-[card-flip-in_700ms_cubic-bezier(0.34,1.35,0.64,1)_both]" : swappingOut ? "pointer-events-none animate-[card-flip-out_300ms_cubic-bezier(0.5,0,0.75,0)_forwards]" : settled ? "" : "animate-q-in"} rounded-[30px] p-3 shadow-[0_18px_30px_-22px_rgba(29,40,56,0.7)] transition-[rotate,translate,opacity,filter] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1.5 motion-reduce:transition-none ${tilt} ${
-        ""
+      style={
+        {
+          backgroundColor: card.bg,
+          color: card.fg,
+          ...(deal ? { animationDelay: `${index * (deal === "out" ? 40 : 70)}ms`, "--deal-r": index % 2 ? "9deg" : "-10deg" } : {}),
+        } as React.CSSProperties
+      }
+      className={`group/card relative flex h-full cursor-pointer flex-col rounded-[30px] p-3 shadow-[0_18px_30px_-22px_rgba(29,40,56,0.7)] transition-[rotate,translate,opacity,filter] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1.5 motion-reduce:transition-none ${motionClass({ deal, fresh, swappingOut, settled })} ${
+        CARD_TILTS[index % CARD_TILTS.length]
       }`}
     >
-      {fresh ? <SwapConfetti /> : null}
-      {/* cover */}
+      {fresh && <SwapConfetti />}
+
       <div data-book-cover={book.id} className="relative overflow-hidden rounded-[20px]">
         <BookCover book={book} />
       </div>
 
       <div className="flex flex-1 flex-col px-1.5 pb-1 pt-3">
-        {/* tag pills */}
-        <ul className="flex flex-wrap gap-1.5" aria-label="Tags">
-          {pills.map((p, i) => {
-            const c = pillColours[i % pillColours.length];
-            return (
-              <li key={p} className="rounded-full px-2.5 py-0.5 type-caption-strong" style={{ backgroundColor: c.bg, color: c.fg }}>
-                {p}
-              </li>
-            );
-          })}
-        </ul>
+        <TagPills pills={pills} card={card} />
 
         <Title className="mt-2.5 type-title">
           {href ? (
@@ -146,137 +132,158 @@ export function BookCard({
           )}
         </Title>
         <p className="mt-1 type-caption opacity-75">
-          {book.author} · {book.rating != null && book.reviews != null ? `★ ${book.rating} (${book.reviews.toLocaleString("en-IN")}) · ` : ""}{book.format}
+          {book.author} · {book.rating != null && book.reviews != null ? `★ ${book.rating} (${book.reviews.toLocaleString("en-IN")}) · ` : ""}
+          {book.format}
         </p>
-
         <p className="mt-2 line-clamp-3 type-body-sm opacity-90">{book.description}</p>
 
-        {book.reason ? (
-        // The AI's note, in the AI look used across the site (--ai-gradient-line, globals.css; the
-        // home chat's focus ring): a thin gradient border, gradient sparkle and caret; the words
-        // stay in the card's own text colour so they read easily.
-        <div className="mt-3 rounded-[15px] bg-[image:var(--ai-gradient-line)] p-[1.5px]">
-          <p
-            className="rounded-[13.5px] px-3 py-2 type-body-sm"
-            style={{ backgroundColor: card.dark ? `color-mix(in srgb, ${card.bg} 86%, #fff)` : "#fffdf8" }}
-          >
-            <span className="font-semibold">
-              <AiSparkle className="-mt-0.5 mr-1 inline size-4" />
-              Why we picked it:{" "}
-            </span>
-            <TypeReason key={book.id} text={book.reason} delay={(deal === "in" ? 750 : 450) + index * 110} />
-          </p>
-        </div>
-        ) : null}
+        {book.reason && <WhyPicked bookId={book.id} reason={book.reason} card={card} delay={(deal === "in" ? 750 : 450) + index * 110} />}
 
-        {/* price · thumbs · menu */}
         <div className="mt-auto flex items-center gap-1 pt-3">
           <span className="mr-auto type-title-sm tabular-nums">{rupeesFmt(book.price)}</span>
-          {onRate ? (
-          <>
-          <Thumb dark={card.dark} pressed={rating === "up"} label={`I like “${book.title}”`} onClick={() => onRate("up")}>
-            <path d="M7 10v10H4V10zM7 10l4-7c1.7 0 2.5 1 2.2 2.6L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.8 20H7" />
-          </Thumb>
-          <Thumb dark={card.dark} pressed={rating === "down"} label={`Not for us: “${book.title}”`} onClick={() => onRate("down")}>
-            <path d="M17 14V4h3v10zM17 14l-4 7c-1.7 0-2.5-1-2.2-2.6l.6-3.4H5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.2 4H17" />
-          </Thumb>
-          </>
-          ) : null}
-
-          {onMenu ? (
-          <div className="relative" data-menu-root>
-            <button
-              type="button"
-              onClick={onMenu}
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              aria-label={`More options for “${book.title}”`}
-              className={`grid size-10 place-items-center rounded-[13px] transition-colors ${card.dark ? "hover:bg-white/15" : "hover:bg-[#1d2838]/10"}`}
-            >
-              <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden>
-                <circle cx="5" cy="12" r="1.9" />
-                <circle cx="12" cy="12" r="1.9" />
-                <circle cx="19" cy="12" r="1.9" />
-              </svg>
-            </button>
-            {menuOpen ? (
-              <ul
-                role="menu"
-                aria-label={`Options for “${book.title}”`}
-                className="absolute bottom-12 right-0 z-30 w-52 animate-q-in rounded-[20px] bg-[#fffdf8] p-1.5 type-body-sm text-[#1d2838] shadow-[0_20px_40px_-12px_rgba(29,40,56,0.45),inset_0_0_0_1px_rgba(29,40,56,0.08)]"
-              >
-                {[
-                  ["Swap this book", onSwap],
-                  ["Remove", onRemove],
-                  ["Already own", onOwn],
-                  ["Already read", onRead],
-                  ["Report this book", onReport],
-                ].map(([label, fn]) => (
-                  <li key={label as string} role="none">
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={fn as (() => void) | undefined}
-                      className={`w-full rounded-[14px] px-3.5 py-2.5 text-left transition-colors hover:bg-[#f4eee3] ${
-                        label === "Report this book" ? "text-[#c2412b]" : ""
-                      }`}
-                    >
-                      {label as string}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-          ) : null}
+          {onRate && (
+            <>
+              <Thumb dark={card.dark} pressed={rating === "up"} label={`I like “${book.title}”`} onClick={() => onRate("up")}>
+                <path d="M7 10v10H4V10zM7 10l4-7c1.7 0 2.5 1 2.2 2.6L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.8 20H7" />
+              </Thumb>
+              <Thumb dark={card.dark} pressed={rating === "down"} label={`Not for us: “${book.title}”`} onClick={() => onRate("down")}>
+                <path d="M17 14V4h3v10zM17 14l-4 7c-1.7 0-2.5-1-2.2-2.6l.6-3.4H5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.2 4H17" />
+              </Thumb>
+            </>
+          )}
+          {menu && (
+            <CardMenu
+              title={book.title}
+              dark={card.dark}
+              open={menu.open}
+              onToggle={menu.onToggle}
+              items={[
+                ["Swap this book", menu.onSwap],
+                ["Remove", menu.onRemove],
+                ["Already own", menu.onOwn],
+                ["Already read", menu.onRead],
+                ["Report this book", menu.onReport],
+              ]}
+            />
+          )}
         </div>
 
-        {/* Curation: the main button puts the book in this child's box (C1); Amazon is reached from the box.
-            Pressed again, it takes it out. */}
         {onToggle ? (
-          <BoxToggleButton
+          <AddToBoxButton
             selected={!!selected}
             onToggle={onToggle}
             title={book.title}
-            whoseBox={whoseBox}
-            fill={{ bg: card.dark ? "#fffdf8" : "#1d2838", fg: card.dark ? "#1d2838" : "#fffdf8" }}
+            whoseBox={boxChild ? `${boxChild}'s box` : "your box"}
+            fill={{ bg: ink.backgroundColor, fg: ink.color }}
             className="mt-2 w-full"
           />
         ) : (
-        <>
-        {/* split CTA: label + arrow chip */}
-        {/* C3/C4: adds the book to the box, then sends the whole box to Amazon. */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation(); // the card itself opens the book
-            if (buyNow(book, boxChild, href ? "book" : "curation") === "box") router.push("/box?checkout=1");
-          }}
-          className="group/buy mt-2 flex h-12 w-full items-stretch gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-        >
-          <span
-            className="flex flex-1 items-center justify-center rounded-[14px] type-button-sm transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]"
-            style={{ backgroundColor: card.dark ? "#fffdf8" : "#1d2838", color: card.dark ? "#1d2838" : "#fffdf8" }}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (buyNow(book, boxChild, href ? "book" : "curation") === "box") router.push("/box?checkout=1");
+            }}
+            className="group/buy mt-2 flex h-12 w-full items-stretch gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
           >
-            {buyLabel(box, book.id)}
-          </span>
-          <span
-            className="grid w-12 place-items-center rounded-[14px] transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]"
-            style={{ backgroundColor: card.dark ? "#fffdf8" : "#1d2838", color: card.dark ? "#1d2838" : "#fffdf8" }}
-          >
-            <svg viewBox="0 0 24 24" className="size-5 transition-transform group-hover/buy:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M4 12h16M14 6l6 6-6 6" />
-            </svg>
-          </span>
-        </button>
-        </>
+            <span className="flex flex-1 items-center justify-center rounded-[14px] type-button-sm transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]" style={ink}>
+              {buyLabel(box, book.id)}
+            </span>
+            <span className="grid w-12 place-items-center rounded-[14px] transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]" style={ink}>
+              <svg viewBox="0 0 24 24" className="size-5 transition-transform group-hover/buy:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M4 12h16M14 6l6 6-6 6" />
+              </svg>
+            </span>
+          </button>
         )}
       </div>
     </article>
   );
 }
 
-/** Little confetti burst for a freshly swapped-in card (KutuBooku palette). */
+function TagPills({ pills, card }: { pills: string[]; card: CardColour }) {
+  const colours = PILL_COLOURS.filter((c) => c.bg !== card.bg);
+  return (
+    <ul className="flex flex-wrap gap-1.5" aria-label="Tags">
+      {pills.map((p, i) => {
+        const c = colours[i % colours.length];
+        return (
+          <li key={p} className="rounded-full px-2.5 py-0.5 type-caption-strong" style={{ backgroundColor: c.bg, color: c.fg }}>
+            {p}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function WhyPicked({ bookId, reason, card, delay }: { bookId: string; reason: string; card: CardColour; delay: number }) {
+  return (
+    <div className="mt-3 rounded-[15px] bg-[image:var(--ai-gradient-line)] p-[1.5px]">
+      <p className="rounded-[13.5px] px-3 py-2 type-body-sm" style={{ backgroundColor: card.dark ? `color-mix(in srgb, ${card.bg} 86%, #fff)` : "#fffdf8" }}>
+        <span className="font-semibold">
+          <AiSparkle className="-mt-0.5 mr-1 inline size-4" />
+          Why we picked it:{" "}
+        </span>
+        <TypeReason key={bookId} text={reason} delay={delay} />
+      </p>
+    </div>
+  );
+}
+
+function CardMenu({
+  title,
+  dark,
+  open,
+  onToggle,
+  items,
+}: {
+  title: string;
+  dark: boolean;
+  open: boolean;
+  onToggle: () => void;
+  items: [string, () => void][];
+}) {
+  return (
+    <div className="relative" data-menu-root>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`More options for “${title}”`}
+        className={`grid size-10 place-items-center rounded-[13px] transition-colors ${dark ? "hover:bg-white/15" : "hover:bg-[#1d2838]/10"}`}
+      >
+        <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden>
+          <circle cx="5" cy="12" r="1.9" />
+          <circle cx="12" cy="12" r="1.9" />
+          <circle cx="19" cy="12" r="1.9" />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          role="menu"
+          aria-label={`Options for “${title}”`}
+          className="absolute bottom-12 right-0 z-30 w-52 animate-q-in rounded-[20px] bg-[#fffdf8] p-1.5 type-body-sm text-[#1d2838] shadow-[0_20px_40px_-12px_rgba(29,40,56,0.45),inset_0_0_0_1px_rgba(29,40,56,0.08)]"
+        >
+          {items.map(([label, fn]) => (
+            <li key={label} role="none">
+              <button
+                type="button"
+                role="menuitem"
+                onClick={fn}
+                className={`w-full rounded-[14px] px-3.5 py-2.5 text-left transition-colors hover:bg-[#f4eee3] ${label === "Report this book" ? "text-[#c2412b]" : ""}`}
+              >
+                {label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 const CONFETTI = [
   { c: "#f26b4f", dx: "-120px", dy: "-90px", r: "-140deg", w: 10, h: 14 },
   { c: "#f6c453", dx: "115px", dy: "-105px", r: "120deg", w: 12, h: 12 },
@@ -306,16 +313,6 @@ function SwapConfetti() {
   );
 }
 
-export function SparkleIcon({ className = "size-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9z" />
-      <path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z" opacity="0.7" />
-    </svg>
-  );
-}
-
-/** SparkleIcon filled with the AI gradient (the "Why we picked it" note). */
 function AiSparkle({ className }: { className?: string }) {
   const id = `ai-sparkle-${useId().replace(/:/g, "")}`;
   return (
@@ -334,12 +331,10 @@ function AiSparkle({ className }: { className?: string }) {
   );
 }
 
-/** Types the reason out after a delay, like the AI explaining its pick. */
 function TypeReason({ text, delay }: { text: string; delay: number }) {
   const [shown, setShown] = useState(0);
-  // Freeze the start delay on mount: the parent's deal phase changes later,
-  // and a changing delay would restart the typing.
   const [startDelay] = useState(delay);
+
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setShown(text.length); // eslint-disable-line react-hooks/set-state-in-effect
@@ -359,50 +354,37 @@ function TypeReason({ text, delay }: { text: string; delay: number }) {
       if (tick) clearInterval(tick);
     };
   }, [text, startDelay]);
+
   const typing = shown < text.length;
   return (
     <>
       <span className="sr-only">{text}</span>
       <span aria-hidden>
         {text.slice(0, shown)}
-        {typing ? (
+        {typing && (
           <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] animate-[caret_0.9s_steps(1)_infinite] bg-[image:linear-gradient(#7c5cff,#ff6ac1)]" />
-        ) : null}
+        )}
       </span>
     </>
   );
 }
 
-function Thumb({
-  dark,
-  pressed,
-  label,
-  onClick,
-  children,
-}: {
-  dark: boolean;
-  pressed: boolean;
-  label: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
+function Thumb({ dark, pressed, label, onClick, children }: { dark: boolean; pressed: boolean; label: string; onClick: () => void; children: React.ReactNode }) {
+  const tone = pressed
+    ? `relative animate-[like-pop_420ms_cubic-bezier(.22,1,.36,1)] ${dark ? "bg-[#fffdf8] text-[#1d2838]" : "bg-[#1d2838] text-white"}`
+    : dark
+      ? "hover:bg-white/15"
+      : "hover:bg-[#1d2838]/10";
+
   return (
     <button
       type="button"
       aria-pressed={pressed}
       aria-label={label}
       onClick={onClick}
-      className={`grid size-10 place-items-center rounded-[13px] transition-[background-color,color,scale] duration-200 active:scale-95 ${
-        pressed
-          ? dark
-            ? "relative bg-[#fffdf8] text-[#1d2838] animate-[like-pop_420ms_cubic-bezier(.22,1,.36,1)]"
-            : "relative bg-[#1d2838] text-white animate-[like-pop_420ms_cubic-bezier(.22,1,.36,1)]"
-          : dark
-            ? "hover:bg-white/15"
-            : "hover:bg-[#1d2838]/10"
-      }`}
+      className={`grid size-10 place-items-center rounded-[13px] transition-[background-color,color,scale] duration-200 active:scale-95 ${tone}`}
     >
-      {pressed ? <span aria-hidden className="pointer-events-none absolute -inset-1 rounded-[16px] border-2 border-current opacity-0 animate-[like-ring_520ms_ease-out]" /> : null}
+      {pressed && <span aria-hidden className="pointer-events-none absolute -inset-1 rounded-[16px] border-2 border-current opacity-0 animate-[like-ring_520ms_ease-out]" />}
       <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         {children}
       </svg>

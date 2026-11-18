@@ -9,7 +9,7 @@
 // - Reduced motion: everything is shown at once.
 
 import { useEffect, useRef, useState } from "react";
-import { KutuAvatar } from "../../_components/KutuAvatar";
+import { AiAvatar } from "../../_components/AiAvatar";
 
 export type AiBlock = { kind: "lead" | "cue" | "activity"; title?: string; text: string };
 
@@ -81,7 +81,7 @@ export function AiSummary({ blocks, bookTitle }: { blocks: AiBlock[]; bookTitle:
     <div ref={ref} className="flex max-w-[640px] flex-col gap-[1.2em]">
       {/* AI label: shimmering while it "reads", then settles */}
       <p className="flex items-center gap-2 text-base font-semibold tracking-[-0.01em] sm:text-lg" aria-live="polite">
-        <KutuAvatar size={36} thinking={stage === "thinking" || stage === "typing"} />
+        <AiAvatar size={36} thinking={stage === "thinking" || stage === "typing"} />
         {stage === "done" ? (
           <span>Summarised by KutuBooku AI</span>
         ) : (

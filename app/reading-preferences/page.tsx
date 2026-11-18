@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { questions } from "../_data/questions";
 import { Questionnaire } from "./Questionnaire";
 import { Preloader } from "../_components/Preloader";
-import { GlobalHeader } from "../_components/GlobalHeader";
+import { Header } from "../_components/Header";
 import { PageTransition } from "../_components/PageTransition";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ export default function ReadingPreferencesPage() {
         className={`flex min-h-dvh flex-1 flex-col bg-[#FDDAA6] font-[family-name:var(--font-q-sans)] text-[#1d2838]`}
       >
         <Preloader />
-        <GlobalHeader />
+        <Header />
         <Questionnaire questions={questions} />
       </div>
     </PageTransition>

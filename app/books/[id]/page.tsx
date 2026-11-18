@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { getImageProps } from "next/image";
 import { notFound } from "next/navigation";
 import { abs, jsonLd } from "../../_lib/site";
-import { GlobalFooter } from "../../_components/GlobalFooter";
-import { GlobalHeader } from "../../_components/GlobalHeader";
+import { Footer } from "../../_components/Footer";
+import { Header } from "../../_components/Header";
 import { PageTransition } from "../../_components/PageTransition";
 import { MOCK_BOOKS } from "../../_data/curation-mock";
 import { BookPdp, bookTheme } from "./BookPdp";
@@ -82,10 +82,10 @@ export default async function BookPage({ params }: Props) {
     <PageTransition>
       <div style={theme} className={`flex min-h-dvh flex-1 flex-col overflow-x-clip bg-white font-[family-name:var(--font-q-sans)] text-black`}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(bookData(book)) }} />
-        <GlobalHeader background="bg-[var(--book-tint)]" />
+        <Header background="bg-[var(--book-tint)]" />
         <BookPdp book={book} />
         {/* pb on phones: room for the fixed Buy button */}
-        <GlobalFooter className="pb-24 sm:pb-0" />
+        <Footer className="pb-24 sm:pb-0" />
       </div>
     </PageTransition>
   );

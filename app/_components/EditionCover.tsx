@@ -1,9 +1,5 @@
 import type { EditionArt } from "../_data/editions";
 
-/**
- * Original illustrated cover art for each monthly Edition, built from CSS/SVG
- * so there are no image assets to license. Replace with commissioned art later.
- */
 export function EditionCover({ art, title }: { art: EditionArt; title: string }) {
   return (
     <div className="@container relative size-full overflow-hidden" aria-hidden>
@@ -13,7 +9,6 @@ export function EditionCover({ art, title }: { art: EditionArt; title: string })
 }
 
 function Stars({ count, seed, className = "bg-white" }: { count: number; seed: number; className?: string }) {
-  // Deterministic pseudo-random positions so server and client render match.
   const dots = Array.from({ length: count }, (_, i) => {
     const x = ((i * 37 + seed * 13) % 97) + 1;
     const y = ((i * 53 + seed * 29) % 95) + 2;

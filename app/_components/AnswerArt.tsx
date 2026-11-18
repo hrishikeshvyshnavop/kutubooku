@@ -1,8 +1,3 @@
-// Original spot illustrations for questionnaire answers (48×48, navy line +
-// one or two palette fills). Keyed by "<questionId>:<optionValue>".
-// Add a key here to give any new answer an illustration; options without one
-// fall back to a letter tile.
-
 const INK = "#1d2838";
 const CORAL = "#f26b4f";
 const MARIGOLD = "#f6c453";
@@ -12,7 +7,6 @@ const LILAC = "#c9b7f1";
 
 const line = { stroke: INK, strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 
-/** Open book used by several reading illustrations. */
 const OpenBook = ({ fill = "#fff", y = 0 }: { fill?: string; y?: number }) => (
   <g transform={`translate(0 ${y})`}>
     <path d="M24 30c-4-3-10-4-16-4v12c6 0 12 1 16 4 4-3 10-4 16-4V26c-6 0-12 1-16 4z" fill={fill} {...line} />
@@ -21,7 +15,6 @@ const OpenBook = ({ fill = "#fff", y = 0 }: { fill?: string; y?: number }) => (
 );
 
 const ART: Record<string, React.ReactNode> = {
-  /* ---------- reading stage ---------- */
   "stage:read-to": (
     <>
       <OpenBook fill={MARIGOLD} y={2} />
@@ -57,7 +50,6 @@ const ART: Record<string, React.ReactNode> = {
     </>
   ),
 
-  /* ---------- interests ---------- */
   "interests:animals": (
     <>
       <ellipse cx="24" cy="31" rx="9" ry="8" fill={MARIGOLD} {...line} />
@@ -154,7 +146,6 @@ const ART: Record<string, React.ReactNode> = {
     </>
   ),
 
-  /* ---------- already read? ---------- */
   "skip:no": (
     <>
       <OpenBook fill={MINT} y={0} />
@@ -171,7 +162,6 @@ const ART: Record<string, React.ReactNode> = {
     </>
   ),
 
-  /* ---------- can't stand ---------- */
   "avoid:scary": (
     <>
       <path d="M12 40V22a12 12 0 0 1 24 0v18l-4-3-4 3-4-3-4 3-4-3z" fill={LILAC} {...line} />
@@ -218,7 +208,6 @@ const ART: Record<string, React.ReactNode> = {
   ),
 };
 
-/** Returns the illustration for an answer, or null if it has none. */
 export function answerArt(questionId: string, value: string): React.ReactNode | null {
   const art = ART[`${questionId}:${value}`];
   if (!art) return null;

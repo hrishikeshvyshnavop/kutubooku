@@ -40,7 +40,7 @@
 }
 
 /* ------------------------------------------------------------------------- */
-/* Home intro (HomeIntro.tsx, 2026-11-05): three beats, then the hero.         */
+/* Home intro (Intro.tsx, 2026-11-05): three beats, then the hero.         */
 /* ~7s, about 2.2s a beat: slowed 2026-11-11 so parents can read each line.  */
 /* Times (ms from load): card 608-2688, chips 1216/1456/1696, covers deal     */
 /* 2336-3040 and drop ~4640-5780, box 4496, flaps close 5790-6226, hop 6304,  */
@@ -54,7 +54,7 @@
 }
 /* (No page scroll lock while it plays: toggling overflow on <html> brought the scrollbar back
    mid hand-off on Windows, shifting the carousel ~17px, and restyled the whole page. The overlay
-   swallows scroll gestures itself: HomeIntro, overscroll-behavior + touch-action below.) */
+   swallows scroll gestures itself: Intro, overscroll-behavior + touch-action below.) */
 .home-intro {
   overscroll-behavior: contain;
   touch-action: none;
@@ -144,7 +144,7 @@
   12%, 88% { opacity: 1; }
 }
 @keyframes hi-dot-on { to { opacity: 1; } }
-/* The hero's books fly out of the box into the carousel (BookHero sets --ix/--iy/--d). */
+/* The hero's books fly out of the box into the carousel (Hero sets --ix/--iy/--d). */
 /* Only the books on screen get it (data-intro-on, set per book): marking all ~60 at once built
    60 compositing layers in one frame and froze the hand-off. */
 /* Transform only, no opacity: opacity on these preserve-3d items flattens the 3D books while it
@@ -253,7 +253,7 @@
 }
 
 /* Home hero: 3D books float slowly from their resting angle, and fly in on load. */
-/* Hero "Ask KutuBooku AI" (app/_components/HeroAsk.tsx) */
+/* Hero "Ask KutuBooku AI" (app/_components/AiChat.tsx) */
 /* reply card grows up out of the ask box, and shrinks back into it */
 @keyframes ask-pop-in {
   from {
@@ -546,7 +546,7 @@
     opacity: 0;
   }
 }
-/* Hero book → book page (BookHero + BookCover3D share name="book-<id>", share="book-morph"):
+/* Hero book → book page (Hero + BookCover3D share name="book-<id>", share="book-morph"):
    the clicked book flies from the carousel to the cover slot and grows, above the page
    swap (z-index), while its two snapshots (carousel tilt → page tilt) crossfade. */
 ::view-transition-group(.book-morph) {

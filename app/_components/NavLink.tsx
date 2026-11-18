@@ -1,11 +1,5 @@
 "use client";
 
-// Nav link that also handles in-page sections ("/#faq"). Used by the header and footer.
-// - Already on the page that holds the section: no navigation, the page glides to it
-//   (through Lenis, so it matches the site's smooth scroll) and the URL gets the #hash.
-// - From any other page: a normal link; Next opens the page at the section.
-// "/" and "/home" are the same page (home), so "/#faq" glides on either.
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { pageScroll } from "./SmoothScroll";
@@ -31,11 +25,9 @@ export function NavLink({ href, onClick, ...props }: React.ComponentProps<typeof
         if (!el) return;
         e.preventDefault();
         history.replaceState(history.state, "", `#${hash}`);
-        // Next frame: lets a closing menu release the page scroll first.
         requestAnimationFrame(() => {
           const top = el.getBoundingClientRect().top + window.scrollY;
-          pageScroll.to(top); // smooth native scroll; instant with reduced motion
-          // Keyboard users land in the section too.
+          pageScroll.to(top);
           el.focus({ preventScroll: true });
         });
       }}

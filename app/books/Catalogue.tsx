@@ -20,7 +20,7 @@ import { ageBand, ageOf } from "../_data/questions";
 import { BookCard } from "../curation/BookCard";
 import { TAG_SHORT } from "../curation/card-style";
 import { activeOf, displayName, useChildren } from "../_lib/children";
-import { useCardBox } from "../_components/useCardBox";
+import { useAddToBox } from "../_components/useAddToBox";
 import { useSession } from "../_lib/session";
 import { CheckIcon } from "../_components/CheckIcon";
 import { localTransition } from "../_lib/local-transition";
@@ -168,7 +168,7 @@ export function Catalogue() {
   const [f, setF] = useState<Filters>(NONE);
   const [ready, setReady] = useState(false);
   // Card buttons: "Add to {child}'s box" (shared with the home row).
-  const { whoseBox, cardProps, toastEl } = useCardBox();
+  const { whoseBox, cardProps, toastEl } = useAddToBox();
 
   // Start from the URL; with no age in it, the active child's age band (C: "pre-selected, can be switched off").
   const childBand = bandOf(active?.answers);
@@ -421,7 +421,7 @@ export function Catalogue() {
                 book={b}
                 index={i}
                 href={`/books/${b.id}`}
-                {...cardProps(b.id)}
+                box={cardProps(b.id)}
               />
             </li>
           ))}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { GlobalHeader } from "../_components/GlobalHeader";
+import { Header } from "../_components/Header";
 import { PageTransition } from "../_components/PageTransition";
 import { Catalogue } from "./Catalogue";
 import { MOCK_BOOKS } from "../_data/curation-mock";
@@ -28,7 +28,7 @@ export default function BooksPage() {
     <PageTransition>
       <div className={`flex min-h-dvh flex-1 flex-col bg-[#f4efe6] font-[family-name:var(--font-q-sans)] text-[#1d2838]`}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(STRUCTURED) }} />
-        <GlobalHeader background="bg-[#f4efe6]" />
+        <Header background="bg-[#f4efe6]" />
         <Suspense fallback={<div className="flex-1" />}>
           <Catalogue />
         </Suspense>

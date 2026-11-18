@@ -1,52 +1,32 @@
-// The one footer for every content page (home, book page, 404).
-// Design language: the home hero's background (peach + soft white glow, hero-bg.ts), black text, a closing
-// headline in the shared SectionTitle style, the header's amber pills and split CTA,
-// peach social icons, and the wordmark full width along the bottom.
-// Same max width and side padding as the header, so the edges line up.
-
 import Link from "next/link";
 import { NavLink } from "./NavLink";
 import { NAV, PILL } from "../_data/nav";
-import { SplitCta } from "./HomeHeader";
+import { CtaButton } from "./CtaButton";
 import { SectionTitle } from "./SectionTitle";
-import { StickyFooterShell } from "./StickyFooterShell";
-import { HERO_GLOW, HERO_PEACH } from "./hero-bg";
+import { FooterShell } from "./FooterShell";
+import { HERO_GLOW, HERO_PEACH } from "../_data/theme";
 
-// TODO: real profile URLs. The icons are in /public/icons (peach), so they sit in black circles.
 const SOCIALS = [
   { label: "Instagram", icon: "/icons/instagram.svg", href: "#" },
   { label: "TikTok", icon: "/icons/tiktok.svg", href: "#" },
 ];
 
-// Written out, not new Date(): this Next version refuses unstable values like the current time while prerendering. Update each January.
 const YEAR = 2026;
 
 const COL_TITLE = "font-[family-name:var(--font-caveat)] text-[26px] leading-none text-[#3b308f] sm:text-[30px]";
 
-/**
- * Classes for the page content just above the footer (each page's <main>): it sits over
- * the footer and gets rounded bottom corners, so it lifts off the footer as you
- * scroll to the end. overflow-clip (not hidden) keeps the home hero's position: sticky working.
- */
-export const REVEAL_ABOVE = "relative z-10 overflow-clip rounded-b-[32px] sm:rounded-b-[48px] lg:rounded-b-[64px]";
-
-export function GlobalFooter({ className = "" }: { className?: string }) {
+export function Footer({ className = "" }: { className?: string }) {
   return (
-    // -mt + extra pt: the footer tucks 64px under the content, so its rounded corners show the footer, not whatever is behind the page.
-    <StickyFooterShell aria-labelledby="footer-title" className={`-mt-16 ${HERO_PEACH} text-black ${className}`}>
-      {/* Same glow as the home hero (hero-bg.ts) */}
+    <FooterShell aria-labelledby="footer-title" className={`-mt-16 ${HERO_PEACH} text-black ${className}`}>
       <div aria-hidden className={HERO_GLOW} />
-      {/* Kept compact (about 880px at 1440 wide) so the whole footer fits a laptop screen and can be pinned (see StickyFooterShell). */}
       <div className="relative mx-auto w-full max-w-[1920px] px-page pt-28 sm:pt-32">
-        {/* Closing line + CTA */}
         <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
           <SectionTitle id="footer-title" eyebrow="one last thing" className="max-w-[900px]">
             Every child has a book they&apos;ll love. Let&apos;s find it.
           </SectionTitle>
-          <SplitCta href="/reading-preferences" label="Find books for my child" className="w-fit shrink-0" />
+          <CtaButton href="/reading-preferences" label="Find books for my child" className="w-fit shrink-0" />
         </div>
 
-        {/* Links */}
         <div className="mt-10 grid gap-10 border-t-2 border-black/15 pt-10 sm:mt-14 sm:grid-cols-2 lg:flex lg:justify-between lg:gap-12">
           <nav aria-label="Footer">
             <p className={COL_TITLE}>explore</p>
@@ -96,21 +76,16 @@ export function GlobalFooter({ className = "" }: { className?: string }) {
           </div>
         </div>
 
-        {/* Wordmark, edge to edge of the content width, as a quiet watermark: one tone a step darker
-            than the peach (the logo used as a mask), so it signs off the page without the bright
-            mint + amber clashing on peach. Decorative: the header logo carries the name. */}
         <div
           aria-hidden
           className="mt-12 aspect-[3348/550] w-full select-none bg-[#F3BE78] [mask:url(/brand/kutubooku-logo.svg)_center/contain_no-repeat] sm:mt-14"
         />
 
-        {/* Legal */}
         <div className="flex flex-col gap-2 py-6 text-sm font-medium text-black/60 sm:flex-row sm:items-center sm:justify-between sm:py-8 sm:text-base">
           <p>© {YEAR} KutuBooku. Books picked for your child.</p>
-          {/* Amazon Associates disclosure (see CONTEXT.md Q32) */}
           <p>As an Amazon Associate, KutuBooku earns from qualifying purchases. You buy and get delivery through Amazon.in.</p>
         </div>
       </div>
-    </StickyFooterShell>
+    </FooterShell>
   );
 }

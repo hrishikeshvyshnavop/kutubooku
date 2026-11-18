@@ -14,7 +14,7 @@ import { book3DFor } from "../_components/Book3D";
 import { childNameOf, readAnswers } from "../_components/curation/ui";
 import { isSignedIn, useSession } from "../_lib/session";
 import { activeOf, displayName, useChildren } from "../_lib/children";
-import { ReaderAvatar } from "../_components/ReaderAvatar";
+import { ChildAvatar } from "../_components/ChildAvatar";
 import { CheckIcon } from "../_components/CheckIcon";
 import { amazonCartUrl, rupees } from "../_lib/amazon";
 import {
@@ -333,7 +333,7 @@ function BoxBody({
                 className="rounded-[28px] bg-white p-4 shadow-[0_24px_70px_rgba(29,40,56,0.08)] sm:rounded-[36px] sm:p-6"
               >
                 <div className={`flex flex-wrap items-center gap-x-4 gap-y-3 px-1 ${flat ? "sr-only" : ""}`}>
-                  {profile ? <ReaderAvatar child={profile} index={list.indexOf(profile)} size={44} round /> : null}
+                  {profile ? <ChildAvatar child={profile} index={list.indexOf(profile)} size={44} round /> : null}
                   <div className="min-w-0 flex-1">
                     <h2 id={id} className="flex items-baseline gap-2 text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
                       {flat ? "Your books" : g.child ? `For ${g.child}` : "For anyone"}
@@ -609,7 +609,7 @@ function MoveMenu({ item, title, targets, onMove }: { item: BoxItem; title: stri
               {(() => {
                 const profile = t ? kids.find((c) => displayName(c.name) === t) : null;
                 return profile ? (
-                  <ReaderAvatar child={profile} index={kids.indexOf(profile)} size={32} round />
+                  <ChildAvatar child={profile} index={kids.indexOf(profile)} size={32} round />
                 ) : (
                   <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-[#f4efe6] text-black/55">
                     <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

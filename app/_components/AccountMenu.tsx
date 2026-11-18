@@ -1,21 +1,13 @@
 "use client";
 
-// The one profile control in the header once signed in (Netflix-style, B6):
-// the active child's picture and name. Its menu holds everything account-related:
-// who books are being added for, switching child, adding / managing readers, the box,
-// and the Google account with Sign out.
-// Before any child exists it shows the parent's initial and "Account".
-// Phones: the same button, picture only.
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { signOut, type Session } from "../_lib/session";
 import { useBox } from "../_lib/box";
 import { MAX_CHILDREN, activeOf, displayName, switchChild, useChildren } from "../_lib/children";
-import { ReaderAvatar } from "./ReaderAvatar";
+import { ChildAvatar } from "./ChildAvatar";
 
-/** Menu close animation length; signing out waits for it so nothing swaps under a fading menu. */
 const CLOSE_MS = 200;
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 const ITEM = `flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-lg font-semibold tracking-[-0.01em] hover:bg-[#fff3d6] ${FOCUS}`;
@@ -43,7 +35,6 @@ export function AccountMenu({ session }: { session: Session }) {
   const stayRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
 
-  // Keyboard: the question takes focus on its safe answer ("Stay signed in").
   useEffect(() => {
     if (confirming) stayRef.current?.focus();
   }, [confirming]);
@@ -77,10 +68,9 @@ export function AccountMenu({ session }: { session: Session }) {
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={active ? `Adding books for ${name}. Profile and account` : "Account"}
-        // Hugs the name (short names left a big empty pill); capped so long names truncate.
         className={`flex h-12 max-w-[220px] items-center gap-2 rounded-full bg-[#fbbe63] p-1 text-xl font-semibold tracking-[-0.16px] text-black transition-colors hover:bg-[#f9a220] sm:pr-4 xl:h-14 xl:py-2 xl:pl-2 ${FOCUS}`}
       >
-        {active ? <ReaderAvatar child={active} index={list.indexOf(active)} size={40} round /> : <Initial session={session} size={40} />}
+        {active ? <ChildAvatar child={active} index={list.indexOf(active)} size={40} round /> : <Initial session={session} size={40} />}
         <span className="min-w-0 truncate text-left max-sm:hidden">{active ? name : "Account"}</span>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden className={`shrink-0 transition-transform max-sm:hidden ${open ? "rotate-180" : ""}`}>
           <path d="M6 9l6 6 6-6" />
@@ -88,8 +78,6 @@ export function AccountMenu({ session }: { session: Session }) {
       </button>
       <p role="status" aria-live="polite" className="sr-only">{said}</p>
 
-      {/* Opens and closes with a short fade + drop (not an instant show/hide). Closed: invisible
-          once the fade ends, and inert, so nothing in it can be reached. */}
       <div
         id={menuId}
         inert={!open}
@@ -100,7 +88,7 @@ export function AccountMenu({ session }: { session: Session }) {
         {active ? (
           <>
             <Link href="/curation" onClick={done} className={`${ITEM} pb-3`}>
-              <ReaderAvatar child={active} index={list.indexOf(active)} size={44} />
+              <ChildAvatar child={active} index={list.indexOf(active)} size={44} />
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-black/50">Adding books for</span>
                 <span className="block truncate leading-tight">{name}</span>
@@ -120,7 +108,7 @@ export function AccountMenu({ session }: { session: Session }) {
                     }}
                     className={ITEM}
                   >
-                    <ReaderAvatar child={c} index={list.indexOf(c)} size={32} round />
+                    <ChildAvatar child={c} index={list.indexOf(c)} size={32} round />
                     <span className="truncate">Switch to {displayName(c.name)}</span>
                   </button>
                 ))}
@@ -156,15 +144,10 @@ export function AccountMenu({ session }: { session: Session }) {
             My box
             {n > 0 && <span className="rounded-full bg-black px-2 py-0.5 text-sm text-white">{n}</span>}
           </Link>
-          {/* The parent's Google account (real name and photo come from Google once sign-in is real). */}
           <div className="px-3 pb-1 pt-2">
             <p className="text-sm font-semibold text-black/50">Signed in with Google</p>
             <p className="truncate text-[15px]">{session.email}</p>
           </div>
-          {/* Sign out asks first, in place (no dialog over a menu): the row turns into a short
-              question with Sign out / Stay signed in. Leaving the menu cancels it. */}
-          {/* Both stay mounted and swap with a height animation (grid rows 1fr <-> 0fr), so the
-              menu grows smoothly instead of jumping. The hidden one is inert. */}
           <div
             inert={confirming}
             className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
@@ -195,11 +178,9 @@ export function AccountMenu({ session }: { session: Session }) {
                   <button
                     type="button"
                     onClick={() => {
-                      // Let the menu fade away first, then sign out: the header's profile button
-                      // then fades over to "Log-in / Sign-up" and a toast confirms it.
                       done();
                       setTimeout(() => {
-                        signOut(); // account-only pages send you home
+                        signOut();
                         router.refresh();
                       }, CLOSE_MS);
                     }}

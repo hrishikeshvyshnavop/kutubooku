@@ -1,9 +1,5 @@
 "use client";
 
-// Records where you last pressed (--pt-x / --pt-y on <html>), so the page-to-page "Splash"
-// transition (globals.css) spreads the next page out from exactly that spot.
-// Keyboard navigation has no point: the splash then starts from the middle of the screen.
-
 import { useEffect } from "react";
 
 export function SplashOrigin() {

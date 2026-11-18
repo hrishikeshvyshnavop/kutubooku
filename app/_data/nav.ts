@@ -1,5 +1,5 @@
 // Site navigation, shared by the header (client) and the footer (server).
-// Kept out of HomeHeader.tsx: a "use client" module's plain values can't be imported by server components.
+// Kept out of Header.tsx: a "use client" module's plain values can't be imported by server components.
 
 // /gifting and /blog are still to be built (they show the 404 page for now). FAQ is the home
 // page's FAQ section (/#faq); NavLink glides to it when already on home.

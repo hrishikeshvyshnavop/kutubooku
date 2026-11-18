@@ -1,7 +1,5 @@
 "use client";
 
-// "Pick a character": a child's profile picture from the books' characters (Netflix-style icon picker).
-
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { AVATARS, avatarSrc } from "../_data/avatars";
@@ -19,7 +17,6 @@ export function AvatarChooser({
   open: boolean;
   name: string;
   value: string;
-  /** Characters other children already have: avatar id → child's name. */
   taken: Record<string, string>;
   onPick: (id: string) => void;
   onClose: () => void;

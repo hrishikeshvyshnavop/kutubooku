@@ -1,17 +1,9 @@
-"use client";
-
-// Shared UI for the screens after the questionnaire (sign-in, curation).
-// Copied from app/reading-preferences/Questionnaire.tsx so the two can evolve
-// separately for now — consolidate into one shared module later.
-
 import Image from "next/image";
 import type { MockBook } from "../../_data/curation-mock";
 import { activeChild, displayName } from "../../_lib/children";
 
 export const INK = "#1d2838";
 export const CORAL = "#f26b4f";
-
-/* -------------------------------- Buttons -------------------------------- */
 
 export {
   ArrowIcon,
@@ -27,13 +19,10 @@ export {
 } from "../Button";
 export type { ButtonProps, ButtonVariant } from "../Button";
 
-/* ---------------------------- Answers storage ---------------------------- */
-
 export type Answers = Record<string, string | string[]>;
 export const ANSWERS_KEY = "kb:reading-preferences";
 export const SIGNED_IN_KEY = "kb:signed-in";
 
-/** The active child's answers once signed in (app/_lib/children.ts), else the questionnaire's draft. */
 export function readAnswers(): Answers | null {
   const active = activeChild();
   if (active) return active.answers;
@@ -48,8 +37,6 @@ export function readAnswers(): Answers | null {
 }
 
 export const childNameOf = (a: Answers | null): string => displayName(a?.name);
-
-/* ------------------------------ Book cover ------------------------------- */
 
 export function BookCover({ book, className = "" }: { book: MockBook; className?: string }) {
   return (

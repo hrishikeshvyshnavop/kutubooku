@@ -4,10 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-// Header layout follows the Aardvark Book Club pattern (centred pill nav,
-// split CTA with arrow chip, region pill on the right, split Menu button on
-// mobile) with KutuBooku's own logo, wording and colours.
-
 const links = [
   { href: "/editions", label: "Editions" },
   { href: "/gifting", label: "Gifting" },
@@ -36,7 +32,6 @@ function Logo() {
   );
 }
 
-/** Split CTA: label block + separate arrow square, 2px apart. */
 function SplitButton({ href, label, className = "" }: { href: string; label: string; className?: string }) {
   return (
     <Link href={href} className={`group flex h-[42px] items-stretch gap-0.5 ${className}`}>
@@ -50,7 +45,7 @@ function SplitButton({ href, label, className = "" }: { href: string; label: str
   );
 }
 
-export function SiteHeader() {
+export function LegacyHeader() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -64,7 +59,6 @@ export function SiteHeader() {
     <header className="relative z-40 flex h-20 items-center justify-between gap-4 bg-transparent px-4 sm:px-[18px]">
       <Logo />
 
-      {/* Desktop: centred pill nav + split CTA */}
       <nav aria-label="Main" className="absolute left-1/2 hidden -translate-x-1/2 lg:block">
         <ul className="flex items-center gap-1.5">
           {links.map((l) => (
@@ -80,14 +74,12 @@ export function SiteHeader() {
         </ul>
       </nav>
 
-      {/* Desktop right: region pill */}
       <ul className="hidden items-center gap-1.5 xl:flex">
         <li>
           <span className={`${pill} cursor-default hover:bg-white/65`}>🇮🇳 Shopping on Amazon.in</span>
         </li>
       </ul>
 
-      {/* Mobile: split Menu button */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -105,7 +97,6 @@ export function SiteHeader() {
         </span>
       </button>
 
-      {/* Mobile menu panel */}
       <div
         id="mobile-menu"
         hidden={!open}

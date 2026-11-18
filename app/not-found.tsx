@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { Footer } from "./_components/Footer";
 import { FooterMascot } from "./_components/FooterMascot";
-import { GlobalFooter, REVEAL_ABOVE } from "./_components/GlobalFooter";
-import { GlobalHeader } from "./_components/GlobalHeader";
+import { REVEAL_ABOVE } from "./_data/footer";
+import { Header } from "./_components/Header";
 import { PageTransition } from "./_components/PageTransition";
 
 // Handwritten footer label.
@@ -10,7 +11,7 @@ export default function NotFound() {
   return (
     <PageTransition>
       <div className={`flex min-h-dvh flex-col bg-[#FDDAA6] text-[#1d2838]`}>
-        <GlobalHeader />
+        <Header />
         <main className={`flex flex-1 flex-col items-center bg-[#FDDAA6] px-page pt-8 sm:pt-12 ${REVEAL_ABOVE}`}>
           <div className="my-auto w-full max-w-[720px] py-8 text-center">
             <div className="rounded-[36px] bg-[#fffdf8] px-6 py-12 shadow-[0_24px_70px_rgba(29,40,56,0.12)] sm:rounded-[56px] sm:px-12 sm:py-16">
@@ -39,7 +40,7 @@ export default function NotFound() {
           {/* last in main: the mascot peeks over the footer */}
           <FooterMascot className="mt-10 w-full" />
         </main>
-        <GlobalFooter />
+        <Footer />
       </div>
     </PageTransition>
   );

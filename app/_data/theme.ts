@@ -1,7 +1,6 @@
 // The home hero's background, shared with the footer so the page opens and closes
 // on the same surface: brand peach plus a soft white glow (a radial highlight a little
 // above the middle, faded in from the top).
-// Plain module (no "use client") so both server and client components can import it.
 
 export const HERO_PEACH = "bg-[#FDDAA6]";
 
