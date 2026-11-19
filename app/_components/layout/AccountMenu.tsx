@@ -8,6 +8,7 @@ import { useBox } from "../../_lib/box";
 import { useGiftOrders } from "../../_lib/gift-orders";
 import { MAX_CHILDREN, activeOf, displayName, switchChild, useChildren } from "../../_lib/children";
 import { ChildAvatar } from "../child/ChildAvatar";
+import { ScrollThumb } from "../ui/ScrollThumb";
 
 const CLOSE_MS = 200;
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
@@ -35,6 +36,7 @@ export function AccountMenu({ session }: { session: Session }) {
   const [confirming, setConfirming] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const stayRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
 
   useEffect(() => {
@@ -84,130 +86,133 @@ export function AccountMenu({ session }: { session: Session }) {
       <div
         id={menuId}
         inert={!open}
-        className={`absolute right-0 top-[calc(100%+8px)] z-50 max-h-[calc(100dvh-120px)] w-[300px] origin-top-right overflow-y-auto rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5 transition-[opacity,scale,translate,visibility] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+        className={`absolute right-0 top-[calc(100%+8px)] z-50 flex max-h-[calc(100dvh-120px)] w-[300px] origin-top-right flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5 transition-[opacity,scale,translate,visibility] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
           open ? "visible translate-y-0 scale-100 opacity-100" : "invisible -translate-y-1 scale-[0.98] opacity-0"
         }`}
       >
-        {active ? (
-          <>
-            <Link href="/curation" onClick={done} className={`${ITEM} pb-3`}>
-              <ChildAvatar child={active} index={list.indexOf(active)} size={44} />
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold text-black/50">Adding books for</span>
-                <span className="block truncate leading-tight">{name}</span>
-              </span>
-            </Link>
-            <div className="border-t border-black/8 pt-1.5">
-              {list
-                .filter((c) => c.id !== active.id)
-                .map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => {
-                      switchChild(c.id);
-                      setSaid(`Now adding books for ${displayName(c.name)}`);
-                      done();
-                    }}
-                    className={ITEM}
-                  >
-                    <ChildAvatar child={c} index={list.indexOf(c)} size={32} round />
-                    <span className="truncate">Switch to {displayName(c.name)}</span>
-                  </button>
-                ))}
-              {list.length < MAX_CHILDREN && (
-                <Link href="/reading-preferences?new=1" onClick={done} className={ITEM}>
-                  <span aria-hidden className="grid size-8 place-items-center rounded-full border-2 border-dashed border-black/30 text-lg leading-none">+</span>
-                  Add child
-                </Link>
-              )}
-              <Link href="/children?manage=1" onClick={done} className={ITEM}>
-                <span aria-hidden className="grid size-8 place-items-center">
-                  <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" />
-                  </svg>
+        <div ref={listRef} className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
+          {active ? (
+            <>
+              <Link href="/curation" onClick={done} className={`${ITEM} pb-3`}>
+                <ChildAvatar child={active} index={list.indexOf(active)} size={44} />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-black/50">Adding books for</span>
+                  <span className="block truncate leading-tight">{name}</span>
                 </span>
-                Manage readers
               </Link>
-            </div>
-          </>
-        ) : (
-          <>
-            <Link href="/curation" onClick={done} className={ITEM}>
-              My child&apos;s books
-            </Link>
-            <Link href="/reading-preferences" onClick={done} className={ITEM}>
-              Edit reading answers
-            </Link>
-          </>
-        )}
+              <div className="border-t border-black/8 pt-1.5">
+                {list
+                  .filter((c) => c.id !== active.id)
+                  .map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        switchChild(c.id);
+                        setSaid(`Now adding books for ${displayName(c.name)}`);
+                        done();
+                      }}
+                      className={ITEM}
+                    >
+                      <ChildAvatar child={c} index={list.indexOf(c)} size={32} round />
+                      <span className="truncate">Switch to {displayName(c.name)}</span>
+                    </button>
+                  ))}
+                {list.length < MAX_CHILDREN && (
+                  <Link href="/reading-preferences?new=1" onClick={done} className={ITEM}>
+                    <span aria-hidden className="grid size-8 place-items-center rounded-full border-2 border-dashed border-black/30 text-lg leading-none">+</span>
+                    Add child
+                  </Link>
+                )}
+                <Link href="/children?manage=1" onClick={done} className={ITEM}>
+                  <span aria-hidden className="grid size-8 place-items-center">
+                    <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" />
+                    </svg>
+                  </span>
+                  Manage readers
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link href="/curation" onClick={done} className={ITEM}>
+                My child&apos;s books
+              </Link>
+              <Link href="/reading-preferences" onClick={done} className={ITEM}>
+                Edit reading answers
+              </Link>
+            </>
+          )}
 
-        <div className="mt-1.5 border-t border-black/8 pt-1.5">
-          <Link href="/box" onClick={done} className={`${ITEM} justify-between`}>
-            My box
-            {n > 0 && <span className="rounded-full bg-black px-2 py-0.5 text-sm text-white">{n}</span>}
-          </Link>
-          <Link href="/gifting/orders" onClick={done} className={`${ITEM} justify-between`}>
-            My gifts
-            {gifts > 0 && <span className="rounded-full bg-black px-2 py-0.5 text-sm text-white">{gifts}</span>}
-          </Link>
-          <div className="px-3 pb-1 pt-2">
-            <p className="text-sm font-semibold text-black/50">Signed in with Google</p>
-            <p className="truncate text-[15px]">{session.email}</p>
-          </div>
-          <div
-            inert={confirming}
-            className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-              confirming ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
-            }`}
-          >
-            <div className="min-h-0 overflow-hidden">
-              <button type="button" onClick={() => setConfirming(true)} className={`${ITEM} text-black/65`}>
-                Sign out
-              </button>
+          <div className="mt-1.5 border-t border-black/8 pt-1.5">
+            <Link href="/box" onClick={done} className={`${ITEM} justify-between`}>
+              My box
+              {n > 0 && <span className="rounded-full bg-black px-2 py-0.5 text-sm text-white">{n}</span>}
+            </Link>
+            <Link href="/gifting/orders" onClick={done} className={`${ITEM} justify-between`}>
+              My gifts
+              {gifts > 0 && <span className="rounded-full bg-black px-2 py-0.5 text-sm text-white">{gifts}</span>}
+            </Link>
+            <div className="px-3 pb-1 pt-2">
+              <p className="text-sm font-semibold text-black/50">Signed in with Google</p>
+              <p className="truncate text-[15px]">{session.email}</p>
             </div>
-          </div>
-          <div
-            inert={!confirming}
-            className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-              confirming ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-            }`}
-          >
-            <div className="min-h-0 overflow-hidden">
-              <div role="group" aria-labelledby={`${menuId}-q`} className="mt-1 rounded-xl bg-[#fff3d6] p-3">
-                <p id={`${menuId}-q`} className="text-lg font-semibold leading-tight tracking-[-0.01em]">
-                  Sign out of KutuBooku?
-                </p>
-                <p className="mt-1 text-[15px] leading-snug text-black/65">
-                  Your box and readers stay saved to your account for next time.
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      done();
-                      setTimeout(() => {
-                        signOut();
-                        router.refresh();
-                      }, CLOSE_MS);
-                    }}
-                    className={`h-11 flex-auto whitespace-nowrap rounded-full bg-black px-4 text-[15px] font-semibold text-white transition-colors hover:bg-black/80 ${FOCUS}`}
-                  >
-                    Sign out
-                  </button>
-                  <button
-                    ref={stayRef}
-                    type="button"
-                    onClick={() => setConfirming(false)}
-                    className={`h-11 flex-auto whitespace-nowrap rounded-full border-2 border-black/15 px-4 text-[15px] font-semibold transition-colors hover:border-black ${FOCUS}`}
-                  >
-                    Stay signed in
-                  </button>
+            <div
+              inert={confirming}
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+                confirming ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
+              }`}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <button type="button" onClick={() => setConfirming(true)} className={`${ITEM} text-black/65`}>
+                  Sign out
+                </button>
+              </div>
+            </div>
+            <div
+              inert={!confirming}
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+                confirming ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+              }`}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <div role="group" aria-labelledby={`${menuId}-q`} className="mt-1 rounded-xl bg-[#fff3d6] p-3">
+                  <p id={`${menuId}-q`} className="text-lg font-semibold leading-tight tracking-[-0.01em]">
+                    Sign out of KutuBooku?
+                  </p>
+                  <p className="mt-1 text-[15px] leading-snug text-black/65">
+                    Your box and readers stay saved to your account for next time.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        done();
+                        setTimeout(() => {
+                          signOut();
+                          router.refresh();
+                        }, CLOSE_MS);
+                      }}
+                      className={`h-11 flex-auto whitespace-nowrap rounded-full bg-black px-4 text-[15px] font-semibold text-white transition-colors hover:bg-black/80 ${FOCUS}`}
+                    >
+                      Sign out
+                    </button>
+                    <button
+                      ref={stayRef}
+                      type="button"
+                      onClick={() => setConfirming(false)}
+                      className={`h-11 flex-auto whitespace-nowrap rounded-full border-2 border-black/15 px-4 text-[15px] font-semibold transition-colors hover:border-black ${FOCUS}`}
+                    >
+                      Stay signed in
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        <ScrollThumb scroller={listRef} className="absolute inset-y-0 right-0.5" />
       </div>
     </div>
   );

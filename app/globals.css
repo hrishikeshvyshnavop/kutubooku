@@ -471,6 +471,25 @@
   }
 }
 
+.review-track {
+  animation: review-marquee var(--loop-dur, 40s) linear infinite;
+}
+.review-track:hover,
+.review-track:focus-within,
+.review-track:active {
+  animation-play-state: paused;
+}
+@keyframes review-marquee {
+  to {
+    translate: calc(var(--loop) * -1) 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .review-track {
+    animation: none;
+  }
+}
+
 @keyframes like-pop {
   0% { transform: scale(0.75) rotate(-12deg); }
   55% { transform: scale(1.18) rotate(6deg); }
@@ -815,10 +834,14 @@ html {
   display: none;
 }
 
-/* Native scrolling (SmoothScroll.tsx). The scrollbar's space is always reserved, so nothing
-   shifts sideways when it hides (modal dialog open) or a page is shorter than the screen. */
-html {
-  scrollbar-gutter: stable;
+/* The page's native scrollbar is hidden; ScrollThumb (layout.tsx) draws the overlay
+   thumb instead, so nothing shifts sideways when a modal locks scrolling. */
+html,
+html:hover {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
 }
 html.kb-scroll-lock {
   overflow: hidden;

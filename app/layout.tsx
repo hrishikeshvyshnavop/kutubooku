@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { BookSheetHost } from "./_components/book/BookSheetHost";
 import { SmoothScroll } from "./_components/layout/SmoothScroll";
 import { SplashOrigin } from "./_components/layout/SplashOrigin";
+import { ScrollThumb } from "./_components/ui/ScrollThumb";
 
 const grotesk = Figtree({ variable: "--font-q-sans", subsets: ["latin"] });
 const calSans = Cal_Sans({ variable: "--font-cal", weight: "400", subsets: ["latin"] });
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <BookSheetHost />
         </Suspense>
         <SplashOrigin />
+        <ScrollThumb scroller="page" className="fixed inset-y-0 right-0.5 z-[60]" />
       </body>
     </html>
   );

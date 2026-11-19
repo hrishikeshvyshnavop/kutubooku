@@ -5,6 +5,7 @@ import { playMorph } from "../_lib/book-sheet";
 import { BookPdp, bookTheme } from "../books/[id]/BookPdp";
 import type { MockBook } from "../_data/curation-mock";
 import { SHEET_CLOSE_BTN, SHEET_DIALOG } from "../_data/sheet";
+import { ScrollThumb } from "../_components/ui/ScrollThumb";
 
 type Props = {
   book: MockBook | null;
@@ -49,11 +50,12 @@ export function BookDetails({ book, reason, inList, child, onAdd, onOpen, onClos
         if (e.target === e.currentTarget) onClose();
       }}
       data-lenis-prevent
-      className={SHEET_DIALOG}
+      className={`no-scrollbar ${SHEET_DIALOG}`}
     >
       {b ? (
         <div style={bookTheme(b)} className="min-h-full font-[family-name:var(--font-q-sans)]">
           <div className="sticky top-0 z-40 bg-[var(--book-tint)]/90 backdrop-blur">
+            <ScrollThumb scroller={ref} className="absolute right-1 top-0" />
             <span aria-hidden className="absolute left-1/2 top-2 h-1.5 w-12 -translate-x-1/2 rounded-full bg-black/20" />
             <div className="mx-auto flex max-w-[1920px] items-center justify-between gap-3 px-5 pb-2 pt-4 sm:px-10 lg:px-[6%]">
               {inList ? (

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { NAV, PILL } from "../../_data/nav";
+import { NAV } from "../../_data/nav";
 import { HERO_PEACH } from "../../_data/theme";
 import { lastSignOut, useSession } from "../../_lib/session";
 import { AccountMenu } from "./AccountMenu";
@@ -19,6 +19,9 @@ const SIGNED_OUT_MS = 3200;
 const SIGNED_OUT_TOAST = { text: "You've signed out. Your box is saved for next time.", tone: "info" } as const;
 const LOGIN_LABEL = "Log-in / Sign-up";
 const MOBILE_MENU_ID = "header-mobile-menu";
+const NAV_TEXT = "font-heading whitespace-nowrap font-semibold leading-none tracking-[-0.02em] text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black";
+const NAV_BAR = "relative inline-block rounded-sm text-xl after:absolute after:-inset-x-2 after:-inset-y-4 after:content-[''] 2xl:text-[22px]";
+const NAV_ROW = "flex h-12 items-center rounded-xl px-3 text-2xl transition-colors duration-200 hover:bg-black/5";
 const STAGGER_MS = 40;
 const STAGGER_START_MS = 60;
 const SPRING = "ease-[cubic-bezier(0.34,1.4,0.64,1)]";
@@ -97,27 +100,29 @@ function reveal(open: boolean, index: number) {
   };
 }
 
-function NavLinks({
-  listClassName,
-  linkClassName,
-  onNavigate,
-  open,
-}: {
-  listClassName: string;
-  linkClassName: string;
-  onNavigate?: () => void;
-  open?: boolean;
-}) {
+function NavLinks({ variant, onNavigate, open }: { variant: "bar" | "menu"; onNavigate?: () => void; open?: boolean }) {
+  const pathname = usePathname();
+  const bar = variant === "bar";
+
   return (
     <nav aria-label="Main">
-      <ul className={listClassName}>
-        {NAV.map(({ href, label, live }, i) => (
-          <li key={href} {...(open === undefined ? {} : reveal(open, i))}>
-            <NavLink href={href} prefetch={live ? undefined : false} onClick={onNavigate} className={`${PILL} font-heading ${linkClassName}`}>
-              {label}
-            </NavLink>
-          </li>
-        ))}
+      <ul className={bar ? "flex items-center gap-6 2xl:gap-8" : "flex flex-col gap-0.5"}>
+        {NAV.map(({ href, label, live }, i) => {
+          const current = pathname === href;
+          return (
+            <li key={href} {...(open === undefined ? {} : reveal(open, i))}>
+              <NavLink
+                href={href}
+                prefetch={live ? undefined : false}
+                onClick={onNavigate}
+                aria-current={current ? "page" : undefined}
+                className={`${NAV_TEXT} ${bar ? `${NAV_BAR} ${current ? "link-underline-on" : "link-underline"}` : `${NAV_ROW} ${current ? "bg-[#fbbe63]/40" : ""}`}`}
+              >
+                {label}
+              </NavLink>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );
@@ -199,7 +204,7 @@ export function Header({ background = HERO_PEACH }: { background?: string }) {
           <Logo />
 
           <div className="hidden xl:block">
-            <NavLinks listClassName="flex items-center gap-2" linkClassName="max-2xl:px-3.5 max-2xl:text-xl" />
+            <NavLinks variant="bar" />
           </div>
 
           <div className="hidden items-center justify-end gap-2 xl:flex">
@@ -220,7 +225,7 @@ export function Header({ background = HERO_PEACH }: { background?: string }) {
           aria-hidden={!open}
           className={`absolute inset-x-4 top-[calc(100%-0.25rem)] rounded-2xl bg-white p-3 shadow-xl ring-1 ring-black/5 xl:hidden ${PANEL_MOTION} ${open ? PANEL_OPEN : PANEL_CLOSED}`}
         >
-          <NavLinks listClassName="flex flex-col gap-1.5" linkClassName="justify-center" onNavigate={closeMenu} open={open} />
+          <NavLinks variant="menu" onNavigate={closeMenu} open={open} />
           {!session && (
             <div {...reveal(open, NAV.length)}>
               <Button variant="split" href={signInHref} className="mt-2 w-full">{LOGIN_LABEL}</Button>

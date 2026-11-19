@@ -12,6 +12,7 @@ import { useSession } from "../../_lib/session";
 import { AddToBoxButton } from "../ui/AddToBoxButton";
 import { AiAvatar } from "./AiAvatar";
 import { ChildAvatar } from "../child/ChildAvatar";
+import { ScrollThumb } from "../ui/ScrollThumb";
 import { useAddToBox } from "../useAddToBox";
 
 const SETTLE_MS = 450;
@@ -394,15 +395,22 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
                       ))}
                     </ul>
                   )}
-                  {child ? (
-                    <Button variant="split" size="md" href="/curation" className="w-full">
-                      See {childName}&apos;s full curation
-                    </Button>
-                  ) : (
-                    <Button variant="split" size="md" href="/reading-preferences" className="w-full">
-                      {latest.answer.age !== undefined ? `Get a full curation for a ${latest.answer.age}-year-old` : "Get a full curation for my child"}
-                    </Button>
-                  )}
+                  <div className="border-t border-[#1d2838]/10 pt-4">
+                    {child ? (
+                      <Button variant="split" tone="ink" size="md" href="/curation" className="max-w-full [&>span:first-child]:min-w-0 [&>span:first-child]:pl-1.5">
+                        <span aria-hidden className="shrink-0">
+                          <ChildAvatar child={child} index={kids?.list.indexOf(child) ?? 0} size={34} round />
+                        </span>
+                        <span className="truncate">See {childName}&apos;s full curation</span>
+                      </Button>
+                    ) : (
+                      <Button variant="split" tone="ink" size="md" href="/reading-preferences" className="max-w-full [&>span:first-child]:min-w-0">
+                        <span className="truncate">
+                          {latest.answer.age !== undefined ? `Get a full curation for a ${latest.answer.age}-year-old` : "Get a full curation for my child"}
+                        </span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </ChatScrollArea>
@@ -534,58 +542,33 @@ function Thinking() {
   );
 }
 
-const INSET = 12;
-const MIN_THUMB = 36;
 const FADE = 28;
 
-type Geo = { top: number; height: number; scrollable: boolean; atTop: boolean; atBottom: boolean };
+type Edges = { scrollable: boolean; atTop: boolean; atBottom: boolean };
 
 function ChatScrollArea({
   className = "",
   followKey,
-
   children,
 }: {
   className?: string;
   followKey: string | number;
-
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [geo, setGeo] = useState<Geo>({ top: 0, height: 0, scrollable: false, atTop: true, atBottom: true });
-  const [awake, setAwake] = useState(false);
-  const [dragging, setDragging] = useState(false);
-  const sleepTimer = useRef(0);
-  const drag = useRef<{ y: number; scrollTop: number } | null>(null);
+  const [edges, setEdges] = useState<Edges>({ scrollable: false, atTop: true, atBottom: true });
 
   const measure = () => {
     const el = ref.current;
     if (!el) return;
     const { scrollTop, scrollHeight, clientHeight } = el;
     const max = scrollHeight - clientHeight;
-    const rail = clientHeight - INSET * 2;
-    const height = Math.max(MIN_THUMB, (clientHeight / scrollHeight) * rail);
-    setGeo({
-      scrollable: max > 1,
-      height,
-      top: INSET + (max > 0 ? (scrollTop / max) * (rail - height) : 0),
-      atTop: scrollTop <= 1,
-      atBottom: scrollTop >= max - 1,
-    });
+    setEdges({ scrollable: max > 1, atTop: scrollTop <= 1, atBottom: scrollTop >= max - 1 });
   };
   const measureRef = useRef(measure);
   useEffect(() => {
     measureRef.current = measure;
   });
-
-  const sleepSoon = () => {
-    window.clearTimeout(sleepTimer.current);
-    sleepTimer.current = window.setTimeout(() => setAwake(false), 1000);
-  };
-  const wake = () => {
-    window.clearTimeout(sleepTimer.current);
-    setAwake(true);
-  };
 
   useEffect(() => {
     const el = ref.current;
@@ -598,7 +581,6 @@ function ChatScrollArea({
     return () => {
       ro.disconnect();
       mo.disconnect();
-      window.clearTimeout(sleepTimer.current);
     };
   }, []);
 
@@ -609,72 +591,22 @@ function ChatScrollArea({
     el.scrollTo({ top: el.scrollHeight, behavior: reduce ? "auto" : "smooth" });
   }, [followKey]);
 
-  const onThumbDown = (e: React.PointerEvent) => {
-    const el = ref.current;
-    if (!el) return;
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    drag.current = { y: e.clientY, scrollTop: el.scrollTop };
-    setDragging(true);
-  };
-  const onThumbMove = (e: React.PointerEvent) => {
-    const el = ref.current;
-    if (!el || !drag.current) return;
-    const rail = el.clientHeight - INSET * 2 - geo.height;
-    const ratio = (el.scrollHeight - el.clientHeight) / Math.max(1, rail);
-    el.scrollTop = drag.current.scrollTop + (e.clientY - drag.current.y) * ratio;
-  };
-  const onThumbUp = () => {
-    drag.current = null;
-    setDragging(false);
-    sleepSoon();
-  };
-
-  const mask = geo.scrollable
-    ? `linear-gradient(to bottom, ${geo.atTop ? "#000" : "transparent"} 0, #000 ${FADE}px, #000 calc(100% - ${FADE}px), ${geo.atBottom ? "#000" : "transparent"} 100%)`
+  const mask = edges.scrollable
+    ? `linear-gradient(to bottom, ${edges.atTop ? "#000" : "transparent"} 0, #000 ${FADE}px, #000 calc(100% - ${FADE}px), ${edges.atBottom ? "#000" : "transparent"} 100%)`
     : undefined;
-  const shown = awake || dragging;
 
   return (
     <div className="relative">
       <div
         ref={ref}
         data-lenis-prevent
-        onScroll={() => {
-          measure();
-          wake();
-          sleepSoon();
-        }}
-        onPointerEnter={wake}
-        onPointerLeave={sleepSoon}
+        onScroll={measure}
         className={`no-scrollbar overflow-y-auto overscroll-contain ${className}`}
         style={{ maskImage: mask, WebkitMaskImage: mask, scrollbarWidth: "none" }}
       >
         {children}
       </div>
-
-      {geo.scrollable && (
-        <div aria-hidden className="pointer-events-none absolute inset-y-0 right-2 w-3">
-          <div
-            onPointerDown={onThumbDown}
-            onPointerMove={onThumbMove}
-            onPointerUp={onThumbUp}
-            onPointerCancel={onThumbUp}
-            onPointerEnter={wake}
-            onPointerLeave={() => !dragging && sleepSoon()}
-            className={`group pointer-events-auto absolute inset-x-0 flex cursor-grab touch-none justify-center transition-opacity duration-300 active:cursor-grabbing ${
-              shown ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ top: geo.top, height: geo.height }}
-          >
-            <span
-              className={`h-full rounded-full transition-[width,background-color] duration-200 ${
-                dragging ? "w-2 bg-[#f9a220]" : "w-1 bg-black/25 group-hover:w-2 group-hover:bg-[#f9a220]"
-              }`}
-            />
-          </div>
-        </div>
-      )}
+      <ScrollThumb scroller={ref} className="absolute inset-y-0 right-1.5" />
     </div>
   );
 }

@@ -7,8 +7,13 @@ const EDGE = 10;
 const IDLE_MS = 1200;
 
 type Geo = { top: number; height: number; scrollable: boolean };
+type Scroller = React.RefObject<HTMLElement | null> | "page";
 
-export function ScrollThumb({ scroller, className = "" }: { scroller: React.RefObject<HTMLElement | null>; className?: string }) {
+function resolve(scroller: Scroller) {
+  return scroller === "page" ? document.documentElement : scroller.current;
+}
+
+export function ScrollThumb({ scroller, className = "" }: { scroller: Scroller; className?: string }) {
   const [geo, setGeo] = useState<Geo>({ top: 0, height: 0, scrollable: false });
   const [awake, setAwake] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -26,8 +31,10 @@ export function ScrollThumb({ scroller, className = "" }: { scroller: React.RefO
   };
 
   useEffect(() => {
-    const el = scroller.current;
+    const el = resolve(scroller);
     if (!el) return;
+    const page = scroller === "page";
+    const events: EventTarget = page ? window : el;
 
     const measure = () => {
       const { scrollTop, scrollHeight, clientHeight } = el;
@@ -47,21 +54,24 @@ export function ScrollThumb({ scroller, className = "" }: { scroller: React.RefO
     };
 
     const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    if (el.firstElementChild) ro.observe(el.firstElementChild);
-    el.addEventListener("scroll", onScroll, { passive: true });
+    ro.observe(page ? document.body : el);
+    const content = page ? document.body.firstElementChild : el.firstElementChild;
+    if (content) ro.observe(content);
+    events.addEventListener("scroll", onScroll, { passive: true });
+    if (page) window.addEventListener("resize", measure);
     const raf = requestAnimationFrame(measure);
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
-      el.removeEventListener("scroll", onScroll);
+      events.removeEventListener("scroll", onScroll);
+      if (page) window.removeEventListener("resize", measure);
       window.clearTimeout(timer.current);
     };
   }, [scroller]);
 
   const onDown = (e: React.PointerEvent) => {
-    const el = scroller.current;
+    const el = resolve(scroller);
     if (!el) return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -69,7 +79,7 @@ export function ScrollThumb({ scroller, className = "" }: { scroller: React.RefO
     setDragging(true);
   };
   const onMove = (e: React.PointerEvent) => {
-    const el = scroller.current;
+    const el = resolve(scroller);
     if (!el || !drag.current) return;
     const ratio = (el.scrollHeight - el.clientHeight) / Math.max(1, travel.current);
     el.scrollTo({ top: drag.current.scrollTop + (e.clientY - drag.current.y) * ratio, behavior: "instant" });
