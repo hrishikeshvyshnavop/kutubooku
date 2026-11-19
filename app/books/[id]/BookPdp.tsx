@@ -2,11 +2,11 @@ import reviewsJson from "../../../public/covers/reviews.json";
 import { THEME_LABEL, TOPIC_LABEL, detailsFor, similarTo } from "../../_data/book-details";
 import type { MockBook } from "../../_data/curation-mock";
 import { AiSummary, type AiBlock } from "./AiSummary";
-import { BookCard } from "../../_components/book/BookCard";
 import { BookCover3D } from "./BookCover3D";
 import { book3DFor } from "../../_components/book/Book3D";
 import { ReviewWall } from "../../_components/book/ReviewWall";
 import { BuyTray } from "./BuyTray";
+import { SimilarBooks } from "./SimilarBooks";
 import { SectionTitle } from "../../_components/ui/SectionTitle";
 import { FooterMascot } from "../../_components/layout/FooterMascot";
 import { REVEAL_ABOVE } from "../../_data/footer";
@@ -260,21 +260,7 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
             <br />
             like this
           </SectionTitle>
-          <ul
-            aria-label={`Books like ${book.title}`}
-            className="mx-[calc(var(--gutter)*-1)] mt-10 flex snap-x snap-mandatory scroll-px-[var(--gutter)] gap-4 overflow-x-auto px-page pb-6 pt-2 [scrollbar-width:none] sm:mt-14 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-5 lg:overflow-visible lg:px-0"
-            data-lenis-prevent-horizontal
-          >
-            {similar.map((s, i) => (
-              <li key={s.id} className="w-[min(78vw,320px)] shrink-0 snap-start lg:w-auto [perspective:1400px]">
-                {sheet?.onOpenBook ? (
-                  <BookCard book={s} index={i + 1} titleAs="h3" onOpen={() => sheet.onOpenBook?.(s.id)} />
-                ) : (
-                  <BookCard book={s} index={i + 1} titleAs="h3" href={`/books/${s.id}`} />
-                )}
-              </li>
-            ))}
-          </ul>
+          <SimilarBooks books={similar} title={book.title} onOpenBook={sheet?.onOpenBook} />
         </section>
       )}
 

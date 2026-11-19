@@ -55,8 +55,8 @@ export function ReviewWall({ reviews, id = "reviews", eyebrow = "from parents", 
           </span>
         </SectionTitle>
       </div>
-      <div className="sm:overflow-x-auto sm:pb-6 sm:[scrollbar-width:none]" data-lenis-prevent-horizontal>
-        <ul className="flex flex-col items-center gap-4 px-4 sm:mx-auto sm:w-max sm:flex-row sm:gap-0 sm:px-6 sm:pt-6">
+      <div className="sm:-mb-10 sm:-mt-6 sm:overflow-x-auto sm:[scrollbar-width:none]">
+        <ul className="flex flex-col items-center gap-4 px-4 sm:mx-auto sm:w-max sm:flex-row sm:gap-0 sm:px-6 sm:pb-16 sm:pt-12">
           {reviews.map((r, i) => {
             const card = CARDS[i % CARDS.length];
             const last = i === reviews.length - 1;

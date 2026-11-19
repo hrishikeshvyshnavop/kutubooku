@@ -19,7 +19,6 @@ export function CollectionBooks({ label, items, accent }: { label: string; items
     <>
       <ul
         aria-label={label}
-        data-lenis-prevent-horizontal
         className="mx-[calc(var(--gutter)*-1)] mt-8 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto overscroll-x-contain px-page pb-6 pt-4 [scrollbar-width:none] sm:mt-10 sm:gap-5"
       >
         {items.map((b, i) => (
