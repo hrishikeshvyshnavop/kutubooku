@@ -1,21 +1,13 @@
 "use client";
 
-// Signed-in session, shared by the header, sign-in, curation and box pages.
-// ⚠️ SIMULATED: real "Sign in with Google" (OAuth via Payload + Google provider) is a dev-team task.
-// Until then, "Continue with Google" signs in a sample parent account, kept in localStorage so it
-// survives reloads and new tabs, and signing out really signs out.
-
 import { useSyncExternalStore } from "react";
 
 export type Session = { name: string; email: string; since: number };
 
 const KEY = "kb:session";
-/** Older flag the first screens used (sessionStorage). Still read so nobody gets signed out by this change. */
 const LEGACY_KEY = "kb:signed-in";
-/** Box page: "we've added this browser's books to your account" was shown (see app/box/Box.tsx). */
 const MERGED_KEY = "kb:box-merged";
 
-/** The sample account "Continue with Google" signs in as, until real Google sign-in exists. */
 const SAMPLE_ACCOUNT = { name: "Sample Parent", email: "parent@example.com" };
 
 let cache: Session | null | undefined;
@@ -52,7 +44,6 @@ function subscribe(l: () => void) {
   };
 }
 
-/** The session; null when signed out; undefined during server render / before hydration. */
 export function useSession(): Session | null | undefined {
   return useSyncExternalStore(subscribe, read, () => undefined);
 }
@@ -64,15 +55,12 @@ export function signIn(): Session {
   try {
     localStorage.setItem(KEY, JSON.stringify(s));
     sessionStorage.setItem(LEGACY_KEY, "1");
-  } catch {
-    /* private mode: signed in for this page only */
-  }
+  } catch {}
   cache = s;
   emit();
   return s;
 }
 
-/** When the last sign-out happened (this tab), so the header can say "You've signed out" even if the page changes. */
 let signedOutAt = 0;
 export const lastSignOut = () => signedOutAt;
 
@@ -82,14 +70,11 @@ export function signOut() {
     localStorage.removeItem(KEY);
     sessionStorage.removeItem(LEGACY_KEY);
     sessionStorage.removeItem(MERGED_KEY);
-  } catch {
-    /* ignore */
-  }
+  } catch {}
   cache = null;
   emit();
 }
 
-/** Only same-site relative paths are allowed as the place to go after signing in. */
 export function safeNext(raw: string | null | undefined, fallback = "/") {
   return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/sign-in") ? raw : fallback;
 }

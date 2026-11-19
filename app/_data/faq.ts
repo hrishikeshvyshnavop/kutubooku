@@ -1,6 +1,3 @@
-// Home page FAQ. Answers only state what has been decided (docs/CONTEXT.md).
-// Real copy will come from Payload CMS.
-
 export type Faq = { q: string; a: string };
 
 export const HOME_FAQ: Faq[] = [

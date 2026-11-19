@@ -12,14 +12,26 @@ import { BoxLink } from "./BoxLink";
 import { HideOnScroll } from "./HideOnScroll";
 import { MascotVideo } from "../media/MascotVideo";
 import { NavLink } from "../ui/NavLink";
-import { CtaButton } from "../ui/CtaButton";
+import { Button } from "../ui/Button";
 import { Toast } from "../ui/Toast";
 
 const SIGNED_OUT_MS = 3200;
 const SIGNED_OUT_TOAST = { text: "You've signed out. Your box is saved for next time.", tone: "info" } as const;
 const LOGIN_LABEL = "Log-in / Sign-up";
 const MOBILE_MENU_ID = "header-mobile-menu";
-const MENU_CHIP = "rounded-lg bg-[#f9a220] text-black";
+const STAGGER_MS = 40;
+const STAGGER_START_MS = 60;
+const SPRING = "ease-[cubic-bezier(0.34,1.4,0.64,1)]";
+const PANEL_MOTION = `origin-top-right transition-[opacity,scale,translate,visibility] motion-reduce:transition-none`;
+const PANEL_OPEN = `visible scale-100 opacity-100 duration-[420ms] ${SPRING}`;
+const PANEL_CLOSED = "invisible -translate-y-2 scale-[0.92] opacity-0 duration-200 ease-[cubic-bezier(0.5,0,0.75,0)]";
+const ITEM_MOTION = "transition-[opacity,translate] motion-reduce:transition-none";
+const ITEM_OPEN = `translate-y-0 opacity-100 duration-[420ms] ${SPRING}`;
+const ITEM_CLOSED = "-translate-y-2.5 opacity-0 duration-150 ease-in";
+const LABEL_ROLL = "text-center transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
+const LINE = "[transform-box:fill-box] [transform-origin:center] motion-reduce:transition-none";
+const LINE_TO_CROSS = "[transition:translate_160ms_ease-in,rotate_280ms_160ms_cubic-bezier(0.34,1.56,0.64,1),scale_160ms,opacity_120ms]";
+const LINE_TO_BARS = "[transition:rotate_180ms_ease-in,translate_240ms_180ms_cubic-bezier(0.34,1.56,0.64,1),scale_200ms_180ms,opacity_160ms_180ms]";
 
 let toastOwner: symbol | null = null;
 
@@ -55,7 +67,7 @@ function Logo() {
       onPointerLeave={off}
       onFocus={on}
       onBlur={off}
-      className="flex items-center gap-1 text-[#111]"
+      className="flex min-w-0 items-center gap-1 text-[#111]"
     >
       <MascotVideo
         name="kutu-logo-mark"
@@ -64,7 +76,7 @@ function Logo() {
         height={168}
         play="hover"
         active={active}
-        className="h-[52px] w-auto sm:h-[56px]"
+        className="h-[44px] w-auto shrink-0 sm:h-[56px]"
       />
       <Image
         src="/brand/kutubooku-logo-deep.svg"
@@ -72,18 +84,35 @@ function Logo() {
         width={1674}
         height={275}
         priority
-        className="h-auto w-[132px] sm:w-[154px]"
+        className="h-auto w-[96px] min-[360px]:w-[112px] min-[400px]:w-[132px] sm:w-[154px]"
       />
     </Link>
   );
 }
 
-function NavLinks({ listClassName, linkClassName, onNavigate }: { listClassName: string; linkClassName: string; onNavigate?: () => void }) {
+function reveal(open: boolean, index: number) {
+  return {
+    className: `${ITEM_MOTION} ${open ? ITEM_OPEN : ITEM_CLOSED}`,
+    style: { transitionDelay: open ? `${STAGGER_START_MS + index * STAGGER_MS}ms` : "0ms" },
+  };
+}
+
+function NavLinks({
+  listClassName,
+  linkClassName,
+  onNavigate,
+  open,
+}: {
+  listClassName: string;
+  linkClassName: string;
+  onNavigate?: () => void;
+  open?: boolean;
+}) {
   return (
     <nav aria-label="Main">
       <ul className={listClassName}>
-        {NAV.map(({ href, label, live }) => (
-          <li key={href}>
+        {NAV.map(({ href, label, live }, i) => (
+          <li key={href} {...(open === undefined ? {} : reveal(open, i))}>
             <NavLink href={href} prefetch={live ? undefined : false} onClick={onNavigate} className={`${PILL} font-heading ${linkClassName}`}>
               {label}
             </NavLink>
@@ -123,27 +152,33 @@ function SignedOutToast({ session }: { session: unknown }) {
 function LoginCta({ href, hidden }: { href: string; hidden: boolean }) {
   const [fresh] = useState(() => typeof window !== "undefined" && msSinceSignOut() < SIGNED_OUT_MS);
 
-  return <CtaButton href={href} label={LOGIN_LABEL} className={hidden ? "invisible" : fresh ? "animate-q-in" : ""} />;
+  return <Button variant="split" href={href} className={hidden ? "invisible" : fresh ? "animate-q-in" : ""}>{LOGIN_LABEL}</Button>;
 }
 
-function MenuButton({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+function MenuButton({ open, compact, onToggle }: { open: boolean; compact: boolean; onToggle: () => void }) {
+  const label = open ? "Close" : "Menu";
+  const line = `${LINE} ${open ? LINE_TO_CROSS : LINE_TO_BARS}`;
+  const icon = (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden className="overflow-visible">
+      <path d="M4 7h16" className={`${line} ${open ? "translate-y-[5px] rotate-45" : ""}`} />
+      <path d="M4 12h16" className={`${line} ${open ? "scale-x-0 opacity-0" : ""}`} />
+      <path d="M4 17h16" className={`${line} ${open ? "-translate-y-[5px] -rotate-45" : ""}`} />
+    </svg>
+  );
+  const shared = { onClick: onToggle, "aria-expanded": open, "aria-controls": MOBILE_MENU_ID };
+
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-expanded={open}
-      aria-controls={MOBILE_MENU_ID}
-      className="group flex h-12 items-stretch gap-0.5"
-    >
-      <span className={`flex items-center px-4 text-lg font-bold leading-none tracking-[-0.4px] ${MENU_CHIP}`}>
-        {open ? "Close" : "Menu"}
-      </span>
-      <span className={`grid w-12 place-items-center ${MENU_CHIP}`}>
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
-          <path d={open ? "M6 6l12 12M18 6L6 18" : "M4 7h16M4 12h16M4 17h16"} />
-        </svg>
-      </span>
-    </button>
+    <>
+      <Button variant="icon" tone="amber" size="md" label={label} className={compact ? "sm:hidden" : "min-[360px]:hidden"} {...shared}>
+        {icon}
+      </Button>
+      <Button variant="split" size="md" icon={icon} label={label} className={compact ? "max-sm:hidden" : "max-[359px]:hidden"} {...shared}>
+        <span aria-hidden className="-my-1 grid overflow-hidden py-1 [&>*]:col-start-1 [&>*]:row-start-1">
+          <span className={`${LABEL_ROLL} ${open ? "-translate-y-[140%] opacity-0" : ""}`}>Menu</span>
+          <span className={`${LABEL_ROLL} ${open ? "" : "translate-y-[140%] opacity-0"}`}>Close</span>
+        </span>
+      </Button>
+    </>
   );
 }
 
@@ -160,7 +195,7 @@ export function Header({ background = HERO_PEACH }: { background?: string }) {
       <header className="relative z-40 mx-auto w-full max-w-[1920px] px-page py-4">
         <SignedOutToast session={session} />
 
-        <div className="flex items-center justify-between gap-4 xl:grid xl:grid-cols-[1fr_auto_1fr]">
+        <div className="flex items-center justify-between gap-2 sm:gap-4 xl:grid xl:grid-cols-[1fr_auto_1fr]">
           <Logo />
 
           <div className="hidden xl:block">
@@ -172,20 +207,25 @@ export function Header({ background = HERO_PEACH }: { background?: string }) {
             {session ? <AccountMenu session={session} /> : <LoginCta href={signInHref} hidden={session === undefined} />}
           </div>
 
-          <div className="flex items-center gap-2 xl:hidden">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 xl:hidden">
             <BoxLink />
             {session && <AccountMenu session={session} />}
-            <MenuButton open={open} onToggle={() => setOpen((o) => !o)} />
+            <MenuButton open={open} compact={Boolean(session)} onToggle={() => setOpen((o) => !o)} />
           </div>
         </div>
 
         <div
           id={MOBILE_MENU_ID}
-          hidden={!open}
-          className="absolute inset-x-4 top-[calc(100%-0.25rem)] rounded-2xl bg-white p-3 shadow-xl ring-1 ring-black/5 xl:hidden"
+          inert={!open}
+          aria-hidden={!open}
+          className={`absolute inset-x-4 top-[calc(100%-0.25rem)] rounded-2xl bg-white p-3 shadow-xl ring-1 ring-black/5 xl:hidden ${PANEL_MOTION} ${open ? PANEL_OPEN : PANEL_CLOSED}`}
         >
-          <NavLinks listClassName="flex flex-col gap-1.5" linkClassName="justify-center" onNavigate={closeMenu} />
-          {!session && <CtaButton href={signInHref} label={LOGIN_LABEL} className="mt-2 w-full" />}
+          <NavLinks listClassName="flex flex-col gap-1.5" linkClassName="justify-center" onNavigate={closeMenu} open={open} />
+          {!session && (
+            <div {...reveal(open, NAV.length)}>
+              <Button variant="split" href={signInHref} className="mt-2 w-full">{LOGIN_LABEL}</Button>
+            </div>
+          )}
         </div>
       </header>
     </HideOnScroll>

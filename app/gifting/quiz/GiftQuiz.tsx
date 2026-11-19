@@ -1,11 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AddToBoxButton } from "../../_components/ui/AddToBoxButton";
-import { ArrowIcon, Button, OutlineButton } from "../../_components/ui/Button";
+import { ArrowIcon, Button } from "../../_components/ui/Button";
 import { rupeesFmt } from "../../_lib/format";
 import { MOCK_BOOKS } from "../../_data/curation-mock";
 import {
@@ -137,7 +136,7 @@ export function GiftQuiz() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1920px] flex-1 flex-col p-2.5 sm:p-3">
-      <div className="grid flex-1 gap-2.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-3">
+      <div className="grid flex-1 grid-rows-[auto_1fr] gap-2.5 lg:grid-rows-none lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-3">
         <aside
           style={{ backgroundColor: PANEL_COLOURS[step % PANEL_COLOURS.length] }}
           className="flex flex-col rounded-[28px] p-5 transition-colors duration-700 ease-out sm:rounded-[48px] sm:p-8 lg:min-h-[min(560px,calc(100dvh-14rem))]"
@@ -246,10 +245,10 @@ export function GiftQuiz() {
 
             <div className="sticky bottom-0 z-10 -mx-2 mt-10 flex min-h-[80px] items-center justify-end gap-1.5 rounded-t-[24px] bg-[#fffdf8]/90 px-2 pb-3 pt-3 backdrop-blur">
               {step > 0 && (
-                <OutlineButton onClick={() => goTo(step - 1)} label="Previous question">
+                <Button variant="secondary" onClick={() => goTo(step - 1)} label="Previous question">
                   <ArrowIcon dir="left" />
                   Back
-                </OutlineButton>
+                </Button>
               )}
               {showContinue && (
                 <Button type="submit" variant="primary" arrow="right">
@@ -399,10 +398,9 @@ function GiftPicks({
               Each one suits their age, with the reason we picked it. Add the ones you like to your gift basket.
             </p>
           </div>
-          <OutlineButton onClick={onEdit} label="Change your answers">
-            <ArrowIcon dir="left" />
+          <Button variant="secondary" arrow="left" onClick={onEdit} label="Change your answers">
             Change answers
-          </OutlineButton>
+          </Button>
         </div>
 
         <ul className="mt-10 grid gap-4 sm:mt-14 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
@@ -477,20 +475,12 @@ function BasketBar({ basket, budget }: { basket: string[]; budget: string }) {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <button
-            type="button"
-            onClick={clearGiftBasket}
-            className="hidden h-12 rounded-[14px] px-4 type-button-sm text-[#fffdf8]/80 transition-colors hover:bg-white/10 hover:text-[#fffdf8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fffdf8] sm:block"
-          >
+          <Button variant="ghost" tone="light" size="lg" onClick={clearGiftBasket} className="hidden sm:inline-flex">
             Clear
-          </button>
-          <Link
-            href="/gifting/checkout"
-            className="flex h-12 items-center gap-2 rounded-[14px] bg-[#f9a220] px-5 type-button-sm text-black transition-colors hover:bg-[#e8900c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fffdf8]"
-          >
+          </Button>
+          <Button variant="split" size="md" href="/gifting/checkout">
             Checkout
-            <ArrowIcon dir="right" />
-          </Link>
+          </Button>
         </div>
       </div>
     </div>

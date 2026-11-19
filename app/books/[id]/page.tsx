@@ -8,10 +8,6 @@ import { PageTransition } from "../../_components/layout/PageTransition";
 import { MOCK_BOOKS } from "../../_data/curation-mock";
 import { BookPdp, bookTheme } from "./BookPdp";
 
-// Book product page (PDP), /books/[id]. Layout from Figma node 1431:6 (Hrishi's Workspace).
-
-// Handwritten "At a glance" heading. Only this page uses it, so it is loaded here, not in the root layout.
-
 type Props = { params: Promise<{ id: string }> };
 
 const findBook = (id: string) => MOCK_BOOKS.find((b) => b.id === id);
@@ -28,15 +24,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description: book.description,
     alternates: { canonical: `/books/${book.id}` },
-    // Share card: the cover, resized (some originals are 4000×5000 px).
     openGraph: { type: "book", url: `/books/${book.id}`, title, description: book.description, images: [{ url: coverFor(book.cover), width: 1200, alt: `Cover of ${book.title}` }] },
   };
 }
 
-// width 600 → the 2× file is 1200 px wide: the size share cards use, without the 4000 px original.
 const coverFor = (src: string) => getImageProps({ src, alt: "", width: 600, height: 600 }).props.src;
 
-/** What the book is, for search engines. No ratings or prices: ours are samples / approximate. */
 function bookData(book: NonNullable<ReturnType<typeof findBook>>) {
   return [
     {
@@ -68,14 +61,10 @@ function bookData(book: NonNullable<ReturnType<typeof findBook>>) {
 }
 
 export default async function BookPage({ params }: Props) {
-  // Static mock data, all ids known at build time: cache the whole page so every book is
-  // fully prerendered (was partial for 13 of 15) and navigating to it is instant.
   "use cache";
   const book = findBook((await params).id);
   if (!book) notFound();
 
-  // The page takes its colours from the book: the spine colour of its 3D book,
-  // which was picked from the real cover. Text stays black, so the tints are kept light.
   const theme = bookTheme(book);
 
   return (
@@ -84,7 +73,6 @@ export default async function BookPage({ params }: Props) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(bookData(book)) }} />
         <Header background="bg-[var(--book-tint)]" />
         <BookPdp book={book} />
-        {/* pb on phones: room for the fixed Buy button */}
         <Footer className="pb-24 sm:pb-0" />
       </div>
     </PageTransition>

@@ -72,7 +72,7 @@ export function ReviewWall({ reviews, id = "reviews", eyebrow = "from parents", 
                   {r.book && (
                     <Link
                       href={r.book.href}
-                      className="link-underline mt-2 inline-block type-body-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
+                      className="relative after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-[''] link-underline mt-2 inline-block type-body-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
                     >
                       on {r.book.title}
                     </Link>

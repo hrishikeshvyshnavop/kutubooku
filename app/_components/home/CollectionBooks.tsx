@@ -5,6 +5,7 @@ import { BookCard } from "../book/BookCard";
 import { CARD_TILTS, PILL_COLOURS, cardColourFor } from "../../_data/card-style";
 import type { MockBook } from "../../_data/curation-mock";
 import { rupeesFmt } from "../../_lib/format";
+import { Button } from "../ui/Button";
 import { useAddToBox } from "../useAddToBox";
 
 export type CollectionItem =
@@ -81,37 +82,9 @@ function SeasonalCard({ b, index, accent }: { b: Extract<CollectionItem, { kind:
         <div className="mt-auto flex items-center pt-3">
           <span className="type-title-sm tabular-nums">{rupeesFmt(b.price)}</span>
         </div>
-        <a
-          href={b.href}
-          target="_blank"
-          rel="sponsored noopener noreferrer"
-          className="group/buy mt-2 flex h-12 w-full items-stretch gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-        >
-          <span
-            className="flex flex-1 items-center justify-center rounded-[14px] type-button-sm transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]"
-            style={{ backgroundColor: ink, color: onInk }}
-          >
-            Buy on Amazon.in
-            <span className="sr-only"> (opens in a new tab)</span>
-          </span>
-          <span
-            className="grid w-12 place-items-center rounded-[14px] transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]"
-            style={{ backgroundColor: ink, color: onInk }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="size-5 transition-transform group-hover/buy:-translate-y-0.5 group-hover/buy:translate-x-0.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
-            >
-              <path d="M7 17L17 7M9 7h8v8" />
-            </svg>
-          </span>
-        </a>
+        <Button variant="split" size="md" tone={card.dark ? "light" : "ink"} icon="external" href={b.href} newTab className="mt-2 w-full">
+          Buy on Amazon.in
+        </Button>
       </div>
     </article>
   );

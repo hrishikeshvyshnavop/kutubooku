@@ -1,26 +1,13 @@
 "use client";
 
-// Book page as a slide-up sheet over any screen, kept in the URL as ?book=<id>
-// (e.g. /box?book=the-dot). Because it's in the URL: refresh keeps the screen AND the sheet,
-// the link can be shared, and Back closes it. Plain /books/<id> links (search engines, old links)
-// still open the full page; inside the app they're caught and opened as the sheet
-// (app/_components/BookSheetHost.tsx).
-//
-// Also: the "book flies into the sheet" morph, and preloading so the sheet opens instantly.
-
 import { getImageProps } from "next/image";
 
 export const BOOK_PARAM = "book";
 
-/* ------------------------------ Open / close ------------------------------ */
-
-/** How many sheet entries we pushed onto history in this visit (so × can go back over them). */
 let depth = 0;
 
-/** Where the clicked book was, so it can fly into the sheet once it's open. */
 let pendingMorph: { id: string; rect: DOMRect; source: HTMLElement } | null = null;
 
-/** Remember the clicked book's spot (also used by the listing's own sheet). */
 export function rememberMorph(id: string, from?: Element | null) {
   const source = findSourceCover(from);
   pendingMorph = source ? { id, rect: source.getBoundingClientRect(), source } : null;
@@ -31,12 +18,10 @@ export function openBook(id: string, from?: Element | null) {
   if (url.searchParams.get(BOOK_PARAM) === id) return;
   rememberMorph(id, from);
   url.searchParams.set(BOOK_PARAM, id);
-  // Next syncs useSearchParams with the History API: no server round trip, the page stays put.
   window.history.pushState(null, "", url);
   depth++;
 }
 
-/** Close the sheet: back over the entries we pushed, or (opened from a shared link / refresh) drop the param. */
 export function closeBook() {
   if (depth > 0) {
     const n = depth;
@@ -49,24 +34,18 @@ export function closeBook() {
   window.history.replaceState(null, "", url);
 }
 
-/** Browser Back/Forward moved through sheet entries. */
 export function onSheetHistory(hasBook: boolean) {
   depth = hasBook ? Math.max(0, depth - 1) : 0;
 }
 
-/** /books/<id> → id (only plain book links). */
 export function bookIdFromHref(href: string | null): string | null {
   const m = href?.match(/^\/books\/([^/?#]+)\/?$/);
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-/* -------------------------------- Preload -------------------------------- */
-
-// The 3D cover's `sizes` on the book page (BookCover3D): preload exactly that file.
 const PAGE_COVER_SIZES = "(min-width: 1024px) 600px, 420px";
 const preloaded = new Set<string>();
 
-/** Fetch and decode the book page's cover ahead of the click. */
 export function preloadCover(src: string) {
   if (preloaded.has(src)) return;
   preloaded.add(src);
@@ -81,7 +60,6 @@ export function preloadCover(src: string) {
 type ContentModule = typeof import("../_components/book/BookSheetContent");
 let chunk: Promise<ContentModule> | null = null;
 let loaded: ContentModule["default"] | null = null;
-/** Load the sheet's code (it isn't in every page's bundle). Idle time, hover, focus and touch call this. */
 export function preloadSheet() {
   chunk ??= import("../_components/book/BookSheetContent").then((m) => {
     loaded = m.default;
@@ -89,10 +67,7 @@ export function preloadSheet() {
   });
   return chunk;
 }
-/** The sheet's content component once loaded: rendered directly, so opening never waits. */
 export const loadedSheetContent = () => loaded;
-
-/* ------------------------- Book flies into the sheet ------------------------ */
 
 function findSourceCover(from?: Element | null): HTMLElement | null {
   if (!from) return null;
@@ -104,23 +79,14 @@ function findSourceCover(from?: Element | null): HTMLElement | null {
 
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-/**
- * Called once the sheet's cover is in the page. The sheet's own 3D book flies from where the
- * clicked book was into its place, following the sheet as it slides up.
- *
- * The sheet clips its content while it slides, so the flying book is an exact copy of the
- * sheet's 3D book (same markup, tilt and images) in the browser's top layer, above the sheet.
- * On landing it sits exactly on the real one, which is shown in the same frame: no swap to see.
- */
 export function playMorph(id: string, target: HTMLElement | null) {
   const m = pendingMorph;
   pendingMorph = null;
   if (!m || m.id !== id || !target || !target.isConnected) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const book = target.firstElementChild as HTMLElement | null; // the tilted 3D book inside the cover slot
+  const book = target.firstElementChild as HTMLElement | null;
   if (!book) return;
 
-  // The real book stays hidden until the copy lands on it (set now, before the first paint).
   target.style.opacity = "0";
   m.source.style.visibility = "hidden";
   const restore = () => {
@@ -128,8 +94,6 @@ export function playMorph(id: string, target: HTMLElement | null) {
     m.source.style.visibility = "";
   };
 
-  // The sheet may open in this same commit, after this runs: wait (a few frames at most) until
-  // the cover slot has a size, then fly.
   let tries = 0;
   const begin = () => {
     if (!target.isConnected) return restore();
@@ -141,7 +105,6 @@ export function playMorph(id: string, target: HTMLElement | null) {
 }
 
 function fly(target: HTMLElement, book: HTMLElement, m: NonNullable<typeof pendingMorph>, restore: () => void) {
-  // Unscaled size of the cover slot (it's scaled per breakpoint with CSS).
   const W = target.offsetWidth;
   const H = target.offsetHeight;
 
@@ -173,7 +136,7 @@ function fly(target: HTMLElement, book: HTMLElement, m: NonNullable<typeof pendi
   copy.style.transition = "none";
   flyEl.appendChild(copy);
   document.body.appendChild(flyEl);
-  flyEl.showPopover?.(); // top layer, above the open sheet
+  flyEl.showPopover?.();
 
   const from = m.rect;
   const fromCx = from.left + from.width / 2;
@@ -184,9 +147,9 @@ function fly(target: HTMLElement, book: HTMLElement, m: NonNullable<typeof pendi
   const frame = (now: number) => {
     const t = Math.min(1, (now - start) / DURATION);
     const p = easeInOut(t);
-    const nat = target.getBoundingClientRect(); // where the book will sit (the sheet is still moving)
-    const s = nat.width / W; // the slot's own CSS scale
-    const k0 = from.height / nat.height; // start at the clicked book's size
+    const nat = target.getBoundingClientRect();
+    const s = nat.width / W;
+    const k0 = from.height / nat.height;
     const scale = s * (k0 + (1 - k0) * p);
     const cx = fromCx + (nat.left + nat.width / 2 - fromCx) * p;
     const cy = fromCy + (nat.top + nat.height / 2 - fromCy) * p + Math.sin(Math.PI * p) * -50;
@@ -196,7 +159,6 @@ function fly(target: HTMLElement, book: HTMLElement, m: NonNullable<typeof pendi
     flyEl.style.visibility = "visible";
     if (t < 1) requestAnimationFrame(frame);
     else {
-      // Land: the real book appears exactly where the copy is, in the same frame.
       restore();
       flyEl.remove();
     }

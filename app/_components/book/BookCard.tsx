@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "../ui/Button";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { AddToBoxButton } from "../ui/AddToBoxButton";
@@ -46,6 +47,7 @@ type BookCardProps = {
   onOpen?: () => void;
   box?: BookCardBox;
   curation?: BookCardCuration;
+  compact?: boolean;
 };
 
 const SETTLE_MS = 900;
@@ -69,6 +71,7 @@ export function BookCard({
   onOpen,
   box: { child: boxChild = null, selected, onToggle } = {},
   curation: { motion: { deal, fresh, swappingOut } = {}, rating, onRate, menu } = {},
+  compact = false,
 }: BookCardProps) {
   const router = useRouter();
   const box = useBox();
@@ -95,6 +98,8 @@ export function BookCard({
   };
 
   const titleText = <span className="link-underline">{book.title}</span>;
+  const full = compact ? "max-sm:hidden" : "";
+  const whoseBox = boxChild ? `${boxChild}'s box` : "your box";
 
   return (
     <article
@@ -108,20 +113,22 @@ export function BookCard({
           ...(deal ? { animationDelay: `${index * (deal === "out" ? 40 : 70)}ms`, "--deal-r": index % 2 ? "9deg" : "-10deg" } : {}),
         } as React.CSSProperties
       }
-      className={`group/card relative flex h-full cursor-pointer flex-col rounded-[30px] p-3 shadow-[0_18px_30px_-22px_rgba(29,40,56,0.7)] transition-[rotate,translate,opacity,filter] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1.5 motion-reduce:transition-none ${motionClass({ deal, fresh, swappingOut, settled })} ${
+      className={`group/card relative flex h-full cursor-pointer flex-col rounded-[30px] p-3 ${compact ? "max-sm:rounded-[22px] max-sm:p-2" : ""} shadow-[0_18px_30px_-22px_rgba(29,40,56,0.7)] transition-[rotate,translate,opacity,filter] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1.5 motion-reduce:transition-none ${motionClass({ deal, fresh, swappingOut, settled })} ${
         CARD_TILTS[index % CARD_TILTS.length]
       }`}
     >
       {fresh && <SwapConfetti />}
 
-      <div data-book-cover={book.id} className="relative overflow-hidden rounded-[20px]">
+      <div data-book-cover={book.id} className={`relative overflow-hidden rounded-[20px] ${compact ? "max-sm:rounded-[15px]" : ""}`}>
         <BookCover book={book} />
       </div>
 
-      <div className="flex flex-1 flex-col px-1.5 pb-1 pt-3">
-        <TagPills pills={pills} card={card} />
+      <div className={`flex flex-1 flex-col px-1.5 pb-1 pt-3 ${compact ? "max-sm:px-1 max-sm:pb-0 max-sm:pt-2.5" : ""}`}>
+        <div className={full}>
+          <TagPills pills={pills} card={card} />
+        </div>
 
-        <Title className="mt-2.5 type-title">
+        <Title className={`mt-2.5 type-title ${compact ? "max-sm:mt-0 max-sm:line-clamp-2 max-sm:text-[18px] max-sm:leading-[1.08]" : ""}`}>
           {href ? (
             <IntentLink href={href} className="group/title text-left focus-visible:outline-none">
               {titleText}
@@ -132,16 +139,27 @@ export function BookCard({
             </button>
           )}
         </Title>
-        <p className="mt-1 type-caption opacity-75">
+        <p className={`mt-1 type-caption opacity-75 ${full}`}>
           {book.author} · {book.rating != null && book.reviews != null ? `★ ${book.rating} (${book.reviews.toLocaleString("en-IN")}) · ` : ""}
           {book.format}
         </p>
-        <p className="mt-2 line-clamp-3 type-body-sm opacity-90">{book.description}</p>
+        <p className={`mt-2 line-clamp-3 type-body-sm opacity-90 ${full}`}>{book.description}</p>
 
         {book.reason && <WhyPicked bookId={book.id} reason={book.reason} card={card} delay={(deal === "in" ? 750 : 450) + index * 110} />}
 
         <div className="mt-auto flex items-center gap-1 pt-3">
-          <span className="mr-auto type-title-sm tabular-nums">{rupeesFmt(book.price)}</span>
+          <span className={`mr-auto type-title-sm tabular-nums ${compact ? "max-sm:text-[16px]" : ""}`}>{rupeesFmt(book.price)}</span>
+          {compact && onToggle && (
+            <AddToBoxButton
+              selected={!!selected}
+              onToggle={onToggle}
+              title={book.title}
+              whoseBox={whoseBox}
+              fill={{ bg: ink.backgroundColor, fg: ink.color }}
+              size="icon"
+              className="sm:hidden"
+            />
+          )}
           {onRate && (
             <>
               <Thumb dark={card.dark} pressed={rating === "up"} label={`I like “${book.title}”`} onClick={() => onRate("up")}>
@@ -174,28 +192,23 @@ export function BookCard({
             selected={!!selected}
             onToggle={onToggle}
             title={book.title}
-            whoseBox={boxChild ? `${boxChild}'s box` : "your box"}
+            whoseBox={whoseBox}
             fill={{ bg: ink.backgroundColor, fg: ink.color }}
-            className="mt-2 w-full"
+            className={`mt-2 w-full ${full}`}
           />
         ) : (
-          <button
-            type="button"
+          <Button
+            variant="split"
+            size="md"
+            tone={card.dark ? "light" : "ink"}
             onClick={(e) => {
               e.stopPropagation();
               if (buyNow(book, boxChild, href ? "book" : "curation") === "box") router.push("/box?checkout=1");
             }}
-            className="group/buy mt-2 flex h-12 w-full items-stretch gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+            className="mt-2 w-full"
           >
-            <span className="flex flex-1 items-center justify-center rounded-[14px] type-button-sm transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]" style={ink}>
-              {buyLabel(box, book.id)}
-            </span>
-            <span className="grid w-12 place-items-center rounded-[14px] transition-[border-radius] duration-300 group-hover/buy:rounded-[24px]" style={ink}>
-              <svg viewBox="0 0 24 24" className="size-5 transition-transform group-hover/buy:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M4 12h16M14 6l6 6-6 6" />
-              </svg>
-            </span>
-          </button>
+            {buyLabel(box, book.id)}
+          </Button>
         )}
       </div>
     </article>

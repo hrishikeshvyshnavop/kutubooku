@@ -1,7 +1,3 @@
-// MOCK book-detail content for the book details sheet (modeled on the section
-// structure of Aardvark Book Club's book pages). Everything here is FICTIONAL
-// sample data, like curation-mock.ts. The real content will come from Payload CMS.
-
 import {
   MOCK_BOOKS,
   type BookActivity,
@@ -12,28 +8,17 @@ import {
 } from "./curation-mock";
 
 export type BookDetails = {
-  /** One-line hook shown in italics above the synopsis. */
   tagline: string;
-  /** Rich "About this book" narrative overview. */
   about: string;
   synopsis: string[];
-  /** Core themes like empathy, compassion, kindness, local culture, curiosity. */
   themes: string[];
-  /** 3-stage Story Plot: setup, turningPoint, resolution. */
   storyPlot?: StoryPlot;
-  /** Key character portraits with roles and personality traits. */
   portraits: CharacterPortrait[];
-  /** Hands-on parent-child activities inspired by the book. */
   activities: BookActivity[];
-  /** Thoughtful conversation and discussion cues for parents. */
   cues: string[];
-  /** Four short "at a glance" points. */
   glance: { label: string; value: string }[];
-  /** Sample parent reviews. */
   reviews: { quote: string; who: string }[];
-  /** Opening lines ("Get a taste"). Only some books have one. */
   excerpt?: string[];
-  /** Content notes for parents. Empty = nothing to flag. */
   notes: string[];
 };
 
@@ -157,7 +142,6 @@ function readingMode(b: MockBook) {
 }
 
 export function detailsFor(book: MockBook): BookDetails {
-  // Stable per-book number (ids are slugs now, e.g. "the-dot").
   const n = Math.max(0, MOCK_BOOKS.findIndex((b) => b.id === book.id));
   const ages = book.ageMin === book.ageMax ? `Age ${book.ageMin}` : `Ages ${book.ageMin}–${book.ageMax}`;
   const topics = book.tags.slice(0, 2).map((t) => TOPIC_GLANCE[t] ?? t);
@@ -177,8 +161,6 @@ export function detailsFor(book: MockBook): BookDetails {
     };
   });
 
-  // Keep every book page useful even when a catalogue item has only one or two
-  // interest tags. The real CMS will replace these with submitted reviews.
   const reviews = [...topicReviews, ...FALLBACK_REVIEWS.map((quote) => ({ quote }))].slice(0, 4).map((review, i) => ({
     quote: review.quote,
     who: "who" in review && typeof review.who === "string" ? review.who : `Parent of a ${Math.min(Math.max(book.ageMin + i, 1), 14)}-year-old, ${CITIES[(n + i * 3) % CITIES.length]}`,
@@ -207,7 +189,6 @@ export function detailsFor(book: MockBook): BookDetails {
   };
 }
 
-/** Books that share topics and fit a similar age, most similar first. */
 export function similarTo(book: MockBook, count = 4): MockBook[] {
   return MOCK_BOOKS.filter((b) => b.id !== book.id && b.ageMax >= book.ageMin - 1 && b.ageMin <= book.ageMax + 1)
     .map((b) => ({ b, score: b.tags.filter((t) => book.tags.includes(t)).length }))
@@ -246,7 +227,4 @@ export const THEME_LABEL: Record<string, string> = {
   perseverance: "Perseverance",
   "problem-solving": "Problem Solving",
 };
-
-export const themeLabel = (t: string) =>
-  THEME_LABEL[t.toLowerCase()] ?? t.charAt(0).toUpperCase() + t.slice(1);
 

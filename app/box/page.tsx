@@ -3,8 +3,6 @@ import { Header } from "../_components/layout/Header";
 import { PageTransition } from "../_components/layout/PageTransition";
 import { Box } from "./Box";
 
-// Handwritten labels ("your box").
-
 export const metadata: Metadata = {
   title: "Your box — KutuBooku",
   description: "Your family's books, ready to send to your Amazon.in cart.",
@@ -16,8 +14,6 @@ export default function BoxPage() {
     <PageTransition>
       <div className={`flex min-h-dvh flex-col bg-[#FDDAA6] font-[family-name:var(--font-q-sans)] text-[#1d2838]`}>
         <Header />
-        {/* No footer here: the box is a focused task screen. Fills the screen; pb on phones leaves
-            room for the fixed total + Amazon bar. The Amazon Associate line sits in the box's total. */}
         <main className="flex flex-1 flex-col bg-[#FDDAA6] pb-24 lg:pb-0">
           <Box />
         </main>

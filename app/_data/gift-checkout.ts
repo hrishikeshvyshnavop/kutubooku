@@ -109,7 +109,7 @@ export const EMPTY_DRAFT: CheckoutDraft = {
   bank: "",
 };
 
-export type GiftOrderItem = { bookId: string; title: string; author: string; cover: string; price: number };
+type GiftOrderItem = { bookId: string; title: string; author: string; cover: string; price: number };
 
 export type GiftOrder = {
   id: string;

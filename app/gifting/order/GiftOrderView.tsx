@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "../../_components/ui/Button";
-import { CtaButton } from "../../_components/ui/CtaButton";
 import { rupeesFmt } from "../../_lib/format";
 import { ORDER_STAGES, PAYMENT_METHODS, arrivalLabel, shortDate, stageOf, wrapOf, type GiftOrder, type Wrap } from "../../_data/gift-checkout";
 import { useGiftOrders } from "../../_lib/gift-orders";
@@ -30,7 +29,7 @@ function OrderNotFound() {
         <p className="mt-4 max-w-[44ch] type-body-lg text-[#1d2838]/70">
           Gift orders are saved on the device they were placed on. Check the email receipt for your order number.
         </p>
-        <CtaButton href="/gifting" label="Back to gifting" className="mt-8 w-fit" />
+        <Button variant="split" href="/gifting" className="mt-8 w-fit">Back to gifting</Button>
       </section>
     </div>
   );
@@ -74,8 +73,8 @@ function OrderDetails({ order, stage }: { order: GiftOrder; stage: number }) {
               </div>
             </dl>
             <div className="mt-10 flex flex-wrap items-center gap-3">
-              <CtaButton href="/gifting/quiz" label="Send another gift" className="w-fit" />
-              <Button href="/gifting/orders" variant="outline">
+              <Button variant="split" href="/gifting/quiz" className="w-fit">Send another gift</Button>
+              <Button href="/gifting/orders" variant="secondary">
                 All my gifts
               </Button>
             </div>
@@ -141,7 +140,7 @@ function OrderDetails({ order, stage }: { order: GiftOrder; stage: number }) {
   );
 }
 
-export function GiftVisual({ wrap, note, from, count }: { wrap: Wrap; note: string; from: string; count: number }) {
+function GiftVisual({ wrap, note, from, count }: { wrap: Wrap; note: string; from: string; count: number }) {
   const paper = { backgroundColor: wrap.paper, backgroundImage: wrap.pattern, backgroundSize: "26px 26px" };
   return (
     <div aria-hidden className="relative mx-auto flex h-[340px] w-full max-w-[520px] items-end justify-center sm:h-[400px]">

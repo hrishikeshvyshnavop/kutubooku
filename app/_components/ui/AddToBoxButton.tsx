@@ -5,8 +5,9 @@ import { useState } from "react";
 const ROLL = "transition-[translate,rotate,scale,opacity] duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
 
 const SIZES = {
-  md: { btn: "h-12", face: "rounded-[14px] group-hover/buy:rounded-[24px] type-button-sm", icon: "size-5", gap: "gap-2" },
-  sm: { btn: "h-10", face: "rounded-[12px] group-hover/buy:rounded-[20px] text-[13px] font-semibold leading-none sm:text-sm", icon: "size-4", gap: "gap-1.5" },
+  md: { btn: "h-12", face: "px-3 rounded-[14px] group-hover/buy:rounded-[24px] type-button-sm", icon: "size-5", gap: "gap-2", label: "" },
+  sm: { btn: "h-10", face: "px-3 rounded-[12px] group-hover/buy:rounded-[20px] text-[13px] font-semibold leading-none sm:text-sm", icon: "size-4", gap: "gap-1.5", label: "" },
+  icon: { btn: "size-11 shrink-0", face: "rounded-full", icon: "size-5", gap: "", label: "hidden" },
 } as const;
 
 export function AddToBoxButton({
@@ -49,7 +50,7 @@ export function AddToBoxButton({
       className={`buy-btn group/buy flex items-stretch focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current ${z.btn} ${className}`}
     >
       <span
-        className={`grid flex-1 place-items-center overflow-hidden border-2 px-3 transition-[border-radius,background-color,color,border-color] duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none [&>*]:col-start-1 [&>*]:row-start-1 ${z.face} ${
+        className={`grid flex-1 place-items-center overflow-hidden border-2 transition-[border-radius,background-color,color,border-color] duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none [&>*]:col-start-1 [&>*]:row-start-1 ${z.face} ${
           selected && peekOff ? "animate-[buy-pop_480ms_cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:animate-none" : ""
         }`}
         style={selected ? { backgroundColor: "transparent", color: "inherit", borderColor: "currentColor" } : { backgroundColor: fill.bg, color: fill.fg, borderColor: "transparent" }}
@@ -59,7 +60,7 @@ export function AddToBoxButton({
             <path d="M3.5 8.5 12 4l8.5 4.5v9L12 22l-8.5-4.5z" />
             <path d="M3.5 8.5 12 13l8.5-4.5M12 13v9" />
           </svg>
-          {addLabel}
+          <span className={z.label}>{addLabel}</span>
         </span>
         <span aria-hidden={!selected} className={`${ROLL} flex items-center whitespace-nowrap ${z.gap} ${selected ? "" : "translate-y-[160%] opacity-0"}`}>
           <span aria-hidden className={`relative shrink-0 ${z.icon}`}>
@@ -76,7 +77,7 @@ export function AddToBoxButton({
               <path d="M6 12h12" />
             </svg>
           </span>
-          <span className="-my-1 grid justify-items-center overflow-hidden py-1 [&>*]:col-start-1 [&>*]:row-start-1">
+          <span className={`-my-1 grid justify-items-center ${z.label} overflow-hidden py-1 [&>*]:col-start-1 [&>*]:row-start-1`}>
             <span className={`${ROLL} buy-peek:-translate-y-[140%] buy-peek:opacity-0`}>{inLabel}</span>
             <span aria-hidden className={`${ROLL} translate-y-[140%] opacity-0 buy-peek:translate-y-0 buy-peek:opacity-100`}>Take it out</span>
           </span>

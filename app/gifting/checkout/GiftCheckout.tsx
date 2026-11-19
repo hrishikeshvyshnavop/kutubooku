@@ -4,8 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowIcon, Button } from "../../_components/ui/Button";
-import { CtaButton } from "../../_components/ui/CtaButton";
+import { Button } from "../../_components/ui/Button";
 import { DatePicker } from "../../_components/ui/DatePicker";
 import { rupeesFmt } from "../../_lib/format";
 import {
@@ -252,7 +251,7 @@ function EmptyBasket() {
         <p className="-rotate-3 font-[family-name:var(--font-caveat)] text-[28px] leading-none text-[#3b308f] sm:text-[32px]">nothing here yet</p>
         <h1 className="mt-3 max-w-[18ch] type-display">Your gift basket is empty</h1>
         <p className="mt-4 max-w-[44ch] type-body-lg text-[#1d2838]/70">Answer five quick questions about the child and we&apos;ll suggest books to gift.</p>
-        <CtaButton href="/gifting/quiz" label="Find a gift for a child" className="mt-8 w-fit" />
+        <Button variant="split" href="/gifting/quiz" className="mt-8 w-fit">Find a gift for a child</Button>
       </section>
     </div>
   );
@@ -308,13 +307,9 @@ function StepCard({
           {done && summary && <p className="mt-1 truncate type-body-sm text-[#1d2838]/70">{summary}</p>}
         </div>
         {done && onEdit && (
-          <button
-            type="button"
-            onClick={onEdit}
-            className="h-10 shrink-0 rounded-full border-2 border-[#1d2838]/15 px-4 type-label transition-colors hover:border-[#1d2838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
-          >
+          <Button variant="ghost" size="sm" onClick={onEdit}>
             Edit
-          </button>
+          </Button>
         )}
       </div>
       {open && <div className="mt-6 animate-q-in sm:mt-8">{children}</div>}
@@ -336,16 +331,11 @@ function BasketStep({ books, onContinue }: { books: MockBook[]; onContinue: () =
               <p className="truncate type-body-sm text-[#1d2838]/65">by {b.author}</p>
             </div>
             <p className="type-title-sm tabular-nums">{rupeesFmt(b.price)}</p>
-            <button
-              type="button"
-              onClick={() => toggleGift(b.id)}
-              aria-label={`Remove ${b.title} from the gift basket`}
-              className="grid size-10 shrink-0 place-items-center rounded-full text-[#1d2838]/60 transition-colors hover:bg-[#1d2838]/10 hover:text-[#1d2838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
-            >
-              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <Button variant="icon" tone="clear" onClick={() => toggleGift(b.id)} label={`Remove ${b.title} from the gift basket`}>
+              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
-            </button>
+            </Button>
           </li>
         ))}
       </ul>
@@ -722,24 +712,9 @@ function PaymentStep({
           </svg>
           Payments will be handled by a secure gateway.
         </p>
-        <button
-          type="submit"
-          disabled={paying}
-          aria-live="polite"
-          className="flex h-14 items-center justify-center gap-3 rounded-[14px] bg-[#f9a220] px-7 type-button text-black transition-colors hover:bg-[#e8900c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838] disabled:cursor-wait"
-        >
-          {paying ? (
-            <>
-              <span aria-hidden className="size-5 animate-spin rounded-full border-[3px] border-black/25 border-t-black motion-reduce:animate-none" />
-              Processing payment…
-            </>
-          ) : (
-            <>
-              Pay {rupeesFmt(total)}
-              <ArrowIcon dir="right" />
-            </>
-          )}
-        </button>
+        <Button variant="split" type="submit" loading={paying} aria-live="polite">
+          {paying ? "Processing payment…" : `Pay ${rupeesFmt(total)}`}
+        </Button>
       </div>
     </form>
   );

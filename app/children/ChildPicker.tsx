@@ -1,9 +1,5 @@
 "use client";
 
-// "Who's choosing books today?" (C8): Netflix-style reader picker.
-// Tap a reader → their books. "+ Add child" → the questions for a new reader.
-// "Manage" → each tile opens that child's answers (edit, rename, remove).
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -24,11 +20,10 @@ export function ChildPicker() {
   useEffect(() => {
     if (session === undefined) return;
     if (session === null) {
-      // Just signed out here → home (the header says "You've signed out"); otherwise ask to sign in.
       router.replace(Date.now() - lastSignOut() < 5000 ? "/" : "/sign-in?next=/children");
       return;
     }
-    commitDraft(); // answers given before signing in become the first reader
+    commitDraft();
     if (new URLSearchParams(window.location.search).get("manage") === "1") setManage(true); // eslint-disable-line react-hooks/set-state-in-effect
   }, [session, router]);
 

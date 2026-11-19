@@ -20,7 +20,6 @@ export function Toast({ toast }: { toast: ToastData | null }) {
   const [mounted, setMounted] = useState(false);
   const [lift, setLift] = useState(0);
   useEffect(() => setMounted(true), []); // eslint-disable-line react-hooks/set-state-in-effect -- portal target exists only after hydration
-
   useEffect(() => {
     if (toast) {
       setShown(toast); // eslint-disable-line react-hooks/set-state-in-effect

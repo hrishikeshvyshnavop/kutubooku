@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Book3D, BOOKS } from "../_components/book/Book3D";
-import { CtaButton } from "../_components/ui/CtaButton";
+import { Button } from "../_components/ui/Button";
 import { Faq } from "../_components/ui/Faq";
 import { Footer } from "../_components/layout/Footer";
 import { FooterMascot } from "../_components/layout/FooterMascot";
@@ -68,11 +68,11 @@ function GiftHero() {
             Tell us a little about them and we&apos;ll suggest books that suit them, each with a reason. We wrap every book, add your note
             and deliver it to their door.
           </p>
-          <CtaButton href={QUIZ} label="Find a gift for a child" className="mt-10 w-fit" />
+          <Button variant="split" href={QUIZ} className="mt-10 w-fit">Find a gift for a child</Button>
           <p className="mt-4 type-body-sm text-[#1d2838]/60">You pay book prices only. Wrapping and delivery are on us.</p>
           <Link
             href="/gifting/orders"
-            className="link-underline mt-6 inline-block type-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
+            className="relative after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-[''] link-underline mt-6 inline-block type-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
           >
             Already sent a gift? Track it in My gifts
           </Link>

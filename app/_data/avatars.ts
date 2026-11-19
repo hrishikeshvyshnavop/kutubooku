@@ -1,9 +1,4 @@
-// Profile pictures for child profiles, Netflix-style: characters from the books we recommend.
-// Square crops of the book covers in public/covers (made with a script, 256×256 webp in public/avatars).
-// ⚠️ The covers belong to their publishers. Before launch, swap these for character art
-// the publishers have cleared for this use (or our own illustrations).
-
-export type Avatar = { id: string; label: string; book: string };
+type Avatar = { id: string; label: string; book: string };
 
 export const AVATARS: Avatar[] = [
   { id: "humpty", label: "Humpty", book: "After the Fall" },

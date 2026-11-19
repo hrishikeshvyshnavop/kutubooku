@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { NavLink } from "../ui/NavLink";
 import { NAV, PILL } from "../../_data/nav";
-import { CtaButton } from "../ui/CtaButton";
+import { Button } from "../ui/Button";
 import { SectionTitle } from "../ui/SectionTitle";
 import { FooterShell } from "./FooterShell";
 import { HERO_GLOW, HERO_PEACH } from "../../_data/theme";
@@ -24,7 +24,7 @@ export function Footer({ className = "" }: { className?: string }) {
           <SectionTitle id="footer-title" eyebrow="one last thing" className="max-w-[900px]">
             Every child has a book they&apos;ll love. Let&apos;s find it.
           </SectionTitle>
-          <CtaButton href="/reading-preferences" label="Find books for my child" className="w-fit shrink-0" />
+          <Button variant="split" href="/reading-preferences" className="w-fit shrink-0">Find books for my child</Button>
         </div>
 
         <div className="mt-10 grid gap-10 border-t-2 border-black/15 pt-10 sm:mt-14 sm:grid-cols-2 lg:flex lg:justify-between lg:gap-12">
@@ -45,17 +45,17 @@ export function Footer({ className = "" }: { className?: string }) {
             <p className={COL_TITLE}>your account</p>
             <ul className="mt-5 flex flex-col gap-3 text-xl font-semibold tracking-[-0.02em]">
               <li>
-                <Link href="/sign-in" className="link-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                <Link href="/sign-in" className="relative after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-[''] link-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                   Log in / Sign up
                 </Link>
               </li>
               <li>
-                <Link href="/reading-preferences" className="link-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                <Link href="/reading-preferences" className="relative after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-[''] link-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                   Update reading preferences
                 </Link>
               </li>
               <li>
-                <Link href="/gifting/orders" className="link-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                <Link href="/gifting/orders" className="relative after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-[''] link-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                   My gifts
                 </Link>
               </li>

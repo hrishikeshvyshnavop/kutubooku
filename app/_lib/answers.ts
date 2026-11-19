@@ -2,7 +2,7 @@ import { activeChild, displayName } from "./children";
 
 export type Answers = Record<string, string | string[]>;
 
-export const ANSWERS_KEY = "kb:reading-preferences";
+const ANSWERS_KEY = "kb:reading-preferences";
 
 export function readAnswers(): Answers | null {
   const active = activeChild();

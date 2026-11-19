@@ -10,7 +10,7 @@ import { isSignedIn } from "../_lib/session";
 import { MAX_CHILDREN, activeOf, commitDraft, displayName, switchChild, useChildren, type ChildProfile } from "../_lib/children";
 import { ChildAvatar } from "../_components/child/ChildAvatar";
 import { flyToBox } from "../_lib/fly";
-import { ArrowIcon, BTN_PRIMARY, Button, OutlineButton } from "../_components/ui/Button";
+import { ArrowIcon, Button } from "../_components/ui/Button";
 import { childNameOf, readAnswers, type Answers } from "../_lib/answers";
 import { rupeesFmt } from "../_lib/format";
 import { BookCard } from "../_components/book/BookCard";
@@ -21,7 +21,7 @@ import { AiAvatar } from "../_components/ai/AiAvatar";
 
 type Phase = "init" | "empty" | "loading" | "slow" | "results";
 
-const LOADING_MS = 2500; // simulated AI time
+const LOADING_MS = 2500;
 const REGEN_MS = 1200;
 
 const STAGE_LABELS: Record<string, string> = {
@@ -38,14 +38,12 @@ export function Curation() {
   const [seed, setSeed] = useState(1);
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
   const [picks, setPicks] = useState<Pick[]>([]);
-  // Playful swap: card flipping out, and the freshly swapped-in card (flips in + confetti).
   const [swappingOut, setSwappingOut] = useState<string | null>(null);
   const [freshId, setFreshId] = useState<string | null>(null);
   const [ratings, setRatings] = useState<Record<string, "up" | "down">>({});
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState(false);
-  // Regenerate animation: "out" = cards shuffle away, "in" = new set is dealt in.
   const [deal, setDeal] = useState<"out" | "in" | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -53,13 +51,10 @@ export function Curation() {
   const name = childNameOf(answers);
   const who = name || "your child";
 
-  // Readers (C8): the curation follows the active child; switching reloads it.
   const kids = useChildren();
   const activeKid = activeOf(kids);
-  const activeKey = kids ? activeKid?.id ?? "" : null; // null until hydrated
+  const activeKey = kids ? activeKid?.id ?? "" : null;
 
-  // The box drives the ticks (C1): a ticked book is in the family box for this child.
-  // Nothing is added on its own: the parent ticks what they want.
   const box = useBox();
   const child = name || null;
   const selected = useMemo(
@@ -70,9 +65,6 @@ export function Curation() {
   const fill = useCallback(
     (a: Answers, ex: Set<string>, s: number) => {
       let ranked = rankBooks(a, ex, s);
-      // The real catalogue is finite. When every current pick has been
-      // removed, start a fresh recommendation set instead of leaving a dead
-      // empty state behind.
       if (!ranked.length && ex.size) {
         setExcluded(new Set());
         ranked = rankBooks(a, new Set(), s + 1);
@@ -83,10 +75,9 @@ export function Curation() {
     [],
   );
 
-  // Boot: needs answers + a (simulated) signed-in session, then "curates". Again for another child.
   useEffect(() => {
     if (activeKey === null) return;
-    if (isSignedIn()) commitDraft(); // answers given before signing in become a reader (then active)
+    if (isSignedIn()) commitDraft();
     const a = readAnswers();
     if (!a || ageOf(a) === null) {
       setPhase("empty"); // eslint-disable-line react-hooks/set-state-in-effect
@@ -109,7 +100,6 @@ export function Curation() {
     return () => clearTimeout(t);
   }, [router, fill, activeKey]);
 
-  // Close the ⋯ menu on outside click / Escape.
   useEffect(() => {
     if (!menuFor) return;
     const close = (e: Event) => {
@@ -134,8 +124,6 @@ export function Curation() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
   }, []);
 
-  /* ------------------------------ book actions ----------------------------- */
-
   const dropBook = (id: string, msg: string) => {
     const ex = new Set(excluded).add(id);
     setExcluded(ex);
@@ -158,7 +146,6 @@ export function Curation() {
     }
     const apply = () => {
       setPicks((cur) => cur.map((p) => (p.id === id ? replacement : p)));
-      // The new pick takes the old one's place in the box, if it was there.
       if (selected.has(id)) {
         dropFromBox(id, child);
         toggleInBox(replacement.id, child, "curation");
@@ -196,11 +183,11 @@ export function Curation() {
       cheer();
       return;
     }
-    setDeal("out"); // cards shuffle away one after another
+    setDeal("out");
     const outMs = 420 + picks.length * 40;
     setTimeout(() => {
       fill(answers, excluded, s);
-      setDeal("in"); // new set dealt in card by card
+      setDeal("in");
       cheer();
       setTimeout(() => {
         setDeal(null);
@@ -229,7 +216,6 @@ export function Curation() {
     if (book) say(nextRating === "up" ? `Nice pick — ${book.title} is going on your favourites.` : `Got it — we’ll keep ${book.title} in mind.`);
   };
 
-  /** Adds a book from "Read more like this" to the list and selects it. */
   const addBook = (id: string) => {
     const book = MOCK_BOOKS.find((m) => m.id === id);
     if (!book || picks.some((p) => p.id === id)) return;
@@ -244,13 +230,10 @@ export function Curation() {
 
   const chosen = picks.filter((p) => selected.has(p.id));
   const total = chosen.reduce((s, p) => s + p.price, 0);
-  // Everything in the family box (all children), for "View box".
   const boxCount = box?.items.length ?? 0;
 
   const prof = profileOf(answers);
   const interestText = prof.interests.map((i) => INTEREST_LABELS[i] ?? i);
-
-  /* --------------------------------- render -------------------------------- */
 
   if (phase === "init") return <div className="flex-1" />;
 
@@ -263,10 +246,9 @@ export function Curation() {
         <p className="mt-4 max-w-xl type-body-lg text-[#1d2838]/70">
           Tell us about your child and we&apos;ll curate books just for them. It takes about two minutes.
         </p>
-        <Link href="/" className={`${BTN_PRIMARY} mt-10 self-start`}>
+        <Button href="/" arrow="right" className="mt-10 self-start">
           Start the questions
-          <ArrowIcon dir="right" />
-        </Link>
+        </Button>
       </Frame>
     );
   }
@@ -316,10 +298,10 @@ export function Curation() {
             We&apos;ll email you at your Google address as soon as {who}&apos;s books are ready. You can close this page.
           </p>
           <div className="mt-10 flex flex-wrap gap-2">
-            <OutlineButton onClick={() => router.push("/")} label="Back to your answers">
+            <Button variant="secondary" onClick={() => router.push("/")} label="Back to your answers">
               <ArrowIcon dir="left" />
               Back to answers
-            </OutlineButton>
+            </Button>
             <Button variant="primary" onClick={() => setPhase("results")} arrow="right">
               Keep waiting
             </Button>
@@ -329,7 +311,6 @@ export function Curation() {
     );
   }
 
-  // results
   return (
     <Frame panel="#f6c453" side={side}>
       <ReaderSwitch kids={kids?.list ?? []} activeId={activeKid?.id} />
@@ -379,8 +360,6 @@ export function Curation() {
         <p className="mt-8 type-body-lg">No books left in this set. Try Regenerate for a fresh one.</p>
       ) : null}
 
-
-
       <BookDetails
         book={openBook}
         reason={openPick?.reason}
@@ -391,10 +370,8 @@ export function Curation() {
         onClose={() => setOpenId(null)}
       />
 
-      {/* Toast (top-right, under the header) */}
       <Toast toast={toast ? { text: toast, tone: "info" } : null} />
 
-      {/* Sticky action bar — always in view */}
       <div data-toast-avoid className="sticky bottom-0 z-10 -mx-2 mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-t-[24px] bg-[#fffdf8]/90 px-2 pb-3 pt-3 backdrop-blur">
         <p className="type-body tabular-nums">
           <span className="font-semibold">
@@ -406,13 +383,12 @@ export function Curation() {
           ) : null}
         </p>
         <div className="flex flex-1 justify-end gap-1.5 sm:flex-none">
-          <OutlineButton onClick={regenerate} label="Regenerate the whole list" disabled={regenerating}>
+          <Button variant="secondary" onClick={regenerate} label="Regenerate the whole list" disabled={regenerating}>
             <svg viewBox="0 0 24 24" className={`size-5 ${regenerating ? "animate-spin" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4" />
             </svg>
             <span className="hidden sm:inline">{regenerating ? "Shuffling…" : "Regenerate"}</span>
-          </OutlineButton>
-          {/* C1: the box replaces "Add N to Amazon cart"; Amazon is reached from the box. */}
+          </Button>
           {boxCount ? (
             <Button variant="primary" href="/box" arrow="right" className="flex-1 sm:flex-none">
               View box ({boxCount})
@@ -428,9 +404,6 @@ export function Curation() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-
-/** Readers above the title: switch child, or add another (C8). Only once signed in with a profile. */
 function ReaderSwitch({ kids, activeId }: { kids: ChildProfile[]; activeId?: string }) {
   if (!kids.length) return null;
   const chip =
@@ -465,7 +438,6 @@ function ReaderSwitch({ kids, activeId }: { kids: ChildProfile[]; activeId?: str
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <div>
-      {/* Same type styles as the questionnaire panel: small medium label, big light value */}
       <dt className="type-label text-[#1d2838]/70">{k}</dt>
       <dd className="mt-0.5 type-value">{v}</dd>
     </div>
@@ -483,7 +455,7 @@ function Frame({
 }) {
   return (
     <div className="mx-auto flex w-full max-w-[1920px] flex-1 flex-col p-2.5 sm:p-3">
-      <div className="grid flex-1 gap-2.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.4fr)] lg:gap-3">
+      <div className="grid flex-1 grid-rows-[auto_1fr] gap-2.5 lg:grid-rows-none lg:grid-cols-[minmax(0,1fr)_minmax(0,2.4fr)] lg:gap-3">
         <aside
           style={{ backgroundColor: panel }}
           className="rounded-[28px] p-5 sm:rounded-[48px] sm:p-8 lg:sticky lg:top-[100px] lg:self-start lg:min-h-[min(560px,calc(100dvh-14rem))]"
@@ -498,19 +470,12 @@ function Frame({
   );
 }
 
-/* -------------------------------- Book card -------------------------------- */
-
-/* -------------------------------------------------------------------------- */
-/* AI essence: badge, match chips, typed reasons.                              */
-/* -------------------------------------------------------------------------- */
-
 const THINKING_STEPS = [
   (who: string) => `Re-reading ${who}'s answers…`,
   () => "Finding fresh matches…",
   () => "Writing why each one fits…",
 ];
 
-/** One quiet line under the title: AI provenance + instruction; cycles thinking steps while regenerating. */
 function AiLine({ who, thinking, count }: { who: string; thinking: boolean; count: number }) {
   const [step, setStep] = useState(0);
   useEffect(() => {

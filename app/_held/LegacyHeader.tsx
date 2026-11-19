@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { Button } from "../_components/ui/Button";
 
 const links = [
   { href: "/editions", label: "Editions" },
@@ -34,14 +35,9 @@ function Logo() {
 
 function SplitButton({ href, label, className = "" }: { href: string; label: string; className?: string }) {
   return (
-    <Link href={href} className={`group flex h-[42px] items-stretch gap-0.5 ${className}`}>
-      <span className={`flex flex-1 items-center justify-center whitespace-nowrap rounded-md px-4 text-[15px] font-bold tracking-[-0.03em] ${chip}`}>
-        {label}
-      </span>
-      <span className={`grid w-[42px] place-items-center rounded-md ${chip}`}>
-        <Arrow className="size-4 transition-transform group-hover:translate-x-0.5" />
-      </span>
-    </Link>
+    <Button variant="split" size="sm" href={href} className={className}>
+      {label}
+    </Button>
   );
 }
 

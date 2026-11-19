@@ -5,8 +5,6 @@ import { REVEAL_ABOVE } from "./_data/footer";
 import { Header } from "./_components/layout/Header";
 import { PageTransition } from "./_components/layout/PageTransition";
 
-// Handwritten footer label.
-
 export default function NotFound() {
   return (
     <PageTransition>
@@ -37,7 +35,6 @@ export default function NotFound() {
               </div>
             </div>
           </div>
-          {/* last in main: the mascot peeks over the footer */}
           <FooterMascot className="mt-10 w-full" />
         </main>
         <Footer />

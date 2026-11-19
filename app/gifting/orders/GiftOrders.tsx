@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { CtaButton } from "../../_components/ui/CtaButton";
+import { Button } from "../../_components/ui/Button";
 import { rupeesFmt } from "../../_lib/format";
 import { ORDER_STAGES, arrivalLabel, shortDate, stageOf, wrapOf, type GiftOrder, type Wrap } from "../../_data/gift-checkout";
 import { useGiftOrders } from "../../_lib/gift-orders";
@@ -36,7 +36,7 @@ export function GiftOrders() {
               : "Gifts you send will show up here, with where each one is."}
           </p>
         </div>
-        <CtaButton href="/gifting/quiz" label="Send a gift" className="w-fit shrink-0" />
+        <Button variant="split" href="/gifting/quiz" className="w-fit shrink-0">Send a gift</Button>
       </header>
 
       {!orders.length ? (
@@ -62,7 +62,7 @@ function EmptyGifts() {
       <p className="mt-3 max-w-[40ch] type-body-lg text-[#1d2838]/70">
         Tell us a little about a child and we&apos;ll suggest books to gift. We wrap and deliver them for free.
       </p>
-      <CtaButton href="/gifting/quiz" label="Find a gift for a child" className="mt-8 w-fit" />
+      <Button variant="split" href="/gifting/quiz" className="mt-8 w-fit">Find a gift for a child</Button>
     </section>
   );
 }

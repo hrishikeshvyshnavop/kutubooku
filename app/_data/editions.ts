@@ -1,7 +1,3 @@
-// Monthly "Editions": each month's curation theme, newest first.
-// PLACEHOLDER content until editions come from Payload CMS — books, prices
-// and ASINs below are illustrative, not real listings.
-
 export type EditionArt =
   | "starry"
   | "monsoon"
@@ -14,12 +10,11 @@ export type EditionArt =
   | "wild"
   | "chapters";
 
-export type EditionBook = {
+type EditionBook = {
   title: string;
   author: string;
   ages: string;
   price: number;
-  /** Amazon.in ASIN — filled in from Payload once real books are chosen. */
   asin?: string;
 };
 

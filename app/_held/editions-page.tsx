@@ -1,12 +1,9 @@
-// ON HOLD (2026-11-02): the /editions route is removed for now.
-// To restore, move this file back to app/editions/page.tsx.
 import { Anton, Fraunces, Nunito_Sans } from "next/font/google";
 import Link from "next/link";
 import { Shelf } from "./Shelf";
 import { LegacyHeader } from "./LegacyHeader";
 import { editions } from "../_data/editions";
 
-// Fonts only the Editions shelf and covers use (moved out of the root layout so other pages do not preload them).
 const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"] });
 const nunito = Nunito_Sans({ variable: "--font-nunito", subsets: ["latin"] });
 const anton = Anton({ variable: "--font-anton-src", weight: "400", subsets: ["latin"] });

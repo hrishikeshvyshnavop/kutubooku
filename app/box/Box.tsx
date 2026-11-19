@@ -1,8 +1,6 @@
 "use client";
 
-// /box — the family book box (decisions C7–C24 in docs/CONTEXT.md §15; per child: B3–B5, B10).
-// Query flags: ?demo=1 fills the box with sample books; ?shared=… shows a read-only shared box (C21).
-
+import { Button } from "../_components/ui/Button";
 import Image from "next/image";
 import { Toast } from "../_components/ui/Toast";
 import Link from "next/link";
@@ -46,15 +44,11 @@ import {
 const INK = "#1d2838";
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 const AMBER_BLOCK = "bg-[#f9a220] text-black transition-colors group-hover:bg-[#e8900c]";
-const QUIET_BTN = `inline-flex h-11 items-center justify-center gap-2 rounded-full border-2 border-black/15 px-4 text-[15px] font-semibold transition-colors hover:border-black hover:bg-black/5 ${FOCUS}`;
 const SIDE_PAD = "px-page";
-
-/* ------------------------------- Derived data ------------------------------ */
 
 type Group = { child: string | null; items: BoxItem[] };
 type Line = { bookId: string; qty: number; price: number; title: string; author: string };
 
-/** B10: the active child first, then the other children in the order they were added, "For anyone" last. */
 function groupsOf(items: BoxItem[], order: string[]): Group[] {
   const map = new Map<string | null, BoxItem[]>();
   for (const i of items) map.set(i.child, [...(map.get(i.child) ?? []), i]);
@@ -62,14 +56,10 @@ function groupsOf(items: BoxItem[], order: string[]): Group[] {
   return [...map.entries()].sort(([a], [b]) => rank(a) - rank(b)).map(([child, items]) => ({ child, items }));
 }
 
-/**
- * What goes to Amazon: one line per book, 2+ copies only when the parent chose "one each" (C10).
- * Scoped to one child (B3): only their books, one copy each (a shared copy goes with them, B5).
- */
 function linesOf(state: BoxState, scope?: Scope): Line[] {
   const byBook = new Map<string, number>();
   for (const i of state.items) {
-    if (!toBuy(i)) continue; // C14 unavailable / B5 already bought as a shared copy
+    if (!toBuy(i)) continue;
     if (scope && i.child !== scope.child) continue;
     byBook.set(i.bookId, (byBook.get(i.bookId) ?? 0) + 1);
   }
@@ -81,13 +71,11 @@ function linesOf(state: BoxState, scope?: Scope): Line[] {
   });
 }
 
-
 const chunk = <T,>(list: T[], size: number) =>
   Array.from({ length: Math.ceil(list.length / size) }, (_, i) => list.slice(i * size, i * size + size));
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-/** Counts from the old value to the new one (ease-out), e.g. ₹2,893 → ₹3,292 on "Buy 2". */
 function useTween(value: number, ms = 600) {
   const [shown, setShown] = useState(value);
   const from = useRef(value);
@@ -110,7 +98,6 @@ function useTween(value: number, ms = 600) {
   return Math.round(shown);
 }
 
-/** The box total: counts to the new amount, nudges, and floats the difference ("+ ₹399") beside it. */
 function AnimatedTotal({ value, className = "" }: { value: number; className?: string }) {
   const shown = useTween(value);
   const [delta, setDelta] = useState<{ d: number; k: number } | null>(null);
@@ -144,13 +131,10 @@ function AnimatedTotal({ value, className = "" }: { value: number; className?: s
   );
 }
 
-/** "N books" that counts too. */
 function AnimatedCount({ value, one }: { value: number; one: string }) {
   const n = useTween(value, 400);
   return <>{plural(n, one)}</>;
 }
-
-/* ---------------------------------- Page ---------------------------------- */
 
 export function Box() {
   const router = useRouter();
@@ -159,14 +143,10 @@ export function Box() {
   const [ordered, setOrdered] = useState<number | null>(null);
   const [childName, setChildName] = useState("");
   const [notice, setNotice] = useState("");
-  // Signed in vs guest. ⚠️ Sign-in is simulated (sessionStorage), like the rest of the flow; real accounts are a dev-team task.
   const signedIn = Boolean(useSession());
-  // C5: first visit after signing in with books already in this browser → "added to your account" note.
   const [merged, setMerged] = useState(false);
-  // ?checkout=1 (from a book page's "Add & buy all N on Amazon"): open the handoff screen straight away.
   const [autoCheckout, setAutoCheckout] = useState(false);
 
-  // Client-only reads: query flags and the questionnaire answers.
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     if (q.get("demo") === "1") seedDemoBox();
@@ -181,9 +161,7 @@ export function Box() {
         sessionStorage.setItem(MERGED_KEY, "1");
         setMerged(true);
       }
-    } catch {
-      /* ignore */
-    }
+    } catch {}
     track("box_view", { shared: Boolean(s), signedIn: signed });
   }, [router]);
 
@@ -220,8 +198,6 @@ function Shell({ children }: { children: React.ReactNode }) {
   return <div className={`mx-auto w-full max-w-[1920px] pb-16 pt-8 sm:pt-12 ${SIDE_PAD}`}>{children}</div>;
 }
 
-/* ------------------------------- Filled box ------------------------------- */
-
 function BoxBody({
   state,
   readOnly,
@@ -250,13 +226,10 @@ function BoxBody({
     return a ? [a, ...names.filter((n) => n !== a)] : names;
   }, [list, active]);
   const profileOf = (child: string | null) => list.find((c) => displayName(c.name) === child) ?? null;
-  // "Move to…" targets (B4): every child in the account or the box, then "For anyone".
   const targets = useMemo(() => {
     const inBox = state.items.map((i) => i.child).filter((c): c is string => c !== null);
     return [...new Set([...order, ...inBox])];
   }, [order, state.items]);
-  // Signed out (decided 2026-11-04): children's profiles are account data, so the box is one
-  // plain list, each book once, no child groups / Move to… / "both have this".
   const flat = !signedIn && !readOnly;
   const view = useMemo<BoxState>(() => {
     if (!flat) return state;
@@ -272,14 +245,12 @@ function BoxBody({
   const copies = lines.reduce((n, l) => n + l.qty, 0);
   const total = lines.reduce((n, l) => n + l.qty * l.price, 0);
 
-  // Which children have each book (C10).
   const childrenOf = useMemo(() => {
     const m = new Map<string, (string | null)[]>();
     for (const i of state.items) m.set(i.bookId, [...(m.get(i.bookId) ?? []), i.child]);
     return m;
   }, [state.items]);
 
-  // C23: books left over from an earlier month's Edition.
   const thisMonth = monthKey();
   const stale = state.items.filter((i) => i.edition && i.edition < thisMonth);
   const staleMonth = stale[0]?.edition;
@@ -298,8 +269,6 @@ function BoxBody({
           : `${plural(view.items.length, "book")} saved ${signedIn ? "to your account" : "in this browser"}. You'll pay and get delivery on Amazon.in.`}
       </p>
 
-      {/* No standing notes about saving (decided 2026-11-04). Just after signing in, a toast says
-          this browser's books were added to the account, once. */}
       {!readOnly && signedIn && merged && <MergedToast count={state.items.length} />}
 
       {!readOnly && state.pendingCheckout && (
@@ -342,7 +311,6 @@ function BoxBody({
                     </h2>
                     {!g.child && !flat && <p className="text-[15px] text-black/55">Added while just browsing</p>}
                   </div>
-                  {/* B3: buy just this child's books (only worth it when there's more than one group). */}
                   {!readOnly && groups.length > 1 && groupLines.length > 0 && (
                     <AmazonButton
                       lines={groupLines}
@@ -365,7 +333,6 @@ function BoxBody({
                       copies={state.copies[item.bookId] ?? "share"}
                       targets={targets.filter((t) => t !== item.child)}
                       flat={flat}
-                      // Flat list: removing a book removes it for every child.
                       removeKeys={flat ? state.items.filter((i) => i.bookId === item.bookId).map((i) => i.key) : [item.key]}
                       setNotice={setNotice}
                     />
@@ -379,13 +346,10 @@ function BoxBody({
         <Summary lines={lines} copies={copies} total={total} readOnly={readOnly} state={view} autoCheckout={autoCheckout} />
       </div>
 
-      {/* Phones: the total and the Amazon button stay in reach. */}
       <MobileBar copies={copies} total={total} lines={lines} readOnly={readOnly} />
     </>
   );
 }
-
-/* ----------------------------------- Row ----------------------------------- */
 
 function Row({
   item,
@@ -401,15 +365,11 @@ function Row({
   readOnly: boolean;
   others: (string | null)[];
   copies: "share" | "each";
-  /** Children this book can move to (B4); "For anyone" is always offered too. */
   targets: string[];
-  /** Signed out: one plain list, no children. */
   flat?: boolean;
-  /** Rows "Remove" takes out (flat list: the book for every child). */
   removeKeys: string[];
   setNotice: (s: string) => void;
 }) {
-  // Moved here from another child: a short warm glow once it has landed.
   const [arrived] = useState(() => ARRIVING.has(item.key));
   useEffect(() => {
     if (!arrived) return;
@@ -419,7 +379,6 @@ function Row({
   const book = bookById(item.bookId);
   if (!book) return null;
   const unavailable = MOCK_UNAVAILABLE.has(book.id);
-  // B5: covered by a shared copy bought with another child's books.
   const coveredBy = item.sharedBoughtWith;
   const covered = coveredBy !== undefined;
   const ratio = book3DFor(book.cover, book.title, book.tone).ratio;
@@ -427,11 +386,9 @@ function Row({
   const names = [item.child ?? "Anyone", ...otherNames];
 
   return (
-    // A stable name per row (survives a move between children), so View Transitions can glide it.
     <li className="py-4 first:pt-2 last:pb-1" data-vt-name={vtName("row", `${item.bookId}-${item.addedAt}`)} data-vt-class="box-row">
       <div className={`-mx-2 rounded-2xl px-2 ${arrived ? "animate-[row-arrive_1.2s_ease-out_0.35s_both]" : ""}`}>
       <div className="flex gap-4">
-        {/* Fixed 96px box so titles line up whatever the cover's shape. */}
         <IntentLink href={`/books/${book.id}`} className="flex size-24 shrink-0 items-end justify-center" tabIndex={-1} aria-hidden>
           <Image
             src={book.cover}
@@ -499,28 +456,24 @@ function Row({
         </div>
       </div>
 
-      {/* C14: unavailable — keep it, mark it, offer a swap. */}
       {unavailable && (
         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl bg-[#f4efe6] px-4 py-3 sm:ml-[112px]">
           <p className="flex-1 text-[15px] font-medium">
             Unavailable on Amazon.in right now. We won&apos;t send it.
           </p>
           {!readOnly && (
-            <button
-              type="button"
+            <Button variant="ghost"
               onClick={() => {
                 const next = swapItem(item.key);
                 setNotice(next ? `Swapped ${book.title} for ${next.title}` : "No similar book found");
               }}
-              className={QUIET_BTN}
             >
               Swap for a similar book
-            </button>
+            </Button>
           )}
         </div>
       )}
 
-      {/* C10: the same book for two children — 1 to share (default) or 1 each. */}
       {!unavailable && !covered && others.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl bg-[#fff3d6] px-4 py-3 sm:ml-[112px]">
           <p className="flex-1 text-[15px] font-medium">
@@ -551,20 +504,12 @@ function Row({
   );
 }
 
-/** Keys of rows that were just moved here: they glow once after landing. */
 const ARRIVING = new Set<string>();
 
-/** CSS-safe view-transition-name. */
 const vtName = (kind: string, id: string) => `${kind}-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
 
-/**
- * Remove / Move to… as one seamless motion (View Transitions, app/_lib/local-transition.ts): a moved
- * row glides from its spot into the other child's group, a removed one fades away while the rows
- * below slide up, and the group cards resize smoothly.
- */
 const animateBox = localTransition;
 
-/** B4: "Move to…": the book belongs to another child (or "For anyone"). */
 function MoveMenu({ item, title, targets, onMove }: { item: BoxItem; title: string; targets: string[]; onMove: (to: string | null) => void }) {
   const kids = useChildren()?.list ?? [];
   const [open, setOpen] = useState(false);
@@ -606,7 +551,6 @@ function MoveMenu({ item, title, targets, onMove }: { item: BoxItem; title: stri
               }}
               className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[15px] font-semibold hover:bg-[#fff3d6] ${FOCUS}`}
             >
-              {/* The child's profile picture (or a neutral "anyone" mark), like the header and box groups. */}
               {(() => {
                 const profile = t ? kids.find((c) => displayName(c.name) === t) : null;
                 return profile ? (
@@ -632,8 +576,6 @@ function MoveMenu({ item, title, targets, onMove }: { item: BoxItem; title: stri
 
 const listNames = (n: string[]) => (n.length <= 2 ? n.join(" and ") : `${n.slice(0, -1).join(", ")} and ${n.at(-1)}`);
 
-/* --------------------------------- Summary --------------------------------- */
-
 function Summary({ lines, copies, total, readOnly, state, autoCheckout }: { lines: Line[]; copies: number; total: number; readOnly: boolean; state: BoxState; autoCheckout: boolean }) {
   const [copied, setCopied] = useState(false);
   const trips = Math.ceil(copies / BATCH_SIZE);
@@ -648,22 +590,18 @@ function Summary({ lines, copies, total, readOnly, state, autoCheckout }: { line
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
       }
-    } catch {
-      /* share sheet closed */
-    }
+    } catch {}
   };
 
   return (
     <aside aria-label="Box total" className="rounded-[28px] bg-white p-6 shadow-[0_24px_70px_rgba(29,40,56,0.08)] sm:rounded-[36px] sm:p-8 lg:sticky lg:top-24">
       <dl className="flex items-baseline justify-between gap-4">
         <dt className="text-lg font-semibold"><AnimatedCount value={copies} one="book" /> to buy</dt>
-        {/* aria-live: the new total is read once, not every counting step */}
         <dd className="text-3xl font-bold tracking-[-0.02em]">
           <AnimatedTotal value={total} />
           <span className="sr-only" aria-live="polite">Total now about {rupees(total)}</span>
         </dd>
       </dl>
-      {/* C13: always an approximate total, with a disclaimer. */}
       <p className="mt-2 text-sm text-black/55">
         Approximate. Prices change, and the final price and delivery are shown on Amazon.in.
       </p>
@@ -677,12 +615,12 @@ function Summary({ lines, copies, total, readOnly, state, autoCheckout }: { line
       <AmazonButton lines={lines} readOnly={readOnly} autoOpen={autoCheckout} className="mt-6 w-full" />
 
       {!readOnly && (
-        <button type="button" onClick={share} className={`${QUIET_BTN} mt-3 w-full`}>
+        <Button variant="ghost" onClick={share} className="mt-3 w-full">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13" />
           </svg>
           {copied ? "Link copied" : "Share this list"}
-        </button>
+        </Button>
       )}
 
       <p className="mt-6 border-t border-black/8 pt-4 text-xs text-black/50">
@@ -704,8 +642,6 @@ function MobileBar({ copies, total, lines, readOnly }: { copies: number; total: 
   );
 }
 
-/* ------------------------- Handoff to Amazon (C16) ------------------------- */
-
 function AmazonButton({
   lines,
   readOnly,
@@ -721,15 +657,11 @@ function AmazonButton({
   className?: string;
   compact?: boolean;
   autoOpen?: boolean;
-  /** One child's books only (B3). */
   scope?: Scope;
   label?: string;
-  /** "quiet": the smaller per-child button on each group. */
   variant?: "amber" | "quiet";
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  // ?checkout=1 opens the handoff once, on arrival. Only once: this used to re-run whenever the
-  // number of books changed, so removing a book popped "Opening Amazon.in…" open again.
   const autoOpened = useRef(false);
   useEffect(() => {
     if (!autoOpen || autoOpened.current || lines.length === 0) return;
@@ -740,31 +672,20 @@ function AmazonButton({
   if (variant === "quiet") {
     return (
       <>
-        <button type="button" onClick={() => ref.current?.showModal()} className={`${QUIET_BTN} border-[#f9a220] bg-[#fff3d6] ${className}`}>
+        <Button variant="ghost" onClick={() => ref.current?.showModal()} className={`border-[#f9a220] bg-[#fff3d6] ${className}`}>
           {label}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/arrow-right.svg" alt="" width={14} height={12} />
-        </button>
+        </Button>
         <Handoff dialogRef={ref} lines={lines} readOnly={readOnly} scope={scope} />
       </>
     );
   }
   return (
     <>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => ref.current?.showModal()}
-        className={`group flex h-14 items-stretch gap-0.5 disabled:pointer-events-none disabled:opacity-40 ${FOCUS} ${className}`}
-      >
-        <span className={`flex flex-1 items-center justify-center whitespace-nowrap rounded-lg px-5 text-xl font-bold leading-none tracking-[-0.48px] ${AMBER_BLOCK}`}>
-          {compact ? "Go to Amazon" : "Go to Amazon.in"}
-        </span>
-        <span className={`grid w-14 shrink-0 place-items-center rounded-lg ${AMBER_BLOCK}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icons/arrow-right.svg" alt="" width={18.6562} height={16} className="transition-transform group-hover:translate-x-0.5" />
-        </span>
-      </button>
+      <Button variant="split" disabled={disabled} onClick={() => ref.current?.showModal()} className={className}>
+        {compact ? "Go to Amazon" : "Go to Amazon.in"}
+      </Button>
       <Handoff dialogRef={ref} lines={lines} readOnly={readOnly} />
     </>
   );
@@ -793,16 +714,14 @@ function Handoff({ dialogRef, lines, readOnly, scope }: { dialogRef: React.RefOb
       style={{ color: INK }}
     >
       <div className="relative p-6 sm:p-8">
-        <button
-          type="button"
+        <Button variant="icon" tone="clear" label="Close"
           onClick={close}
-          aria-label="Close"
-          className={`absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-black/5 text-black transition-colors hover:bg-black/10 sm:right-6 sm:top-6 ${FOCUS}`}
+          className="absolute right-4 top-4 size-11 bg-black/5 !opacity-100 sm:right-6 sm:top-6"
         >
           <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden>
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
-        </button>
+        </Button>
         <p className="text-4xl" aria-hidden>📦</p>
         <h2 id={titleId} className="mt-3 pr-12 text-3xl font-bold leading-tight tracking-[-0.02em]">
           Opening Amazon.in with {scope ? `${scope.child ? `${scope.child}'s` : ""} ${plural(copies, "book")}`.trim() : plural(copies, "book")}
@@ -843,9 +762,9 @@ function Handoff({ dialogRef, lines, readOnly, scope }: { dialogRef: React.RefOb
               </a>
             );
           })}
-          <button type="button" onClick={close} className={`${QUIET_BTN} h-12`}>
+          <Button variant="ghost" size="lg" onClick={close}>
             {opened.size > 0 ? "Done" : "Not now"}
-          </button>
+          </Button>
         </div>
 
         <p className="mt-6 text-xs text-black/50">
@@ -856,12 +775,9 @@ function Handoff({ dialogRef, lines, readOnly, scope }: { dialogRef: React.RefOb
   );
 }
 
-/* ------------------------- Signed in / guest (C5) ------------------------- */
-
 const MERGED_KEY = "kb:box-merged";
 const SIGN_IN_HREF = "/sign-in?next=/box";
 
-// Just signed in with books already in this browser (C5): say so once, then fade away.
 function MergedToast({ count }: { count: number }) {
   const [shown, setShown] = useState(true);
   useEffect(() => {
@@ -873,11 +789,7 @@ function MergedToast({ count }: { count: number }) {
   );
 }
 
-/* --------------------------- "Did you order?" (C17) -------------------------- */
-
-/** `child`: only that child's books went to Amazon (B3); "anyone" for the For-anyone group. */
 function DidYouOrder({ onYes, child, book }: { onYes: () => void; child?: string; book?: string }) {
-  // book: a single "Buy now" from that book's page.
   const whose = book ? "" : child === undefined ? "" : child === "anyone" ? " for the For anyone books" : ` for ${child}'s books`;
   if (book)
     return (
@@ -887,12 +799,12 @@ function DidYouOrder({ onYes, child, book }: { onYes: () => void; child?: string
           <p className="mt-1 text-[15px] text-black/70">We&apos;ll mark it as bought, so we don&apos;t pick it again. The rest of your box stays.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={onYes} className={`h-12 rounded-full bg-black px-5 text-[15px] font-semibold text-white hover:bg-black/85 ${FOCUS}`}>
+          <Button variant="ghost" tone="ink" size="lg" onClick={onYes}>
             Yes, mark it bought
-          </button>
-          <button type="button" onClick={keepBox} className={`${QUIET_BTN} h-12 border-black/25`}>
+          </Button>
+          <Button variant="ghost" size="lg" onClick={keepBox} className="border-black/25">
             Not yet
-          </button>
+          </Button>
         </div>
       </section>
     );
@@ -903,18 +815,16 @@ function DidYouOrder({ onYes, child, book }: { onYes: () => void; child?: string
         <p className="mt-1 text-[15px] text-black/70">We&apos;ll mark these books as bought, so we don&apos;t pick them again.</p>
       </div>
       <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={onYes} className={`h-12 rounded-full bg-black px-5 text-[15px] font-semibold text-white hover:bg-black/85 ${FOCUS}`}>
+        <Button variant="ghost" tone="ink" size="lg" onClick={onYes}>
           {child === undefined ? "Yes, clear my box" : "Yes, mark them bought"}
-        </button>
-        <button type="button" onClick={keepBox} className={`${QUIET_BTN} h-12 border-black/25`}>
+        </Button>
+        <Button variant="ghost" size="lg" onClick={keepBox} className="border-black/25">
           Not yet, keep it
-        </button>
+        </Button>
       </div>
     </section>
   );
 }
-
-/* ------------------------------- Empty / done ------------------------------- */
 
 function Centered({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
   return (
@@ -931,7 +841,6 @@ function Centered({ eyebrow, title, children }: { eyebrow: string; title: string
 const CTA_PRIMARY = `inline-flex h-14 items-center justify-center rounded-[18px] bg-[#f9a220] px-7 type-button text-black transition-[background-color,border-radius,scale] duration-300 hover:rounded-[28px] hover:bg-[#e8900c] active:scale-[0.98] ${FOCUS}`;
 const CTA_OUTLINE = `inline-flex h-14 items-center justify-center rounded-[18px] border-2 border-[#1d2838]/20 px-7 type-button transition-[background-color,border-color,border-radius,scale] duration-300 hover:rounded-[28px] hover:border-[#1d2838] hover:bg-[#1d2838]/5 active:scale-[0.98] ${FOCUS}`;
 
-// C19: empty box — next steps (the mascot peeks over the footer below).
 function Empty({ childName, signedIn }: { childName: string; signedIn: boolean }) {
   return (
     <Centered eyebrow="your box" title="Your box is empty">
@@ -942,7 +851,6 @@ function Empty({ childName, signedIn }: { childName: string; signedIn: boolean }
         <Link href="/reading-preferences" className={CTA_PRIMARY}>
           Find books for {childName || "my child"}
         </Link>
-        {/* TODO: point at the Edition pop-up once the Editions page is live (it's parked in app/_held). */}
         <Link href="/" className={CTA_OUTLINE}>
           See this month&apos;s Edition
         </Link>
@@ -959,7 +867,6 @@ function Empty({ childName, signedIn }: { childName: string; signedIn: boolean }
   );
 }
 
-// C18: after "Yes, I ordered".
 function Ordered({ count }: { count: number }) {
   return (
     <Centered eyebrow="happy reading" title="Order placed. Enjoy the stories!">

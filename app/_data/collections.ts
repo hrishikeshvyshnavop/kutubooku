@@ -1,24 +1,4 @@
-// Home page collections ("This month's collection", "Diwali stories", "Halloween"…).
-//
-// ⚠️ Stand-in for the CMS. Each entry below is shaped like a CMS "Collection" document, so the
-// dev team can move it to Payload as-is (one collection type, these fields) and fetch it here:
-//   slug        unique id, used as the section's anchor (/#c-diwali-2026)
-//   eyebrow     the handwritten label above the title ("this month's collection")
-//   title       the section title
-//   description one or two lines under the title
-//   theme       "light" | "dark" + background colour (+ optional accent for the pills)
-//   books       in display order, each either
-//                 - a shelf book's id ("the-dot"): its book page, add to box, and so on, or
-//                 - a seasonal book (title, author, ages, price, optional cover / ASIN): shown only
-//                   while the collection is live, never added to the main shelf. It links to
-//                   Amazon.in. No cover yet? It gets a typeset cover in the collection's colours.
-//   startsAt / endsAt   when it shows on the home page (inclusive dates, India time)
-//   order       lower shows first when several are live
-// The home page shows every live collection (up to MAX_ON_HOME), soonest-ending first among equals.
-// Preview another day: /?on=2026-10-25 (shows what was live then, e.g. Halloween).
-
-/** A book that's only here for the season (not on the main shelf). */
-export type SeasonalBook = {
+type SeasonalBook = {
   title: string;
   author: string;
   ageMin: number;
@@ -36,14 +16,14 @@ export type Collection = {
   description: string;
   theme: { tone: "light" | "dark"; bg: string; accent: string };
   books: CollectionBook[];
-  startsAt: string; // YYYY-MM-DD
-  endsAt: string; // YYYY-MM-DD
+  startsAt: string;
+  endsAt: string;
   order: number;
 };
 
-export const MAX_ON_HOME = 3;
+const MAX_ON_HOME = 3;
 
-export const COLLECTIONS: Collection[] = [
+const COLLECTIONS: Collection[] = [
   {
     slug: "november-2026",
     eyebrow: "this month's collection",
@@ -62,7 +42,6 @@ export const COLLECTIONS: Collection[] = [
     description: "Warm stories to read together over the festival, about the people and places we love.",
     theme: { tone: "dark", bg: "#2b1d5c", accent: "#f9a220" },
     books: [
-      // Seasonal-only, no cover image yet (gets a typeset cover)
       { title: "Binny's Diwali", author: "Thrity Umrigar", ageMin: 4, ageMax: 8, price: 499 },
       "lost-and-found",
       "the-heart-and-the-bottle",
@@ -102,16 +81,13 @@ export const COLLECTIONS: Collection[] = [
   },
 ];
 
-/** Collections live on `day` (YYYY-MM-DD), in display order. */
 export function liveCollections(day: string): Collection[] {
   return COLLECTIONS.filter((c) => c.startsAt <= day && day <= c.endsAt)
     .sort((a, b) => a.order - b.order || a.endsAt.localeCompare(b.endsAt))
     .slice(0, MAX_ON_HOME);
 }
 
-/** Today in India (YYYY-MM-DD). */
 export const todayInIndia = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
 
-/** "Until 12 Nov" */
 export const untilLabel = (endsAt: string) =>
   `Until ${new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${endsAt}T00:00:00Z`))}`;

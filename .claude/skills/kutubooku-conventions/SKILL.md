@@ -16,7 +16,7 @@ description: House rules for working on the KutuBooku Next.js app — code style
   The scanner misses comments inside an empty block (`catch { /* … */ }`) or after a trailing
   comma in an object literal; grep for `//` and `/*` afterwards and fix those by hand.
 - **Plain component names.** Name by what it is: `Header`, `Footer`, `Hero`, `Faq`, `BookList`,
-  `CtaButton`, `AiChat`. No `Home…`/`Global…`/`Site…` prefixes. File name = export name. Rename
+  `AiChat`. No `Home…`/`Global…`/`Site…` prefixes. File name = export name. Rename
   with `git mv` and update every import plus mentions in `globals.css` and `docs/CONTEXT.md`.
 - **Tidying** means: extract hooks (e.g. `useScrollDrivenRow`) and small subcomponents, name magic
   numbers and long class strings as constants, group related props into objects, remove dead
@@ -54,7 +54,12 @@ constants (class strings, colours, data) in `app/_data/` instead.
 - Backgrounds: peach `HERO_PEACH` (`#FDDAA6`) with `HERO_GLOW`, cream `#fffdf8`, sand `#f4efe6`;
   ink `#1d2838`; amber `#f9a220`; coral `#f26b4f`; violet eyebrow `#3b308f`.
 - Section headings: `SectionTitle` with a handwritten Caveat eyebrow.
-- Buttons: `CtaButton` (split amber CTA with arrow chip), `Button`, `OutlineButton`, `AddToBoxButton`.
+- Buttons: always `Button` from `app/_components/ui/Button.tsx`; never hand-style a `<button>` for an action.
+  `variant`: `primary` (amber block), `secondary` (outline with fill sweep), `split` (label + arrow chip,
+  the main CTA), `ghost` (pill), `icon` (round, needs `label`), `link` (underlined text), `google`.
+  `tone`: `amber` `violet` `ink` `light` `outline` `clear` `danger`. `size`: `sm` `md` `lg`.
+  Also `href` / `newTab` (renders a link), `icon` (`arrow` `external` `none` or a node), `arrow`, `loading`.
+  `AddToBoxButton` is the one exception: the stateful add/in-box toggle.
 - Option rows and tiles: cream `#f4eee3`, navy fill that grows from the press point, tilted
   coral/amber accent when selected (see `app/reading-preferences/Questionnaire.tsx`,
   `app/gifting/quiz/GiftQuiz.tsx`, `app/_components/ui/DatePicker.tsx`).

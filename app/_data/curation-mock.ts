@@ -1,5 +1,3 @@
-// Compatibility module for the curation flow. The catalogue now comes from
-// the JSON source used by the Books page; this adapter adds UI-only fields.
 import books from "../../public/covers/books.json";
 
 export type ContentFlag = "scary" | "violence" | "sad" | "romance" | "screens";

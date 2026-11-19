@@ -1,13 +1,3 @@
-// Book product page sections — Figma node 1431:6 (Hrishi's Workspace).
-// The frame is 2560px wide; sizes are scaled ×0.75 to the app's 1920px layout
-// (same as Header), and big type scales down fluidly with clamp() on smaller screens.
-// Cal Sans / Figtree (the site's type pair) stand in for the design's Champ/Degular; Caveat for the handwritten label.
-//
-// The Figma frame was laid out over a third-party book page, so only its LAYOUT is used:
-// the content is KutuBooku's catalogue, and the background waves are drawn here.
-// Its "Get a taste" excerpt slot holds "Read it together" (activities; cues get their own section),
-// because we can't reproduce real books' text.
-
 import reviewsJson from "../../../public/covers/reviews.json";
 import { THEME_LABEL, TOPIC_LABEL, detailsFor, similarTo } from "../../_data/book-details";
 import type { MockBook } from "../../_data/curation-mock";
@@ -36,48 +26,31 @@ const TOPIC_EMOJI: Record<string, string> = {
   making: "✂️",
 };
 
-// Hero topic chips (design: black, #3f309b, #ffd0b2).
 const CHIP_TONES = ["bg-black text-white", "bg-[#3f309b] text-white", "bg-[#ffd0b2] text-black"];
 
-// "At a glance" pills, in design order (#897400, #b6beff, #3d3195, #ffe75e).
 const GLANCE_TONES = ["bg-[#897400] text-black", "bg-[#b6beff] text-black", "bg-[#3d3195] text-white", "bg-[#ffe75e] text-black"];
 
-// Conversation cue cards, from the same palette as the chips and pills.
 const CUE_TONES = ["bg-[#3f309b] text-white", "bg-[#ffd0b2] text-black", "bg-[#ffe75e] text-black"];
 
-// Story plot beat markers and character avatar backgrounds, same palette.
 const PLOT_TONES = ["bg-[#3f309b] text-white", "bg-[#ffd0b2] text-black", "bg-[#ffe75e] text-black"];
 const PORTRAIT_RINGS = ["bg-[#ffe75e]", "bg-[#b6beff]", "bg-[#ffd0b2]"];
 
-
-// Below-the-fold sections: the browser skips their style, layout and paint until they near
-// the viewport (content-visibility: auto), so arriving on the page (the hero → book morph)
-// only lays out what's on screen. The intrinsic size is a placeholder height until first
-// rendered; "auto" then remembers the real one, so the scrollbar doesn't jump.
 const LAZY_LAYOUT = "[content-visibility:auto] [contain-intrinsic-size:auto_900px]";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** The book's colours, from the spine colour of its 3D book (picked from the real cover). Text stays black, so tints are light. */
 export function bookTheme(book: MockBook) {
   const color = book3DFor(book.cover, book.title, book.tone).spine;
   return {
     "--book": color,
-    "--book-tint": `color-mix(in oklab, ${color} 28%, white)`, // hero, header, "Read it together"
-    "--book-soft": `color-mix(in oklab, ${color} 50%, white)`, // waves and pattern
+    "--book-tint": `color-mix(in oklab, ${color} 28%, white)`,
+    "--book-soft": `color-mix(in oklab, ${color} 50%, white)`,
   } as React.CSSProperties;
 }
 
-/**
- * The book page. `sheet` = shown inside a slide-up sheet (the listing's, or the route modal on any
- * screen): a <div> not <main>, no footer mascot, and the buy tray sticks to the bottom of the sheet
- * instead of the window. "Read more like this" opens in the same sheet: through `onOpenBook`
- * (listing), or as a /books link, which the route modal catches.
- */
 export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
     onOpenBook?: (id: string) => void;
     child?: string | null;
-    /** First pass in the sheet: only the top (title, cover, tray), so it opens without a stall. */
     lite?: boolean;
   };
 }) {
@@ -94,10 +67,8 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
     { emoji: "📖", label: book.pages ? `${book.pages}-page ${book.format.toLowerCase()}` : book.format },
     themes.length > 0 && { emoji: "✨", label: themes.join(" & ") },
   ].filter(Boolean) as { emoji: string; label: string }[];
-  // Pyramid like the design: 1 pill, then 2, then 1.
   const glanceRows = [glance.slice(0, 1), glance.slice(1, 3), glance.slice(3)].filter((r) => r.length > 0);
 
-  // Parent reviews for this book first, then sample lines, four in all.
   const reviews = [
     ...reviewsJson.filter((r) => r.bookId === book.id).map((r) => ({ quote: r.quote, who: r.attribution })),
     ...d.reviews,
@@ -110,15 +81,11 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
         { label: "The ending", text: book.storyPlot.resolution },
       ]
     : [];
-  // "Read it together": activities, written out by the AI card. (Cues have their own section.)
   const aiBlocks: AiBlock[] = d.activities.map((a) => ({ kind: "activity" as const, title: a.title, text: a.description }));
-  // "Read more like this": books sharing a topic, in a nearby age range.
   const similar = similarTo(book, 4);
 
   return (
-    // REVEAL_ABOVE: rounded bottom corners; slides up off the sticky footer. bg-white so the footer never shows through.
     <Root className={sheet ? "relative bg-white" : `flex-1 bg-white ${REVEAL_ABOVE}`}>
-      {/* ------------------------------- Hero ------------------------------- */}
       <section aria-labelledby="book-title" className="relative overflow-hidden bg-[var(--book-tint)]">
         <HeroWaves />
         <div className="relative flex flex-col items-center gap-6 px-page pb-[clamp(140px,13.4vw,257px)] pt-[clamp(40px,9vw,174px)] text-center sm:gap-10">
@@ -148,17 +115,13 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
         </div>
       </section>
 
-      {/* ------------------------------- Cover ------------------------------ */}
-      {/* The home hero's 3D book, overlapping the bottom of the hero like the design's cover. */}
       <div className="relative z-10 -mt-[clamp(120px,10.5vw,215px)] px-page">
         <BookCover3D book={book} />
       </div>
 
       {!sheet?.lite && (
       <>
-      {/* ------------------------------- Body ------------------------------- */}
       <div className="mx-auto w-full max-w-[1312px] px-page">
-        {/* At a glance */}
         <section aria-labelledby="glance-title" className="relative flex flex-col items-center gap-2 pb-10 pt-16 sm:pb-[59px] sm:pt-[110px]">
           <h2
             id="glance-title"
@@ -185,20 +148,16 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
         </section>
 
         <div className="mx-auto flex max-w-[1248px] flex-col gap-12 sm:gap-16">
-          {/* Lead */}
           <p className="text-[clamp(30px,3.33vw,64px)] font-semibold leading-[0.9] tracking-[-0.03em] text-pretty">{book.description}</p>
 
-          {/* About */}
           <p className="max-w-[60ch] text-xl font-medium leading-[1.2] tracking-[-0.01em] sm:text-2xl">{d.about}</p>
 
-          {/* Story plot: three beats along a line */}
           {plot.length > 0 && (
             <section aria-labelledby="plot-title" className="mt-12 sm:mt-24">
               <SectionTitle id="plot-title" eyebrow="what happens">
                 Story plot
               </SectionTitle>
               <ol className="relative mt-10 grid gap-10 sm:mt-14 md:grid-cols-3 md:gap-8">
-                {/* the line joining the beats (md+) */}
                 <span aria-hidden className="absolute left-7 right-7 top-7 hidden h-[3px] rounded-full bg-[var(--book-soft)] md:block" />
                 {plot.map((p, i) => (
                   <li key={p.label} className="relative flex flex-col gap-4">
@@ -216,7 +175,6 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
             </section>
           )}
 
-          {/* Character portraits */}
           {d.portraits.length > 0 && (
             <section aria-labelledby="cast-title" className={`mt-12 sm:mt-24 ${LAZY_LAYOUT}`}>
               <SectionTitle id="cast-title" eyebrow="who's who">
@@ -250,19 +208,13 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
             </section>
           )}
 
-          {/* Reviews */}
           {reviews.length > 0 && (
-            // Full width (no max width): breaks out of the body's 1312/1248px columns to the screen
-            // edges so the four overlapping cards (~1360px) fit; ReviewWall puts its heading back in
-            // the same column as the other section headings. (main's overflow-clip absorbs the
-            // scrollbar width that 100vw includes.)
             <div className={`mx-[calc(50%-50vw)] w-screen ${LAZY_LAYOUT}`}>
               <ReviewWall reviews={reviews} />
             </div>
           )}
         </div>
 
-        {/* ------------------------- Conversation cues ------------------------- */}
         {d.cues.length > 0 && (
           <section aria-labelledby="cues-title" className={`mx-auto mt-24 max-w-[1248px] sm:mt-40 ${LAZY_LAYOUT}`}>
             <SectionTitle id="cues-title" eyebrow="ask after the last page">
@@ -287,7 +239,6 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
         )}
       </div>
 
-      {/* --------------------- Read it together ("Get a taste" slot) --------------------- */}
       {d.activities.length > 0 && (
         <section aria-labelledby="together-title" className={`relative mt-24 overflow-clip bg-[var(--book-tint)] sm:mt-40 ${LAZY_LAYOUT}`}>
           <TastePattern />
@@ -302,7 +253,6 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
         </section>
       )}
 
-      {/* ------------------------- Read more like this ------------------------- */}
       {similar.length > 0 && (
         <section aria-labelledby="similar-title" className={`mx-auto w-full max-w-[1312px] px-page pb-10 pt-20 sm:pb-24 sm:pt-[120px] ${LAZY_LAYOUT}`}>
           <SectionTitle id="similar-title" eyebrow="up next">
@@ -310,7 +260,6 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
             <br />
             like this
           </SectionTitle>
-          {/* Phones: a swipeable row. lg+: a row of four. Same tall colour cards as the home page. */}
           <ul
             aria-label={`Books like ${book.title}`}
             className="mx-[calc(var(--gutter)*-1)] mt-10 flex snap-x snap-mandatory scroll-px-[var(--gutter)] gap-4 overflow-x-auto px-page pb-6 pt-2 [scrollbar-width:none] sm:mt-14 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-5 lg:overflow-visible lg:px-0"
@@ -332,16 +281,13 @@ export function BookPdp({ book, sheet }: { book: MockBook; sheet?: {
       </>
       )}
 
-      {/* Last in main: the mascot peeks over the footer */}
       {!sheet && <FooterMascot className="pt-10 sm:pt-16" />}
 
-      {/* Floating Add to box + Buy tray (design: grey tray, bottom-right) */}
       <BuyTray book={book} placement={sheet ? "sticky" : "fixed"} child={sheet?.child} />
     </Root>
   );
 }
 
-/** Hero background: two soft rolling hills along the bottom (original artwork). */
 function HeroWaves() {
   return (
     <svg aria-hidden viewBox="0 0 1920 600" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 bottom-0 h-[72%] w-full">
@@ -359,7 +305,6 @@ function HeroWaves() {
   );
 }
 
-/** "Read it together" background: loose wavy lines, half opacity (original artwork). */
 function TastePattern() {
   return (
     <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full opacity-50">

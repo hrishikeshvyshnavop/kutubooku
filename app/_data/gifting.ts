@@ -1,7 +1,7 @@
 import { INTEREST_LABELS, MOCK_BOOKS, type MockBook } from "./curation-mock";
 import type { Faq } from "./faq";
 
-export type Occasion = { value: string; label: string; line: string; tone: string };
+type Occasion = { value: string; label: string; line: string; tone: string };
 
 export const OCCASIONS: Occasion[] = [
   { value: "birthday", label: "Birthday", line: "A book they'll still be reading next birthday.", tone: "bg-[#ffe75e]" },
@@ -89,7 +89,7 @@ export type GiftPick = { book: MockBook; reason: string; delivery: string };
 
 const SLOW_SOURCING = new Set(["the-heart-and-the-bottle", "after-the-fall", "the-invisible-boy"]);
 
-export const deliveryFor = (bookId: string) => (SLOW_SOURCING.has(bookId) ? "Arrives in 7–9 days" : "Arrives in 4–6 days");
+const deliveryFor = (bookId: string) => (SLOW_SOURCING.has(bookId) ? "Arrives in 7–9 days" : "Arrives in 4–6 days");
 
 export const giftName = (name: string) => name.trim() || "them";
 

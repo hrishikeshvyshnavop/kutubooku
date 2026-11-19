@@ -6,7 +6,6 @@ import { PageTransition } from "../_components/layout/PageTransition";
 export const metadata: Metadata = {
   title: "Sign in — KutuBooku",
   description: "Sign in with Google to see the books we've curated for your child.",
-  // Personal page: kept out of search.
   robots: { index: false, follow: true },
 };
 

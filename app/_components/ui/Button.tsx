@@ -3,29 +3,86 @@
 import Link from "next/link";
 import React from "react";
 
-export const BTN_BASE =
-  "group inline-flex h-14 shrink-0 items-center justify-center gap-2.5 rounded-[18px] text-lg font-medium tracking-[-0.01em] transition-[background-color,border-color,color,scale,border-radius] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:rounded-[28px] focus-visible:rounded-[28px] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838] disabled:pointer-events-none disabled:opacity-30";
+export type ButtonVariant = "primary" | "secondary" | "split" | "ghost" | "icon" | "link" | "google";
+export type ButtonTone = "amber" | "violet" | "ink" | "light" | "outline" | "clear" | "danger";
+export type ButtonSize = "sm" | "md" | "lg";
+type IconName = "arrow" | "external" | "none";
 
-export const BTN_PRIMARY = `${BTN_BASE} border-2 px-5 border-[#f1a903] bg-[#f1a903] text-[#1d2838] hover:border-[#d99500] hover:bg-[#d99500]`;
-
-export const BTN_SECONDARY = `${BTN_BASE} relative isolate overflow-hidden px-[22px] text-[#1d2838]`;
-
-export const BTN_GOOGLE =
-  "group inline-flex h-14 shrink-0 items-center justify-center gap-3 rounded-[18px] border border-[#747775] bg-white px-6 text-lg font-medium text-[#1f1f1f] transition-[background-color,scale,border-radius] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:rounded-[28px] hover:bg-[#f2f2f2] focus-visible:rounded-[28px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60";
-
-export function ArrowIcon({
-  dir,
-  className = "",
-}: {
-  dir: "left" | "right";
+type SharedProps = {
+  variant?: ButtonVariant;
+  tone?: ButtonTone;
+  size?: ButtonSize;
+  arrow?: "left" | "right";
+  icon?: IconName | React.ReactNode;
+  loading?: boolean;
+  label?: string;
   className?: string;
-}) {
+  children?: React.ReactNode;
+};
+
+type AsButton = SharedProps & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof SharedProps> & { href?: undefined; newTab?: undefined };
+type AsLink = SharedProps & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof SharedProps> & { href: string; newTab?: boolean };
+export type ButtonProps = AsButton | AsLink;
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]";
+const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
+
+const SOLID = {
+  amber: "bg-[#f9a220] text-black group-hover:bg-[#e8900c]",
+  violet: "bg-[#9a83de] text-white group-hover:bg-[#8670cc]",
+  ink: "bg-[#1d2838] text-[#fffdf8] group-hover:bg-black",
+  light: "bg-[#fffdf8] text-[#1d2838] group-hover:bg-white",
+  outline: "bg-transparent text-[#1d2838] shadow-[inset_0_0_0_2px_#1d2838] group-hover:bg-[#1d2838] group-hover:text-white",
+  clear: "bg-transparent text-current group-hover:bg-current/10",
+  danger: "bg-[#b3402a] text-white group-hover:bg-[#9a3522]",
+} as const;
+
+const PILL = {
+  amber: "bg-[#f9a220] text-black hover:bg-[#e8900c]",
+  violet: "bg-[#9a83de] text-white hover:bg-[#8670cc]",
+  ink: "bg-[#1d2838] text-white hover:bg-black",
+  light: "text-[#fffdf8]/80 hover:bg-white/10 hover:text-[#fffdf8]",
+  outline: "border-2 border-[#1d2838]/15 text-[#1d2838] hover:border-[#1d2838] hover:bg-[#1d2838]/5",
+  clear: "text-current opacity-70 hover:bg-current/10 hover:opacity-100",
+  danger: "bg-[#b3402a] text-white hover:bg-[#9a3522]",
+} as const;
+
+const ICON_TONE = {
+  amber: "bg-[#f9a220] text-black hover:bg-[#e8900c]",
+  violet: "bg-[#9a83de] text-white hover:bg-[#8670cc]",
+  ink: "bg-[#1d2838] text-white hover:bg-black",
+  light: "bg-[#f4eee3] text-[#1d2838] hover:bg-[#f9a220]",
+  outline: "border-2 border-black text-black hover:bg-black hover:text-[#FDDAA6]",
+  clear: "text-current opacity-60 hover:bg-current/10 hover:opacity-100",
+  danger: "bg-[#b3402a] text-white hover:bg-[#9a3522]",
+} as const;
+
+const LINK_TONE: Record<ButtonTone, string> = {
+  amber: "text-[#a86f00]",
+  violet: "text-[#3b308f]",
+  ink: "text-[#1d2838]",
+  light: "text-[#fffdf8]",
+  outline: "text-[#1d2838]/70 hover:text-[#1d2838]",
+  clear: "text-current",
+  danger: "text-[#b3402a]",
+};
+
+const SPLIT_SIZE = {
+  sm: { h: "h-10", chip: "w-10", radius: "rounded-[12px] group-hover:rounded-[20px]", text: "px-3.5 text-[14px] font-semibold", icon: "size-4" },
+  md: { h: "h-12", chip: "w-12", radius: "rounded-[14px] group-hover:rounded-[24px]", text: "px-4 type-button-sm", icon: "size-[18px]" },
+  lg: { h: "h-14", chip: "w-14", radius: "rounded-lg group-hover:rounded-[24px]", text: "px-5 text-xl font-bold leading-none tracking-[-0.48px]", icon: "size-5" },
+} as const;
+
+const PILL_SIZE = { sm: "h-9 px-4 type-label", md: "h-11 px-5 type-label", lg: "h-12 px-6 type-button-sm" } as const;
+const ICON_SIZE = { sm: "size-10", md: "size-12", lg: "size-14" } as const;
+
+const BASE_BLOCK = `group inline-flex h-14 shrink-0 items-center justify-center gap-2.5 rounded-[18px] text-lg font-medium tracking-[-0.01em] transition-[background-color,border-color,color,scale,border-radius] duration-300 ${EASE} hover:rounded-[28px] focus-visible:rounded-[28px] active:scale-[0.98] ${FOCUS} disabled:pointer-events-none disabled:opacity-30`;
+
+export function ArrowIcon({ dir, className = "" }: { dir: "left" | "right"; className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      className={`size-5 shrink-0 transition-transform duration-200 ${
-        dir === "left" ? "group-hover:-translate-x-0.5" : "group-hover:translate-x-0.5"
-      } ${className}`}
+      className={`size-5 shrink-0 transition-transform duration-200 ${dir === "left" ? "group-hover:-translate-x-0.5" : "group-hover:translate-x-0.5"} ${className}`}
       fill="none"
       stroke="currentColor"
       strokeWidth="2.2"
@@ -38,372 +95,211 @@ export function ArrowIcon({
   );
 }
 
-export function GoogleIcon({ className = "size-5 shrink-0" }: { className?: string }) {
+export function BrandArrow({ className }: { className: string }) {
   return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden>
-      <path
-        fill="#EA4335"
-        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-      />
-      <path
-        fill="#4285F4"
-        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-      />
-      <path
-        fill="#34A853"
-        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-      />
+    <svg viewBox="0 0 18.6562 16" className={`${className} transition-transform duration-300 group-hover:translate-x-0.5`} fill="currentColor" aria-hidden>
+      <path d="M17.4266 6.96615V8.00615L10.0493 14.9723L7.94472 12.4332C9.64169 11.1337 11.393 9.90679 13.1939 8.75569L13.1693 8.65969C10.9195 8.90092 8.11456 9.02154 5.30841 9.02154H0.712715V5.95077H5.30841C8.11456 5.95077 10.9207 6.07138 13.1693 6.31262L13.1939 6.24C11.3973 5.07474 9.64622 3.8406 7.94472 2.54031L10.0493 0L17.4266 6.96615Z" />
     </svg>
   );
 }
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "google";
-
-export interface ButtonSharedProps {
-  variant?: ButtonVariant;
-  arrow?: "left" | "right";
-  textColor?: "white" | "ink";
-  label?: string;
-  className?: string;
-  children?: React.ReactNode;
+function ExternalIcon({ className }: { className: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={`${className} transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M7 17L17 7M9 7h8v8" />
+    </svg>
+  );
 }
 
-export type ButtonAsButton = ButtonSharedProps &
-  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof ButtonSharedProps> & {
-    href?: undefined;
-  };
+function Spinner() {
+  return <span aria-hidden className="size-5 shrink-0 animate-spin rounded-full border-[3px] border-current/25 border-t-current motion-reduce:animate-none" />;
+}
 
-export type ButtonAsAnchor = ButtonSharedProps &
-  Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof ButtonSharedProps> & {
-    href: string;
-  };
-
-export type ButtonProps = ButtonAsButton | ButtonAsAnchor;
-
-export function Button({
-  variant = "primary",
-  arrow,
-  textColor,
-  label,
-  className = "",
-  children,
-  ...props
-}: ButtonProps) {
-  const isSecondary = variant === "secondary" || variant === "outline";
-  const isGoogle = variant === "google";
-
-  const handlePointerEnter = (e: React.PointerEvent<HTMLElement>) => {
-    if (!isSecondary) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty("--x", `${e.clientX - r.left}px`);
-    e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
-  };
-
-  const handlePointerLeave = (e: React.PointerEvent<HTMLElement>) => {
-    if (!isSecondary) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty("--x", `${e.clientX - r.left}px`);
-    e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
-  };
-
-  const handleFocus = (e: React.FocusEvent<HTMLElement>) => {
-    if (!isSecondary) return;
-    if (e.currentTarget.matches(":focus-visible")) {
-      e.currentTarget.style.removeProperty("--x");
-      e.currentTarget.style.removeProperty("--y");
-    }
-  };
-
-  let variantClass = BTN_PRIMARY;
-  if (isSecondary) {
-    variantClass = BTN_SECONDARY;
-  } else if (isGoogle) {
-    variantClass = BTN_GOOGLE;
-  } else if (variant === "primary") {
-    const textClass = textColor === "white" ? "text-white" : "text-[#1d2838]";
-    variantClass = `${BTN_BASE} border-2 px-5 border-[#f1a903] bg-[#f1a903] ${textClass} hover:border-[#d99500] hover:bg-[#d99500]`;
-  }
-
-  const combinedClassName = `${variantClass} ${className}`.trim();
-
-  const content = isSecondary ? (
-    <>
-      <span
-        aria-hidden
-        className="absolute inset-0 -z-10 bg-[#1d2838] transition-[clip-path] duration-[520ms] ease-[cubic-bezier(0.64,0,0.78,0)] group-hover:ease-[cubic-bezier(0.22,1,0.36,1)] group-focus-visible:ease-[cubic-bezier(0.22,1,0.36,1)] [clip-path:circle(0%_at_var(--x,50%)_var(--y,50%))] group-hover:[clip-path:circle(150%_at_var(--x,50%)_var(--y,50%))] group-focus-visible:[clip-path:circle(150%_at_var(--x,50%)_var(--y,50%))] motion-reduce:transition-none"
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_0_0_2px_#1d2838]"
-      />
-      <span className="relative inline-flex items-center gap-2.5 transition-colors delay-[200ms] duration-[260ms] ease-out group-hover:text-white group-hover:delay-[60ms] group-focus-visible:text-white">
-        {arrow === "left" ? <ArrowIcon dir="left" /> : null}
-        {children}
-        {arrow === "right" ? <ArrowIcon dir="right" /> : null}
-      </span>
-    </>
-  ) : (
-    <>
-      {isGoogle ? <GoogleIcon /> : null}
-      {arrow === "left" ? <ArrowIcon dir="left" /> : null}
-      {children}
-      {arrow === "right" ? <ArrowIcon dir="right" /> : null}
-    </>
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-5 shrink-0" aria-hidden>
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
   );
+}
 
-  if ("href" in props && props.href) {
-    const { href, target, rel, ...restAnchorProps } = props as ButtonAsAnchor;
-    const isInternal = href.startsWith("/") && !href.startsWith("//") && target !== "_blank";
+function iconFor(icon: SharedProps["icon"], className: string) {
+  if (icon === "none") return null;
+  if (icon === "external") return <ExternalIcon className={className} />;
+  if (icon === "arrow" || icon === undefined) return <BrandArrow className={className} />;
+  return icon;
+}
 
-    if (isInternal) {
+function setPressOrigin(e: React.PointerEvent<HTMLElement>) {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--x", `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
+}
+
+function clearPressOrigin(e: React.FocusEvent<HTMLElement>) {
+  if (!e.currentTarget.matches(":focus-visible")) return;
+  e.currentTarget.style.removeProperty("--x");
+  e.currentTarget.style.removeProperty("--y");
+}
+
+function render(variant: ButtonVariant, tone: ButtonTone, size: ButtonSize, props: SharedProps) {
+  const { arrow, icon, loading, children } = props;
+  const lead = loading ? <Spinner /> : arrow === "left" ? <ArrowIcon dir="left" /> : null;
+  const trail = !loading && arrow === "right" ? <ArrowIcon dir="right" /> : null;
+
+  switch (variant) {
+    case "split": {
+      const s = SPLIT_SIZE[size];
+      const block = `${SOLID[tone]} ${s.radius} transition-[background-color,border-radius,color] duration-300`;
+      const chip = loading ? <Spinner /> : iconFor(icon, s.icon);
+      return {
+        className: `group inline-flex ${s.h} items-stretch gap-0.5 ${FOCUS} disabled:pointer-events-none disabled:opacity-60`,
+        content: (
+          <>
+            <span className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap ${s.text} ${block}`}>{children}</span>
+            {chip && <span className={`grid ${s.chip} shrink-0 place-items-center ${block}`}>{chip}</span>}
+          </>
+        ),
+      };
+    }
+    case "ghost":
+      return {
+        className: `group inline-flex shrink-0 items-center justify-center gap-2 rounded-full transition-[background-color,border-color,color,opacity] duration-200 ${PILL_SIZE[size]} ${PILL[tone]} ${FOCUS} disabled:pointer-events-none disabled:opacity-40`,
+        content: (
+          <>
+            {lead}
+            {children}
+            {trail}
+          </>
+        ),
+      };
+    case "link":
+      return {
+        className: `group inline-flex items-center gap-1.5 rounded link-underline-on ${size === "sm" ? "type-caption" : "type-label"} ${LINK_TONE[tone]} transition-colors ${FOCUS} disabled:pointer-events-none disabled:opacity-40`,
+        content: (
+          <>
+            {lead}
+            {children}
+            {trail}
+          </>
+        ),
+      };
+    case "icon":
+      return {
+        className: `group grid shrink-0 place-items-center rounded-full transition-[background-color,color,opacity,scale] duration-200 active:scale-95 ${ICON_SIZE[size]} ${ICON_TONE[tone]} ${FOCUS} disabled:pointer-events-none disabled:opacity-30`,
+        content: loading ? <Spinner /> : children,
+      };
+    case "google":
+      return {
+        className: `${BASE_BLOCK} gap-3 border border-[#747775] bg-white px-6 text-[#1f1f1f] hover:bg-[#f2f2f2] disabled:opacity-60`,
+        content: (
+          <>
+            {loading ? <Spinner /> : <GoogleIcon />}
+            {children}
+          </>
+        ),
+      };
+    case "secondary":
+      return {
+        className: `${BASE_BLOCK} relative isolate overflow-hidden px-[22px] text-[#1d2838]`,
+        sweep: true,
+        content: (
+          <>
+            <span
+              aria-hidden
+              className="absolute inset-0 -z-10 bg-[#1d2838] transition-[clip-path] duration-[520ms] ease-[cubic-bezier(0.64,0,0.78,0)] group-hover:ease-[cubic-bezier(0.22,1,0.36,1)] group-focus-visible:ease-[cubic-bezier(0.22,1,0.36,1)] [clip-path:circle(0%_at_var(--x,50%)_var(--y,50%))] group-hover:[clip-path:circle(150%_at_var(--x,50%)_var(--y,50%))] group-focus-visible:[clip-path:circle(150%_at_var(--x,50%)_var(--y,50%))] motion-reduce:transition-none"
+            />
+            <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_0_0_2px_#1d2838]" />
+            <span className="relative inline-flex items-center gap-2.5 transition-colors delay-[200ms] duration-[260ms] ease-out group-hover:text-white group-hover:delay-[60ms] group-focus-visible:text-white">
+              {lead}
+              {children}
+              {trail}
+            </span>
+          </>
+        ),
+      };
+    default:
+      return {
+        className: `${BASE_BLOCK} border-2 border-[#f1a903] bg-[#f1a903] px-5 text-[#1d2838] hover:border-[#d99500] hover:bg-[#d99500]`,
+        content: (
+          <>
+            {lead}
+            {children}
+            {trail}
+          </>
+        ),
+      };
+  }
+}
+
+const DEFAULT_TONE: Record<ButtonVariant, ButtonTone> = {
+  primary: "amber",
+  secondary: "outline",
+  split: "amber",
+  ghost: "outline",
+  icon: "light",
+  link: "ink",
+  google: "light",
+};
+
+const DEFAULT_SIZE: Record<ButtonVariant, ButtonSize> = {
+  primary: "lg",
+  secondary: "lg",
+  split: "lg",
+  ghost: "md",
+  icon: "sm",
+  link: "md",
+  google: "lg",
+};
+
+export function Button(props: ButtonProps) {
+  const { variant = "primary", tone, size, arrow, icon, loading, label, className = "", children, ...rest } = props;
+  const v = render(variant, tone ?? DEFAULT_TONE[variant], size ?? DEFAULT_SIZE[variant], { arrow, icon, loading, children });
+  const cls = `${v.className} ${className}`.trim();
+  const sweep = v.sweep ? { onPointerEnter: setPressOrigin, onPointerLeave: setPressOrigin, onFocus: clearPressOrigin } : {};
+
+  if ("href" in rest && rest.href) {
+    const { href, newTab, target, rel, ...anchor } = rest as Omit<AsLink, keyof SharedProps>;
+    const external = newTab || target === "_blank" || !href.startsWith("/") || href.startsWith("//");
+    if (!external) {
       return (
-        <Link
-          href={href}
-          aria-label={label}
-          className={combinedClassName}
-          onPointerEnter={handlePointerEnter}
-          onPointerLeave={handlePointerLeave}
-          onFocus={handleFocus}
-          {...restAnchorProps}
-        >
-          {content}
+        <Link href={href} aria-label={label} className={cls} {...sweep} {...anchor}>
+          {v.content}
         </Link>
       );
     }
-
     return (
       <a
         href={href}
-        target={target}
-        rel={rel || (target === "_blank" ? "noopener noreferrer" : undefined)}
+        target={newTab ? "_blank" : target}
+        rel={rel ?? (newTab || target === "_blank" ? "sponsored noopener noreferrer" : undefined)}
         aria-label={label}
-        className={combinedClassName}
-        onPointerEnter={handlePointerEnter}
-        onPointerLeave={handlePointerLeave}
-        onFocus={handleFocus}
-        {...restAnchorProps}
+        className={cls}
+        {...sweep}
+        {...anchor}
       >
-        {content}
+        {v.content}
+        {(newTab || target === "_blank") && <span className="sr-only"> (opens in a new tab)</span>}
       </a>
     );
   }
 
-  const { type = "button", disabled, ...restButtonProps } = props as ButtonAsButton;
-
+  const { type = "button", disabled, ...button } = rest as Omit<AsButton, keyof SharedProps>;
   return (
-    <button
-      type={type}
-      disabled={disabled}
-      aria-label={label}
-      className={combinedClassName}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-      onFocus={handleFocus}
-      {...restButtonProps}
-    >
-      {content}
-    </button>
-  );
-}
-
-export function OutlineButton({
-  onClick,
-  label,
-  children,
-  disabled,
-  className,
-  arrow,
-}: {
-  onClick?: () => void;
-  label?: string;
-  children: React.ReactNode;
-  disabled?: boolean;
-  className?: string;
-  arrow?: "left" | "right";
-}) {
-  return (
-    <Button
-      variant="secondary"
-      onClick={onClick}
-      label={label}
-      disabled={disabled}
-      className={className}
-      arrow={arrow}
-    >
-      {children}
-    </Button>
-  );
-}
-
-export function GoogleButton({
-  onClick,
-  busy,
-  children,
-  className = "",
-}: {
-  onClick?: () => void;
-  busy?: boolean;
-  children?: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <Button
-      variant="google"
-      onClick={onClick}
-      disabled={busy}
-      className={`w-full sm:w-auto ${className}`.trim()}
-    >
-      {children ?? (busy ? "Signing in…" : "Continue with Google")}
-    </Button>
-  );
-}
-
-export function SplitButton({
-  href,
-  onClick,
-  label,
-  dark = false,
-  className = "",
-  size = "md",
-}: {
-  href?: string;
-  onClick?: () => void;
-  label: React.ReactNode;
-  dark?: boolean;
-  className?: string;
-  size?: "sm" | "md";
-}) {
-  const isSm = size === "sm";
-  const heightClass = isSm ? "h-10" : "h-12";
-  const radiusClass = isSm
-    ? "rounded-[12px] group-hover/split:rounded-[20px]"
-    : "rounded-[14px] group-hover/split:rounded-[24px]";
-  const arrowBoxClass = isSm ? "w-10" : "w-12";
-  const iconSize = isSm ? "size-4" : "size-5";
-
-  const chipStyle: React.CSSProperties = {
-    backgroundColor: dark ? "#fffdf8" : "#1d2838",
-    color: dark ? "#1d2838" : "#fffdf8",
-  };
-
-  const inner = (
-    <>
-      <span
-        className={`flex flex-1 items-center justify-center text-[15px] font-semibold transition-[border-radius] duration-300 ${radiusClass}`}
-        style={chipStyle}
-      >
-        {label}
-      </span>
-      <span
-        className={`grid place-items-center transition-[border-radius] duration-300 ${arrowBoxClass} ${radiusClass}`}
-        style={chipStyle}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          className={`${iconSize} transition-transform group-hover/split:translate-x-0.5`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-        >
-          <path d="M4 12h16M14 6l6 6-6 6" />
-        </svg>
-      </span>
-    </>
-  );
-
-  if (href) {
-    const isInternal = href.startsWith("/") && !href.startsWith("//");
-    if (isInternal) {
-      return (
-        <Link
-          href={href}
-          className={`group/split flex items-stretch gap-1 ${heightClass} ${className}`.trim()}
-        >
-          {inner}
-        </Link>
-      );
-    }
-    return (
-      <a
-        href={href}
-        target="_blank"
-        rel="sponsored noopener noreferrer"
-        className={`group/split flex items-stretch gap-1 ${heightClass} ${className}`.trim()}
-      >
-        {inner}
-      </a>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group/split flex items-stretch gap-1 ${heightClass} ${className}`.trim()}
-    >
-      {inner}
-    </button>
-  );
-}
-
-export function ThumbButton({
-  dark,
-  pressed,
-  label,
-  onClick,
-  type = "up",
-}: {
-  dark: boolean;
-  pressed: boolean;
-  label: string;
-  onClick: () => void;
-  type?: "up" | "down";
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={pressed}
-      aria-label={label}
-      onClick={onClick}
-      className={`grid size-10 place-items-center rounded-[13px] transition-[background-color,color,scale] duration-200 active:scale-95 ${
-        pressed
-          ? dark
-            ? "relative bg-[#fffdf8] text-[#1d2838] animate-[like-pop_420ms_cubic-bezier(.22,1,.36,1)]"
-            : "relative bg-[#1d2838] text-white animate-[like-pop_420ms_cubic-bezier(.22,1,.36,1)]"
-          : dark
-            ? "hover:bg-white/15"
-            : "hover:bg-[#1d2838]/10"
-      }`}
-    >
-      {pressed ? (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -inset-1 rounded-[16px] border-2 border-current opacity-0 animate-[like-ring_520ms_ease-out]"
-        />
-      ) : null}
-      <svg
-        viewBox="0 0 24 24"
-        className="size-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        {type === "up" ? (
-          <path d="M7 10v10H4V10zM7 10l4-7c1.7 0 2.5 1 2.2 2.6L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.8 20H7" />
-        ) : (
-          <path d="M17 14V4h3v10zM17 14l-4 7c-1.7 0-2.5-1-2.2-2.6l.6-3.4H5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.2 4H17" />
-        )}
-      </svg>
+    <button type={type} disabled={disabled || loading} aria-busy={loading || undefined} aria-label={label} className={cls} {...sweep} {...button}>
+      {v.content}
     </button>
   );
 }

@@ -6,16 +6,12 @@ import { Catalogue } from "./Catalogue";
 import { MOCK_BOOKS } from "../_data/curation-mock";
 import { abs, jsonLd } from "../_lib/site";
 
-// Handwritten eyebrow ("our whole shelf") and the book sheet's section titles.
-
 export const metadata: Metadata = {
   title: "All books — KutuBooku",
   description: "Every book on the KutuBooku shelf: filter by age and interests, open any book, and add it to your box.",
-  // Filters (?age=…&into=…) and the book sheet (?book=…) are views of this one page.
   alternates: { canonical: "/books" },
 };
 
-// The whole shelf as a list, for search engines.
 const STRUCTURED = {
   "@context": "https://schema.org",
   "@type": "ItemList",

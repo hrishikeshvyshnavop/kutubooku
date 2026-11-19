@@ -1,13 +1,8 @@
 "use client";
 
-// Sign-in page. Works from anywhere: ?next= says where to go afterwards (the header passes the
-// current page; the questionnaire passes /curation; the box passes /box). Copy follows the reason.
-// Already signed in → "You're signed in" with Continue and Sign out.
-// ⚠️ Google sign-in is simulated (app/_lib/session.ts); real OAuth is a dev-team task.
-
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowIcon, Button, GoogleButton, OutlineButton } from "../_components/ui/Button";
+import { ArrowIcon, Button } from "../_components/ui/Button";
 import { childNameOf, readAnswers } from "../_lib/answers";
 
 import { safeNext, signIn, signOut, useSession } from "../_lib/session";
@@ -24,7 +19,6 @@ export function SignIn() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    // Client-only reads (sessionStorage + query string).
     const n = childNameOf(readAnswers());
     setName(n); // eslint-disable-line react-hooks/set-state-in-effect
     setNext(safeNext(new URLSearchParams(window.location.search).get("next"), n ? "/curation" : "/"));
@@ -50,9 +44,8 @@ export function SignIn() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1920px] flex-1 flex-col p-2.5 sm:p-3">
-      <div className="grid flex-1 gap-2.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-3">
-        {/* Left panel: why sign in */}
-        <aside className="rounded-[28px] bg-[#9fcbf2] p-5 sm:rounded-[48px] sm:p-8 lg:min-h-[min(560px,calc(100dvh-14rem))]">
+      <div className="grid flex-1 grid-rows-[1fr_auto] gap-2.5 lg:grid-rows-none lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-3">
+        <aside className="order-last rounded-[28px] bg-[#9fcbf2] p-5 lg:order-none sm:rounded-[48px] sm:p-8 lg:min-h-[min(560px,calc(100dvh-14rem))]">
           <p className="type-label text-[#1d2838]/80">{reason === "curation" ? "Almost there" : "Why sign in"}</p>
           <p className="mt-4 type-lead sm:mt-6">Signing in keeps your family&apos;s books safe so we can:</p>
           <ul className="mt-5 space-y-3 type-body sm:mt-8">
@@ -69,7 +62,6 @@ export function SignIn() {
           </ul>
         </aside>
 
-        {/* Right panel: the action */}
         <main className="flex flex-col rounded-[36px] bg-[#fffdf8] px-page-inset pb-6 pt-8 sm:rounded-[56px] sm:pt-12 lg:rounded-b-none lg:rounded-t-[64px] lg:pt-16">
           {session ? (
             <>
@@ -81,9 +73,9 @@ export function SignIn() {
                 <Button variant="primary" onClick={() => router.push(next)} arrow="right">
                   Continue
                 </Button>
-                <OutlineButton onClick={signOut} label="Sign out">
+                <Button variant="secondary" onClick={signOut} label="Sign out">
                   Sign out
-                </OutlineButton>
+                </Button>
               </div>
             </>
           ) : (
@@ -92,8 +84,9 @@ export function SignIn() {
               <p className="mt-4 max-w-xl type-body-lg text-[#1d2838]/70">One tap with your Google account. No new password to remember.</p>
 
               <div className="mt-10 flex flex-col items-start gap-3">
-                {/* Google sign-in button — follows Google's Sign-In branding guidelines */}
-                <GoogleButton onClick={doSignIn} busy={busy || session === undefined} />
+                <Button variant="google" onClick={doSignIn} disabled={busy || session === undefined} className="w-full sm:w-auto">
+                  {busy ? "Signing in…" : "Continue with Google"}
+                </Button>
                 <p className="max-w-md type-caption text-[#1d2838]/60">
                   We only use your Google name and email to save your family&apos;s books and send the monthly picks. We never post anything or
                   share {name ? `${name}'s` : "your child's"} details.
@@ -104,15 +97,15 @@ export function SignIn() {
 
           <div className="sticky bottom-0 z-10 -mx-2 mt-auto flex items-center justify-start rounded-t-[24px] bg-[#fffdf8]/90 px-2 pb-3 pt-6 backdrop-blur">
             {reason === "curation" ? (
-              <OutlineButton onClick={() => router.push("/reading-preferences")} label="Back to your answers">
+              <Button variant="secondary" onClick={() => router.push("/reading-preferences")} label="Back to your answers">
                 <ArrowIcon dir="left" />
                 Back to answers
-              </OutlineButton>
+              </Button>
             ) : (
-              <OutlineButton onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))} label="Go back">
+              <Button variant="secondary" onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))} label="Go back">
                 <ArrowIcon dir="left" />
                 Back
-              </OutlineButton>
+              </Button>
             )}
           </div>
         </main>

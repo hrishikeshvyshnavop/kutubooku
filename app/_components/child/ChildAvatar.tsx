@@ -2,7 +2,7 @@ import Image from "next/image";
 import { avatarById, avatarSrc } from "../../_data/avatars";
 import { displayName, type ChildAnswers } from "../../_lib/children";
 
-export const READER_COLOURS = ["#f6c453", "#9fcbf2", "#a9dfc0", "#f7ab95", "#c9b7f1", "#d8e88a"];
+const READER_COLOURS = ["#f6c453", "#9fcbf2", "#a9dfc0", "#f7ab95", "#c9b7f1", "#d8e88a"];
 
 export function ChildAvatar({
   child,

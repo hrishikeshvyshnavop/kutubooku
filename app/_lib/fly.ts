@@ -1,25 +1,9 @@
 "use client";
 
-// "Add to box" moment: a copy of the book's cover lifts off the page and flies in an arc
-// into the box, which opens its lid to catch it, snaps shut with a bounce, and the count goes up.
-//
-// - Source: the element marked data-book-cover="<id>" (card cover, book page's 3D book), else the button.
-// - Target: an element marked data-box-target. The header's box icon wins on the page (the header
-//   slides back in if it was hidden on scroll); inside a modal sheet (top layer, above the header)
-//   the sheet's own target is used.
-// - Events on the target: "kb:box-incoming" at take-off, "kb:box-catch" on landing (BoxLink uses
-//   them for the lid and to hold the count until the book lands).
-// - "Reduce motion": no flight, just the catch.
-
 import { getImageProps } from "next/image";
 
 const DURATION = 820;
 
-/**
- * The picture for the flying copy. Performance: never the original cover file (some are
- * 4000×5000 px and would be decoded on the spot, freezing the first frames). Prefer the exact
- * image the tapped card is showing (already loaded and decoded), else a small optimised one.
- */
 function flightImage(source: Element | null, cover: string): string {
   const shown = source?.querySelector?.("img") as HTMLImageElement | null;
   if (shown?.currentSrc && shown.complete) return shown.currentSrc;
@@ -38,9 +22,8 @@ function findSource(bookId: string, scope: ParentNode): Element | null {
 
 function findTarget(scope: ParentNode, inDialog: boolean): HTMLElement | null {
   const all = [...scope.querySelectorAll<HTMLElement>("[data-box-target]")].filter(
-    (el) => inDialog || !el.closest("dialog"), // on the page, ignore targets inside closed sheets
+    (el) => inDialog || !el.closest("dialog"),
   );
-  // Header first, then anything else that can be seen.
   return all.find((el) => el.dataset.boxTarget === "header" && el.getClientRects().length > 0) ?? all.find(visible) ?? null;
 }
 
@@ -49,7 +32,6 @@ const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matc
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-/** Plays the flight. `from` is the element that was tapped (used when no cover is found). */
 export function flyToBox({
   bookId,
   cover,
@@ -59,14 +41,13 @@ export function flyToBox({
   bookId: string;
   cover: string;
   from?: Element | null;
-  /** Cover width / height, for when the flight starts from a button rather than the cover. */
   ratio?: number;
 }) {
   if (typeof window === "undefined") return;
   const dialog = (from?.closest("dialog[open]") as HTMLDialogElement | null) ?? null;
   const scope: ParentNode = dialog ?? document;
 
-  if (!dialog) window.dispatchEvent(new Event("kb:reveal-header")); // bring the header (and its box) back
+  if (!dialog) window.dispatchEvent(new Event("kb:reveal-header"));
   const target = findTarget(scope, Boolean(dialog));
   if (!target) return;
 
@@ -79,8 +60,6 @@ export function flyToBox({
   const source = cover_ ?? from;
   if (!source) return;
   const r0 = source.getBoundingClientRect();
-  // Cover on screen: lift that exact copy. Otherwise (e.g. scrolled away): a book-shaped copy
-  // pops out of the button that was tapped.
   const s = cover_
     ? r0
     : (() => {
@@ -90,7 +69,6 @@ export function flyToBox({
       })();
   target.dispatchEvent(new CustomEvent("kb:box-incoming"));
 
-  // The flying copy. In a sheet it must live inside the dialog (the top layer covers everything else).
   const host = dialog ?? document.body;
   const w = Math.min(s.width, 180);
   const h = Math.min(s.height, (180 / Math.max(s.width, 1)) * s.height);
@@ -114,7 +92,6 @@ export function flyToBox({
   } satisfies Partial<CSSStyleDeclaration>);
   host.appendChild(el);
 
-  // Where (0,0) of a "fixed" box really is: inside a transformed dialog it's the dialog's corner.
   const origin = el.getBoundingClientRect();
   const sx = s.left + s.width / 2 - w / 2 - origin.left;
   const sy = s.top + s.height / 2 - h / 2 - origin.top;
@@ -124,17 +101,14 @@ export function flyToBox({
   let raf = 0;
   const frame = (now: number) => {
     const t = Math.min(1, (now - start) / DURATION);
-    // Measure the target every frame: the header may still be sliding in.
     const r = target.getBoundingClientRect();
     const tx = r.left + r.width / 2 - w / 2 - origin.left;
     const ty = r.top + r.height / 2 - h / 2 - origin.top;
     const p = easeInOut(t);
-    // Arc: a lift at the start (the book "picks up"), then a high curve down into the box.
     const lift = Math.sin(Math.PI * Math.min(1, t * 1.6)) * -40;
     const arc = Math.sin(Math.PI * p) * -Math.max(120, Math.abs(ty - sy) * 0.35);
     const x = sx + (tx - sx) * p;
     const y = sy + (ty - sy) * p + arc + (t < 0.6 ? lift * (1 - p) : 0);
-    // Grows a little as it lifts, then shrinks into the box; tilts like it's tumbling in.
     const grow = t < 0.18 ? 1 + 0.12 * easeOut(t / 0.18) : 1.12 - (1.12 - endScale) * easeInOut((t - 0.18) / 0.82);
     const rot = Math.sin(t * Math.PI * 1.5) * -14 + t * 18;
     el.style.transform = `translate(${x}px, ${y}px) scale(${grow}) rotate(${rot}deg)`;
@@ -147,7 +121,6 @@ export function flyToBox({
     }
   };
   raf = requestAnimationFrame(frame);
-  // Safety: never leave a stray copy on screen.
   setTimeout(() => {
     cancelAnimationFrame(raf);
     if (el.isConnected) {
@@ -157,7 +130,6 @@ export function flyToBox({
   }, DURATION + 600);
 }
 
-/** Bounce + "+1" on the element that caught the book. */
 function catchPulse(target: HTMLElement) {
   target.animate(
     [
@@ -187,7 +159,6 @@ function catchPulse(target: HTMLElement) {
   } satisfies Partial<CSSStyleDeclaration>);
   host.appendChild(plus);
   const o = plus.getBoundingClientRect();
-  // Beside the box (left), rising a little: above it would leave the screen for the header icon.
   const x = r.left - o.width - 8 - o.left;
   const y = r.top + r.height / 2 - o.height / 2 - o.top;
   plus

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { MOCK_BOOKS } from "../../_data/curation-mock";
 import { rupees } from "../../_lib/amazon";
-import { CtaButton } from "../ui/CtaButton";
+import { Button } from "../ui/Button";
 import { SectionTitle } from "../ui/SectionTitle";
 import { AiAvatar } from "../ai/AiAvatar";
 import { pageScroll } from "../layout/SmoothScroll";
@@ -48,8 +48,6 @@ const lineClass = (on: boolean) =>
   `transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${on ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`;
 const lineDelay = (on: boolean, k: number): React.CSSProperties => ({ transitionDelay: on ? `${180 + k * 90}ms` : "0ms" });
 
-const ARROW_BTN =
-  "grid size-12 place-items-center rounded-full border-2 border-black text-black transition-[background-color,color,scale,opacity] duration-200 hover:bg-black hover:text-[#FDDAA6] active:scale-95 disabled:pointer-events-none disabled:opacity-25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 
 export function HowItWorks() {
   const [active, setActive] = useState(0);
@@ -253,18 +251,18 @@ export function HowItWorks() {
             </div>
           ) : (
           <div className="flex items-center gap-3">
-            <button type="button" onClick={() => go(active - 1)} disabled={active === 0} aria-label="Previous step" className={ARROW_BTN}>
+            <Button variant="icon" tone="outline" size="md" onClick={() => go(active - 1)} disabled={active === 0} label="Previous step">
               <Chevron dir="left" />
-            </button>
+            </Button>
             <span className="w-16 text-center text-base font-bold tabular-nums">
               {pad(active + 1)} / {pad(STEPS.length)}
             </span>
-            <button type="button" onClick={() => go(active + 1)} disabled={active === last} aria-label="Next step" className={ARROW_BTN}>
+            <Button variant="icon" tone="outline" size="md" onClick={() => go(active + 1)} disabled={active === last} label="Next step">
               <Chevron dir="right" />
-            </button>
+            </Button>
           </div>
           )}
-          <CtaButton href="/reading-preferences" label="Find books for my child" className="w-fit" />
+          <Button variant="split" href="/reading-preferences" className="w-fit">Find books for my child</Button>
           </div>
         </div>
       </div>

@@ -1,30 +1,21 @@
 "use client";
 
-// "Read it together" card, presented as KutuBooku AI writing it for you.
-// When the card scrolls into view: a short "thinking" stage (every line is a
-// shimmering bar the exact shape of the text to come), then the paragraphs
-// type out one after another with a caret.
-// - No layout shift: untyped text is laid out, just invisible.
-// - Screen readers get the full text straight away (the animation is aria-hidden).
-// - Reduced motion: everything is shown at once.
-
 import { useEffect, useRef, useState } from "react";
 import { AiAvatar } from "../../_components/ai/AiAvatar";
 
 export type AiBlock = { kind: "lead" | "cue" | "activity"; title?: string; text: string };
 
-const THINK_MS = 1500; // shimmer stage
-const CHARS_PER_MS = 0.11; // typing speed (~110 characters a second)
-const PAUSE = 14; // "characters" of pause between paragraphs
+const THINK_MS = 1500;
+const CHARS_PER_MS = 0.11;
+const PAUSE = 14;
 
 type Stage = "idle" | "thinking" | "typing" | "done";
 
 export function AiSummary({ blocks, bookTitle }: { blocks: AiBlock[]; bookTitle: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState<Stage>("idle");
-  const [typed, setTyped] = useState(0); // characters typed so far, across all blocks
+  const [typed, setTyped] = useState(0);
 
-  // Where each block starts in the shared character count.
   const full = blocks.map((b) => (b.title ? `${b.title}. ${b.text}` : b.text));
   const starts: number[] = [];
   let total = 0;
@@ -33,7 +24,6 @@ export function AiSummary({ blocks, bookTitle }: { blocks: AiBlock[]; bookTitle:
     total += f.length + PAUSE;
   }
 
-  // Start when the card is well into view (once).
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -79,7 +69,6 @@ export function AiSummary({ blocks, bookTitle }: { blocks: AiBlock[]; bookTitle:
 
   return (
     <div ref={ref} className="flex max-w-[640px] flex-col gap-[1.2em]">
-      {/* AI label: shimmering while it "reads", then settles */}
       <p className="flex items-center gap-2 text-base font-semibold tracking-[-0.01em] sm:text-lg" aria-live="polite">
         <AiAvatar size={36} thinking={stage === "thinking" || stage === "typing"} />
         {stage === "done" ? (
@@ -91,7 +80,6 @@ export function AiSummary({ blocks, bookTitle }: { blocks: AiBlock[]; bookTitle:
         )}
       </p>
 
-      {/* Full text for screen readers */}
       <div className="sr-only">
         {full.map((f) => (
           <p key={f}>{f}</p>
@@ -102,12 +90,10 @@ export function AiSummary({ blocks, bookTitle }: { blocks: AiBlock[]; bookTitle:
         const text = full[i];
         const shown = stage === "done" ? text.length : Math.max(0, Math.min(text.length, typed - starts[i]));
         const active = stage === "typing" && shown > 0 && shown < text.length;
-        // Bold title part ("One-Dot Masterpiece.") for activities
         const titleLen = b.title ? b.title.length + 1 : 0;
         return (
           <p key={text} aria-hidden className={b.kind === "cue" ? "italic" : ""}>
             {thinking ? (
-              // Skeleton: the real text, invisible, on a shimmering bar per line.
               <span className="animate-[ai-shimmer_1.4s_linear_infinite] rounded-md bg-[linear-gradient(90deg,#efede8_0%,#efede8_40%,#faf8f4_50%,#efede8_60%,#efede8_100%)] bg-[length:250%_100%] text-transparent [box-decoration-break:clone]">
                 {text}
               </span>
@@ -127,7 +113,6 @@ export function AiSummary({ blocks, bookTitle }: { blocks: AiBlock[]; bookTitle:
   );
 }
 
-/** A slice of `text`, with the first `boldTo` characters in bold. */
 function Typed({ text, from = 0, upTo = text.length, boldTo }: { text: string; from?: number; upTo?: number; boldTo: number }) {
   const bold = text.slice(from, Math.max(from, Math.min(upTo, boldTo)));
   const rest = text.slice(Math.max(from, boldTo), upTo);

@@ -4,16 +4,10 @@ import { Footer } from "../_components/layout/Footer";
 import { FooterMascot } from "../_components/layout/FooterMascot";
 import { REVEAL_ABOVE } from "../_data/footer";
 import { Header } from "../_components/layout/Header";
-import { CtaButton } from "../_components/ui/CtaButton";
+import { Button } from "../_components/ui/Button";
 import { PageTransition } from "../_components/layout/PageTransition";
 import { SECTION_TITLE, SectionTitle } from "../_components/ui/SectionTitle";
 import { SITE_NAME, abs, jsonLd } from "../_lib/site";
-
-// Curators page (2026-11-05). Hero from Figma "Section / Experts / Meet Our Curators"
-// (Kutubooku Website, node 1257:3815), restyled in the site's own language: Cal Sans + Figtree
-// (Figma's Cal Sans / Lora / Kalam → our type scale + the Caveat eyebrow), navy ink, amber
-// highlight, the shared CtaButton. Photo keeps Figma's crop and its two rounded corners.
-// TODO(content): the three "How a book gets picked" principles are draft copy; confirm with Ria.
 
 export const metadata: Metadata = {
   title: "Our curators — KutuBooku",
@@ -57,7 +51,6 @@ export default function CuratorsPage() {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(STRUCTURED) }} />
         <Header background="bg-[#f4efe6]" />
         <main className={`flex-1 bg-[#f4efe6] ${REVEAL_ABOVE}`}>
-          {/* Hero: copy left, curator photo right (stacks on phones, photo first) */}
           <section aria-labelledby="curators-title" className="mx-auto grid w-full max-w-[1920px] items-center gap-10 px-page pb-16 pt-8 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.75fr)] lg:gap-16 lg:pb-24 xl:gap-24">
             <div className="order-2 max-w-[720px] lg:order-1">
               <p className="w-fit origin-bottom-left -rotate-3 font-[family-name:var(--font-caveat)] text-[28px] leading-none text-[#3b308f] sm:text-[36px]">
@@ -82,10 +75,9 @@ export default function CuratorsPage() {
                 </figcaption>
               </figure>
 
-              <CtaButton href="/reading-preferences" label="Find books for my child" className="mt-10 w-fit" />
+              <Button variant="split" href="/reading-preferences" className="mt-10 w-fit">Find books for my child</Button>
             </div>
 
-            {/* Photo: tl/br rounded like Figma, dark fade at the bottom for the name */}
             <div className="relative order-1 mx-auto aspect-[454/592] w-full max-w-[520px] overflow-hidden rounded-br-[40px] rounded-tl-[40px] lg:order-2 lg:mx-0 lg:justify-self-end">
               <Image
                 src="/curators/ria-zita-george.jpg"
@@ -105,7 +97,6 @@ export default function CuratorsPage() {
             </div>
           </section>
 
-          {/* How a book gets picked */}
           <section aria-labelledby="principles-title" className="relative z-10 bg-[#fffdf8] px-page py-16 sm:py-24">
             <div className="mx-auto w-full max-w-[1920px]">
               <SectionTitle id="principles-title" eyebrow="what we look for">

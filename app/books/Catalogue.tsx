@@ -1,18 +1,6 @@
 "use client";
 
-// /books: every book on the shelf.
-// - Filters (decision 2026-11-04, price/format/personality 2026-11-05): search, one age band,
-//   one price band, any number of formats, personalities and interests. Every option shows how
-//   many books it would leave (with the other filters on); options that would leave none are greyed out.
-//   Desktop (lg+): a sticky sidebar on the left of the grid (age as a list with counts, interests
-//   as wrapping chips). Phones/tablets: the same controls as chip rows above the grid. The active child's age is picked to start with; parents can switch it off.
-//   Filters live in the URL (?age=3-5&price=under-400&format=board&trait=brave&into=animals&q=dot)
-//   so a filtered list can be shared.
-// - Clear filters sits at the top of the filter section.
-// - Cards: the same tall colour cards as /curation. Tapping a card opens the book sheet;
-//   the main button adds the book to the box for the child shown in the header (B1/B6),
-//   or "your box" when nobody is picked.
-
+import { Button } from "../_components/ui/Button";
 import { useEffect, useRef, useState } from "react";
 import { MOCK_BOOKS, type BookFormat } from "../_data/curation-mock";
 import { rupees } from "../_lib/amazon";
@@ -26,11 +14,8 @@ import { CheckIcon } from "../_components/ui/CheckIcon";
 import { localTransition } from "../_lib/local-transition";
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]";
-// Chip press: a quick squeeze, colours ease over (not a hard swap).
 const CHIP = `inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-[15px] font-semibold transition-[background-color,color,scale] duration-200 ease-out active:scale-[0.94] motion-reduce:active:scale-100 ${FOCUS}`;
 
-/** The tick on a selected chip: it grows in from nothing with a small overshoot, so the chip widens
- *  smoothly instead of jumping. Always mounted; the negative margin cancels the chip's gap when hidden. */
 function Tick({ on }: { on: boolean }) {
   return (
     <span
@@ -60,7 +45,6 @@ const fitsBand = (b: { ageMin: number; ageMax: number }, band: BandId) => {
   return b.ageMin <= r.max && b.ageMax >= r.min;
 };
 
-// Price bands (₹). Shelf today: ₹349–₹499, mostly ₹399.
 const PRICES = [
   { id: "under-400", label: `Under ${rupees(400)}`, min: 0, max: 399 },
   { id: "400-499", label: `${rupees(400)}–${rupees(499)}`, min: 400, max: 499 },
@@ -72,7 +56,6 @@ const fitsPrice = (b: { price: number }, id: PriceId) => {
   return b.price >= r.min && b.price <= r.max;
 };
 
-// Formats, youngest first. URL ids are short.
 const FORMATS: { id: string; label: BookFormat }[] = [
   { id: "board", label: "Board book" },
   { id: "picture", label: "Picture book" },
@@ -81,7 +64,6 @@ const FORMATS: { id: string; label: BookFormat }[] = [
 ];
 const formatLabel = (id: string) => FORMATS.find((x) => x.id === id)?.label;
 
-// Personality: the kind of child a book speaks to / helps grow, from the curators' themes.
 const TRAITS = [
   { id: "brave", label: "Brave", themes: ["courage", "resilience", "perseverance", "growth mindset"] },
   { id: "kind", label: "Kind", themes: ["empathy", "compassion", "kindness", "helpfulness", "friendship", "inclusion"] },
@@ -93,7 +75,6 @@ const fitsTrait = (b: { themes: string[] }, id: string) => {
   return Boolean(t && b.themes.some((th) => (t.themes as readonly string[]).includes(th.toLowerCase())));
 };
 
-// Interests on the shelf, most common first.
 const INTERESTS = Object.entries(
   MOCK_BOOKS.flatMap((b) => b.tags).reduce<Record<string, number>>((m, t) => ({ ...m, [t]: (m[t] ?? 0) + 1 }), {}),
 )
@@ -101,7 +82,6 @@ const INTERESTS = Object.entries(
   .sort((a, b) => b[1] - a[1])
   .map(([t]) => t);
 
-/** A child's age band today (their age counts up from when it was given). */
 function bandOf(a: Record<string, string | string[]> | undefined): BandId | null {
   const age = ageOf(a);
   return age === null ? null : (ageBand(age) as BandId);
@@ -136,8 +116,6 @@ function writeUrl(f: Filters) {
   window.history.replaceState(window.history.state, "", url);
 }
 
-/** Sticky top for a sidebar that may be taller than the screen: 24px when it fits, otherwise
- *  negative, so it sticks once its bottom edge (24px gap) reaches the bottom of the screen. */
 function useStickySidebar() {
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -167,13 +145,10 @@ export function Catalogue() {
 
   const [f, setF] = useState<Filters>(NONE);
   const [ready, setReady] = useState(false);
-  // Card buttons: "Add to {child}'s box" (shared with the home row).
   const { whoseBox, cardProps, toastEl } = useAddToBox();
 
-  // Start from the URL; with no age in it, the active child's age band (C: "pre-selected, can be switched off").
   const childBand = bandOf(active?.answers);
   useEffect(() => {
-    // Wait for the session and the children store, so the active child's age can be the default.
     if (session === undefined || kids === null || ready) return;
     const u = readUrl();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the URL and the child store after hydration
@@ -192,10 +167,8 @@ export function Catalogue() {
     if (ready) writeUrl(f);
   }, [f, ready]);
 
-
   const q = f.q.trim().toLowerCase();
   type Book = (typeof MOCK_BOOKS)[number];
-  // One test per filter; an option's count applies every filter except its own group.
   const tests: Record<keyof Filters, (b: Book) => boolean> = {
     q: (b) => !q || `${b.title} ${b.subtitle ?? ""} ${b.author} ${b.illustrator ?? ""}`.toLowerCase().includes(q),
     age: (b) => !f.age || fitsBand(b, f.age),
@@ -215,8 +188,6 @@ export function Catalogue() {
   const activeCount = (f.age ? 1 : 0) + (f.price ? 1 : 0) + f.format.length + f.trait.length + f.into.length + (q ? 1 : 0);
   const filtered = Boolean(f.age || f.price || f.format.length || f.trait.length || f.into.length || q);
 
-  // Filter changes animate the grid (localTransition): cards that drop out fade and shrink away,
-  // the rest glide to their new places, newcomers fade in. Typing in search updates instantly.
   const animateTo = (next: React.SetStateAction<Filters>) => localTransition(() => setF(next));
   const toggle = (key: "format" | "trait", id: string) =>
     animateTo((x) => ({ ...x, [key]: x[key].includes(id) ? x[key].filter((y) => y !== id) : [...x[key], id] }));
@@ -231,34 +202,27 @@ export function Catalogue() {
       </p>
 
       <div className="mt-8 lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-10 xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-14">
-      {/* Filters: chip rows above the grid on phones/tablets, a sticky sidebar on desktop.
-          No inner scroll. Sticky offset (see useStickySidebar): fits the screen → sticks 24px from
-          the top; taller → scrolls with the page until its last filter is in view, then sticks there. */}
       <section
         ref={sidebarRef}
         aria-label="Filter books"
         className="flex flex-col gap-4 lg:sticky lg:gap-5 lg:rounded-[28px] lg:bg-white lg:p-6 lg:ring-1 lg:ring-[#1d2838]/8"
       >
-        {/* Header: "Filters" + Clear filters. Clear is only shown once something is filtered
-            (kept in the layout, so nothing shifts). */}
         <div className="flex h-8 items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 type-body font-semibold">
             Filters
-            {/* How many filters are on */}
             {activeCount ? (
               <span className="grid h-6 min-w-6 animate-q-in place-items-center rounded-full bg-[#1d2838] px-1.5 text-[13px] font-bold leading-none text-white tabular-nums">
                 {activeCount}
               </span>
             ) : null}
           </h2>
-          <button
-            type="button"
+          <Button variant="link" tone="outline" size="sm"
             onClick={() => animateTo(NONE)}
             inert={!filtered}
-            className={`rounded text-[14px] font-semibold leading-none text-[#1d2838]/70 link-underline-on transition-[opacity,color] duration-200 hover:text-[#1d2838] ${FOCUS} ${filtered ? "opacity-100" : "opacity-0"}`}
+            className={`transition-opacity duration-200 ${filtered ? "opacity-100" : "opacity-0"}`}
           >
             Clear all
-          </button>
+          </Button>
         </div>
 
         <label className="relative block max-w-xl lg:max-w-none">
@@ -277,8 +241,6 @@ export function Catalogue() {
           />
         </label>
 
-        {/* Phones: each chip row is one line that scrolls sideways, so its height never changes when
-            the child's age chip fills in after loading (no layout shift). Wider screens wrap. */}
         <div role="radiogroup" aria-label="Age" className="mx-[calc(var(--gutter)*-1)] flex items-center gap-2 overflow-x-auto px-page pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 lg:gap-1.5 [&>*]:shrink-0">
           <span className="mr-1 text-[15px] font-semibold text-[#1d2838]/60 lg:mb-0.5 lg:mr-0 lg:w-full">Age</span>
           {[null, ...BANDS.map((b) => b.id)].map((id) => {
@@ -298,7 +260,6 @@ export function Catalogue() {
                 <Tick on={on} />
                 {id ? `${id.replace("-", "–")} yrs` : "All ages"}
                 {isChild ? <span className={on ? "text-white/70" : "text-[#1d2838]/50"}>· {displayName(active.name)}</span> : null}
-                {/* Sidebar: how many books in each band, right-aligned */}
                 {n !== null ? (
                   <span aria-hidden className={`hidden text-[13px] tabular-nums lg:inline ${on ? "text-white/70" : "text-[#1d2838]/45"}`}>
                     {n}
@@ -404,7 +365,6 @@ export function Catalogue() {
         </div>
       </section>
 
-      {/* Results */}
       <div className="min-w-0">
       <p id="books-count" aria-live="polite" className="mt-8 type-body font-semibold lg:mt-0">
         {shown.length} {shown.length === 1 ? "book" : "books"}
@@ -414,7 +374,7 @@ export function Catalogue() {
       {!ready ? (
         <div className="mt-5 h-[60vh]" aria-busy />
       ) : shown.length ? (
-        <ul className="mt-5 grid gap-x-5 gap-y-7 px-1 pt-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <ul className="mt-5 grid grid-cols-2 gap-x-3 gap-y-5 px-1 pt-2 sm:gap-x-5 sm:gap-y-7 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {shown.map((b, i) => (
             <li key={b.id} className="[perspective:1400px]" data-vt-name={`cat-${b.id.replace(/[^a-zA-Z0-9_-]/g, "_")}`} data-vt-class="cat-card">
               <BookCard
@@ -422,6 +382,7 @@ export function Catalogue() {
                 index={i}
                 href={`/books/${b.id}`}
                 box={cardProps(b.id)}
+                compact
               />
             </li>
           ))}
@@ -430,9 +391,9 @@ export function Catalogue() {
         <div className="mt-10 rounded-[36px] bg-[#fffdf8] px-6 py-14 text-center">
           <p className="type-display-sm">No books match that yet</p>
           <p className="mt-3 type-body-lg text-[#1d2838]/65">Try another age or fewer interests. Our curators add new books every month.</p>
-          <button type="button" onClick={() => animateTo(NONE)} className={`mt-8 h-14 rounded-full bg-[#1d2838] px-7 type-button text-white ${FOCUS}`}>
+          <Button variant="ghost" tone="ink" size="lg" onClick={() => animateTo(NONE)} className="mt-8 h-14 px-7">
             Show all books
-          </button>
+          </Button>
         </div>
       )}
       </div>

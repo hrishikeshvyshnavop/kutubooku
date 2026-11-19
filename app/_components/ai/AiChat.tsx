@@ -1,12 +1,13 @@
 "use client";
 
+import { BrandArrow, Button } from "../ui/Button";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { askMock } from "../../_data/ask-mock";
 import { loadThread, saveThread, threadKey, type AskTurn } from "../../_lib/ask-history";
-import { activeOf, displayName, useChildren } from "../../_lib/children";
+import { MAX_CHILDREN, activeOf, displayName, switchChild, useChildren, type ChildProfile, type ChildrenState } from "../../_lib/children";
 import { useSession } from "../../_lib/session";
 import { AddToBoxButton } from "../ui/AddToBoxButton";
 import { AiAvatar } from "./AiAvatar";
@@ -118,7 +119,7 @@ const PICK_TONES = ["bg-[#ffe75e]", "bg-[#b6beff]", "bg-[#ffd0b2]"];
 const THINK_MS = 1200;
 const CHARS_PER_MS = 0.1;
 const CLOSE_MS = 240;
-const TILTS = [-2.5, 1.5, -1];
+const TILTS = [-1, 0.75, -0.5];
 
 type Turn = AskTurn;
 type Stage = "thinking" | "typing" | "done";
@@ -137,6 +138,10 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
   const [typed, setTyped] = useState(0);
   const [closing, setClosing] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [openOnSwitch, setOpenOnSwitch] = useState(false);
+  const [showEarlier, setShowEarlier] = useState(false);
+  const skipFocusOpen = useRef(false);
   const { whoseBox, cardProps, toastEl } = useAddToBox();
   const pickBox = (id: string) => {
     const { selected, onToggle } = cardProps(id);
@@ -150,7 +155,9 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
     setLoadedKey(key);
     const saved = key ? loadThread(key) : [];
     setTurns(saved);
-    setShown(false);
+    setShown((shown || openOnSwitch) && saved.length > 0);
+    setOpenOnSwitch(false);
+    setShowEarlier(false);
     setStage("done");
   }
   useEffect(() => {
@@ -192,6 +199,7 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
       setStage("done");
       if (clear) setTurns([]);
     };
+    skipFocusOpen.current = true;
     inputRef.current?.focus();
     if (reduced.current) return finish();
     setClosing(true);
@@ -247,25 +255,11 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
         className={`mb-3 flex flex-wrap items-center justify-center gap-1.5 transition-[opacity,translate] duration-300 ${docked ? "hidden" : open ? "pointer-events-none translate-y-2 opacity-0" : ""}`}
         aria-hidden={open || docked || undefined}
       >
-        {turns.length > 0 && (
-          <li className="animate-[ask-ph-in_500ms_cubic-bezier(0.22,1,0.36,1)_both]">
-            <button type="button" tabIndex={open ? -1 : 0} onClick={() => setShown(true)} className={`${SUGGEST_PILL} gap-2 !bg-black !text-white hover:!bg-black/80 ${child ? "!pl-1 sm:!pl-1.5" : ""}`}>
-              {child ? (
-                <ChildAvatar child={child} index={kids?.list.indexOf(child) ?? 0} size={32} round />
-              ) : (
-              <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" />
-              </svg>
-              )}
-              {childName ? `Continue ${childName}'s chat` : "Continue your chat"}
-            </button>
-          </li>
-        )}
         {SUGGESTIONS.map((s, i) => (
           <li
             key={s}
             style={{ animationDelay: `${i * 80}ms` }}
-            className={`animate-[ask-ph-in_500ms_cubic-bezier(0.22,1,0.36,1)_both] ${i > (turns.length > 0 ? -1 : 0) ? "max-sm:hidden" : ""}`}
+            className={`animate-[ask-ph-in_500ms_cubic-bezier(0.22,1,0.36,1)_both] ${i > 0 ? "max-sm:hidden" : ""}`}
           >
             <button
               type="button"
@@ -287,31 +281,20 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
               closing ? "animate-[ask-pop-out_240ms_cubic-bezier(0.4,0,1,1)_both]" : "animate-[ask-pop-in_520ms_cubic-bezier(0.22,1.2,0.36,1)_both]"
             }`}
           >
-            <div className="flex items-center justify-between gap-3 px-5 pb-1 pt-4 sm:px-7 sm:pt-5">
-              <p className="flex items-center gap-2.5 text-lg font-bold leading-none tracking-[-0.02em]">
-                <AiAvatar size={40} thinking={thinkingNow} />
-                KutuBooku AI
-                <span className="-rotate-3 font-[family-name:var(--font-caveat)] text-[22px] font-normal text-[#3b308f]">{childName ? `for ${childName}` : "book finder"}</span>
+            <div className="flex items-center justify-between gap-3 border-b border-black/5 px-5 pb-3 pt-4 sm:px-7">
+              <p className="flex items-center gap-2 text-base font-bold tracking-[-0.01em]">
+                <AiAvatar size={32} thinking={thinkingNow} />
+                Book finder
               </p>
-              <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => close(true)}
-                disabled={stage !== "done"}
-                className="h-10 rounded-full px-3.5 text-base font-semibold text-black/60 transition-colors hover:bg-black/5 hover:text-black disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-black"
-              >
-                Clear chat
-              </button>
-              <button
-                type="button"
-                onClick={() => close()}
-                aria-label="Close chat"
-                className="grid size-10 place-items-center rounded-full bg-[#fbbe63] text-black transition-[background-color,rotate] duration-300 hover:rotate-90 hover:bg-[#f9a220] focus-visible:outline-2 focus-visible:outline-black"
-              >
-                <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
-                  <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                <Button variant="link" tone="outline" size="sm" onClick={() => close(true)} disabled={stage !== "done"}>
+                  Clear chat
+                </Button>
+                <Button variant="icon" tone="amber" onClick={() => close()} label="Close chat" className="bg-[#fbbe63] transition-[background-color,rotate] duration-300 hover:rotate-90">
+                  <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </Button>
               </div>
             </div>
 
@@ -319,12 +302,17 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
               followKey={`${turns.length}-${stage}`}
               className="max-h-[min(480px,calc(100dvh-380px))] space-y-6 px-5 py-5 sm:px-7"
             >
-              {turns.map((t) => {
+              {!showEarlier && turns.length > 1 && (
+                <Button variant="link" tone="outline" size="sm" onClick={() => setShowEarlier(true)} className="mx-auto flex">
+                  Show {turns.length - 1} earlier {turns.length === 2 ? "question" : "questions"}
+                </Button>
+              )}
+              {(showEarlier ? turns : turns.slice(-1)).map((t) => {
                 const isLatest = t === latest;
                 const st: Stage = isLatest ? stage : "done";
                 return (
                   <div key={t.id} className="space-y-3">
-                    <p className="ml-auto w-fit max-w-[85%] origin-bottom-right animate-[ask-bubble-in_420ms_cubic-bezier(0.34,1.56,0.64,1)_both] rounded-[20px] rounded-br-md bg-[#3f309b] px-4 py-2.5 text-base font-semibold leading-snug tracking-[-0.01em] text-white sm:text-lg">
+                    <p className="ml-auto w-fit max-w-[85%] origin-bottom-right animate-[ask-bubble-in_420ms_cubic-bezier(0.34,1.56,0.64,1)_both] rounded-[20px] rounded-br-md bg-[#1d2838] px-4 py-2.5 text-[15px] font-semibold leading-snug tracking-[-0.01em] text-white sm:text-base">
                       {t.question}
                     </p>
 
@@ -332,7 +320,7 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
                       {st === "thinking" ? (
                         <Thinking />
                       ) : (
-                        <p className="text-lg font-medium leading-[1.25] tracking-[-0.01em] sm:text-xl">
+                        <p className="text-base font-medium leading-snug tracking-[-0.01em] text-[#1d2838] sm:text-lg">
                           <span className="sr-only">{st === "done" ? t.answer.text : ""}</span>
                           <span aria-hidden>
                             {t.answer.text.slice(0, st === "done" ? undefined : typed)}
@@ -344,12 +332,15 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
                     </div>
 
                     {st === "done" && t.answer.picks.length > 0 && (
-                      <ul className="grid grid-cols-3 gap-2 pt-1 sm:gap-3">
+                      <ul
+                        data-lenis-prevent-horizontal
+                        className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 pt-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0"
+                      >
                         {t.answer.picks.map((p, i) => (
                           <li
                             key={p.book.id}
                             style={{ "--r": `${TILTS[i % TILTS.length]}deg`, animationDelay: `${isLatest ? i * 110 : 0}ms` } as React.CSSProperties}
-                            className="animate-[ask-card-in_560ms_cubic-bezier(0.34,1.4,0.64,1)_both]"
+                            className="w-[58%] shrink-0 snap-start animate-[ask-card-in_560ms_cubic-bezier(0.34,1.4,0.64,1)_both] sm:w-auto"
                           >
                             <div
                               className={`group flex h-full rotate-[var(--r)] flex-col rounded-[20px] p-2 text-black transition-[rotate,translate] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1.5 hover:rotate-0 focus-within:rotate-0 sm:p-2.5 ${PICK_TONES[i % PICK_TONES.length]}`}
@@ -358,8 +349,8 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
                                 <span data-book-cover={p.book.id} className="relative block aspect-square overflow-hidden rounded-r-[8px] rounded-l-[3px]">
                                   <Image src={p.book.cover} alt="" fill sizes="180px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
                                 </span>
-                                <span className="mt-2 block w-fit rounded-full bg-black px-2.5 py-1 text-xs font-semibold leading-none text-white">{p.reason}</span>
-                                <span className="mt-1.5 line-clamp-2 block text-sm font-bold leading-tight tracking-[-0.01em] sm:text-base">{p.book.title}</span>
+                                <span className="mt-2.5 line-clamp-2 block text-[15px] font-bold leading-tight tracking-[-0.01em] sm:text-base">{p.book.title}</span>
+                                <span className="mt-1 line-clamp-2 block text-[13px] font-semibold leading-snug opacity-75">{p.reason}</span>
                                 <span className="flex items-center gap-1 text-xs font-semibold opacity-60">
                                   Ages {p.book.ageMin}–{p.book.ageMax}
                                   <span aria-hidden className="ml-auto -translate-x-1 opacity-0 transition-[opacity,translate] duration-300 group-hover:translate-x-0 group-hover:opacity-100">
@@ -403,18 +394,15 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
                       ))}
                     </ul>
                   )}
-                  <Link
-                    href="/reading-preferences"
-                    className="group flex min-h-14 items-stretch gap-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
-                  >
-                    <span className="flex flex-1 items-center rounded-lg bg-[#f9a220] px-5 py-3 text-lg font-bold leading-tight tracking-[-0.02em] text-black transition-colors group-hover:bg-[#e8900c] sm:text-xl">
+                  {child ? (
+                    <Button variant="split" size="md" href="/curation" className="w-full">
+                      See {childName}&apos;s full curation
+                    </Button>
+                  ) : (
+                    <Button variant="split" size="md" href="/reading-preferences" className="w-full">
                       {latest.answer.age !== undefined ? `Get a full curation for a ${latest.answer.age}-year-old` : "Get a full curation for my child"}
-                    </span>
-                    <span className="grid w-14 shrink-0 place-items-center rounded-lg bg-[#f9a220] transition-colors group-hover:bg-[#e8900c]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/icons/arrow-right.svg" alt="" width={18.6562} height={16} className="transition-transform group-hover:translate-x-0.5" />
-                    </span>
-                  </Link>
+                    </Button>
+                  )}
                 </div>
               )}
             </ChatScrollArea>
@@ -426,9 +414,7 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
             e.preventDefault();
             ask(value, open ? latest : undefined);
           }}
-          className={`relative flex h-16 items-stretch transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-            focused ? "-translate-y-0.5" : ""
-          }`}
+          className="relative flex h-16 items-stretch"
         >
           <span
             aria-hidden
@@ -438,13 +424,13 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
             aria-hidden
             className={`pointer-events-none absolute -inset-[3px] rounded-[35px] bg-[image:var(--ai-gradient-line)] transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${focused || thinkingNow ? "opacity-100" : "opacity-0"}`}
           />
-          <div className={`relative flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-[32px] bg-white pl-[14px] pr-2 transition-shadow duration-300 ${docked ? "shadow-[0_18px_40px_-16px_rgba(29,40,56,0.45),0_0_0_1px_rgba(29,40,56,0.06)]" : ""}`}>
+          <div className={`relative flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-[32px] bg-white ${child ? "pl-2" : "pl-6"} pr-2 transition-shadow duration-300 ${docked ? "shadow-[0_18px_40px_-16px_rgba(29,40,56,0.45),0_0_0_1px_rgba(29,40,56,0.06)]" : ""}`}>
             <span aria-hidden className={`absolute inset-x-0 bottom-0 h-1 overflow-hidden transition-opacity duration-300 ${thinkingNow ? "opacity-100" : "opacity-0"}`}>
               <span
                 className={`absolute inset-y-0 left-0 w-[250%] animate-[ai-sweep_1.2s_linear_infinite] bg-[linear-gradient(90deg,transparent_0%,transparent_30%,#7c5cff_40%,#4f8bff_47%,#22c7d6_53%,#ff6ac1_60%,transparent_70%,transparent_100%)] ${thinkingNow ? "" : "[animation-play-state:paused]"}`}
               />
             </span>
-            <AiAvatar size={48} thinking={thinkingNow} className={`-ml-1.5 transition-transform duration-500 ${focused ? "scale-105" : ""}`} />
+            {child && kids && <ChildChip child={child} index={kids.list.indexOf(child)} open={pickerOpen} onToggle={() => setPickerOpen((o) => !o)} />}
             <label htmlFor="hero-ask" className="sr-only">
               Ask KutuBooku AI for a book
             </label>
@@ -457,7 +443,14 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
                 id="hero-ask"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                onFocus={() => setFocused(true)}
+                onFocus={() => {
+                  setFocused(true);
+                  if (skipFocusOpen.current) {
+                    skipFocusOpen.current = false;
+                    return;
+                  }
+                  if (!value && turns.length > 0) setShown(true);
+                }}
                 onBlur={() => setFocused(false)}
                 onKeyDown={(e) => {
                   if (e.key === "Tab" && !e.shiftKey && !value && !open) {
@@ -485,16 +478,28 @@ function HeroAsk({ onOpenChange, docked = false }: { onOpenChange?: (open: boole
                 </span>
               )}
             </div>
-            <button
-              type="submit"
-              disabled={!value.trim() || stage !== "done"}
-              aria-label="Ask"
-              className="group grid size-12 shrink-0 place-items-center rounded-full bg-[#f9a220] text-black transition-[background-color,opacity,scale] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-[#e8900c] active:scale-[0.94] disabled:scale-90 disabled:bg-[#fbbe63] disabled:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-black"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/arrow-right.svg" alt="" width={18.6562} height={16} className="transition-transform duration-300 group-enabled:group-hover:translate-x-0.5" />
-            </button>
+            <Button variant="icon" tone="amber" size="md" type="submit" disabled={!value.trim() || stage !== "done"} label="Ask" className="disabled:!opacity-70 disabled:scale-90">
+              <BrandArrow className="h-4 w-[18.66px]" />
+            </Button>
           </div>
+          {pickerOpen && child && kids && (
+            <ChildMenu
+              kids={kids}
+              activeId={child.id}
+              onPick={(id) => {
+                setPickerOpen(false);
+                if (id === child.id) {
+                  if (turns.length > 0) setShown(true);
+                } else {
+                  setOpenOnSwitch(true);
+                  switchChild(id);
+                }
+                skipFocusOpen.current = true;
+                inputRef.current?.focus();
+              }}
+              onClose={() => setPickerOpen(false)}
+            />
+          )}
         </form>
       </div>
       {toastEl}
@@ -669,6 +674,127 @@ function ChatScrollArea({
             />
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+const PICKER_ID = "hero-ask-child-menu";
+
+function ChildChip({ child, index, open, onToggle }: { child: ChildProfile; index: number; open: boolean; onToggle: () => void }) {
+  const name = displayName(child.name);
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-haspopup="menu"
+      aria-expanded={open}
+      aria-controls={open ? PICKER_ID : undefined}
+      aria-label={`Asking for ${name}. Change child`}
+      className={`group flex h-11 max-w-[40%] shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-3 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black sm:max-w-[200px] ${
+        open ? "bg-[#1d2838] text-white" : "bg-[#f4eee3] text-[#1d2838] hover:bg-[#ece3d3]"
+      }`}
+    >
+      <ChildAvatar child={child} index={index} size={36} round />
+      <span className="min-w-0 truncate text-[15px] font-semibold tracking-[-0.01em]">{name}</span>
+      <svg
+        viewBox="0 0 24 24"
+        className={`size-4 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${open ? "rotate-180" : ""}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M6 15l6-6 6 6" />
+      </svg>
+    </button>
+  );
+}
+
+function ChildMenu({ kids, activeId, onPick, onClose }: { kids: ChildrenState; activeId: string; onPick: (id: string) => void; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  const canAdd = kids.list.length < MAX_CHILDREN;
+
+  useEffect(() => {
+    closeRef.current = onClose;
+  });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.querySelector<HTMLElement>('[aria-checked="true"]')?.focus();
+    const onPointer = (e: PointerEvent) => {
+      if (!el.parentElement?.contains(e.target as Node)) closeRef.current();
+    };
+    document.addEventListener("pointerdown", onPointer);
+    return () => document.removeEventListener("pointerdown", onPointer);
+  }, []);
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const items = [...(ref.current?.querySelectorAll<HTMLElement>("[role^=menuitem]") ?? [])];
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      onClose();
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const next = (i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+      items[next]?.focus();
+    }
+  };
+
+  return (
+    <div
+      ref={ref}
+      id={PICKER_ID}
+      role="menu"
+      aria-label="Who is this chat for?"
+      onKeyDown={onKeyDown}
+      className="absolute bottom-[calc(100%+12px)] left-2 z-30 w-[min(300px,calc(100vw-2.5rem))] origin-bottom-left animate-q-in rounded-[24px] bg-[#fffdf8] p-2 text-[#1d2838] shadow-[0_24px_48px_-20px_rgba(29,40,56,0.45)] ring-1 ring-[#1d2838]/10"
+    >
+      <p className="px-3 pb-2 pt-1.5 font-[family-name:var(--font-caveat)] text-[22px] leading-none text-[#3b308f]">who&apos;s this for?</p>
+      {kids.list.map((c, i) => {
+        const active = c.id === activeId;
+        return (
+          <button
+            key={c.id}
+            type="button"
+            role="menuitemradio"
+            aria-checked={active}
+            tabIndex={active ? 0 : -1}
+            onClick={() => onPick(c.id)}
+            className={`flex w-full items-center gap-3 rounded-[16px] p-1.5 pr-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#1d2838] ${
+              active ? "bg-[#f4eee3]" : "hover:bg-[#f4eee3]"
+            }`}
+          >
+            <ChildAvatar child={c} index={i} size={40} round />
+            <span className="min-w-0 flex-1 truncate text-[17px] font-semibold tracking-[-0.01em]">{displayName(c.name)}</span>
+            {active && (
+              <span aria-hidden className="grid size-6 place-items-center rounded-full bg-[#f26b4f]">
+                <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="#1d2838" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12l5 5L20 7" />
+                </svg>
+              </span>
+            )}
+          </button>
+        );
+      })}
+      {canAdd && (
+        <Link
+          href="/reading-preferences?new=1&next=/"
+          role="menuitem"
+          tabIndex={-1}
+          className="mt-1 flex items-center gap-3 rounded-[16px] border-t border-[#1d2838]/10 p-1.5 pr-3 pt-2.5 text-[15px] font-semibold transition-colors hover:bg-[#f4eee3] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#1d2838]"
+        >
+          <span aria-hidden className="grid size-10 place-items-center rounded-full border-2 border-dashed border-[#1d2838]/30 text-xl leading-none">
+            +
+          </span>
+          Add a child
+        </Link>
       )}
     </div>
   );

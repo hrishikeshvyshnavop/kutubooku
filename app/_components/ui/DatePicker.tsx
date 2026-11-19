@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "./Button";
 import { useEffect, useId, useRef, useState } from "react";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -248,13 +249,9 @@ function Calendar({
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#1d2838]/10 pt-3">
         <p className="type-body-sm text-[#1d2838]/60">{min ? `Earliest ${min.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""}</p>
         {selected && (
-          <button
-            type="button"
-            onClick={onClear}
-            className="h-9 rounded-full border-2 border-[#1d2838]/15 px-4 type-label transition-colors hover:border-[#1d2838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
-          >
+          <Button variant="ghost" size="sm" onClick={onClear}>
             Clear date
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -263,17 +260,11 @@ function Calendar({
 
 function MonthButton({ dir, disabled, onClick }: { dir: "prev" | "next"; disabled: boolean; onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={dir === "prev" ? "Previous month" : "Next month"}
-      className="grid size-10 place-items-center rounded-full bg-[#f4eee3] text-[#1d2838] transition-[background-color,scale] duration-200 hover:bg-[#f9a220] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838] disabled:pointer-events-none disabled:opacity-30"
-    >
+    <Button variant="icon" onClick={onClick} disabled={disabled} label={dir === "prev" ? "Previous month" : "Next month"}>
       <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d={dir === "prev" ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6"} />
       </svg>
-    </button>
+    </Button>
   );
 }
 

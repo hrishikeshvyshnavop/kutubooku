@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useRef, useState, ViewTransition } from "react";
 import { MAX_AGE, MONTHS, NAME_TOKEN, ageFromDob, ageInWords, dobParts, dobProblem, formatDob, type Option, type Question } from "../_data/questions";
 import { answerArt } from "../_components/child/AnswerArt";
-import { ArrowIcon, BTN_PRIMARY, Button, OutlineButton } from "../_components/ui/Button";
+import { Button } from "../_components/ui/Button";
 import {
   DRAFT_KEY,
   MAX_CHILDREN,
@@ -30,13 +30,6 @@ import { isSignedIn, safeNext } from "../_lib/session";
 
 type Answers = Record<string, string | string[]>;
 
-// Three modes (see app/_lib/children.ts):
-// - first child (no query): answers kept in sessionStorage so they survive the sign-in step
-//   that comes after the questionnaire (CONTEXT.md Q7); saved as a profile once signed in.
-// - another child (?new=1, signed in): same questions, then straight to their books.
-//   ?add=<bookId> puts that book in their box at the end ("+ Someone new" on a book page),
-//   ?next=<path> is where to go afterwards.
-// - edit a child (?child=<id>): opens on the summary; Save changes, or Remove the child.
 type Mode =
   | { kind: "first" }
   | { kind: "new"; add: string | null; next: string | null }
@@ -44,23 +37,17 @@ type Mode =
 
 const storageKey = (m: Mode) => (m.kind === "first" ? DRAFT_KEY : m.kind === "new" ? NEW_DRAFT_KEY : null);
 
-/** Questions where a brother or sister's answers make a good start (age, stage and books read never carry over). */
 const COPYABLE = new Set(["interests", "avoid"]);
 
 const hasAnswer = (a: Answers, id: string) => (Array.isArray(a[id]) ? a[id].length > 0 : Boolean(a[id]));
 
-/** "Aarav", "Aarav and Meera", "Aarav, Meera and Kabir". */
-export function listOf(names: string[]) {
+function listOf(names: string[]) {
   return names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 
-// Palette — warm and playful (one place to tweak).
-const ACCENT = "bg-[#f26b4f]"; // coral: selected tile, Continue
-// Left panel takes a different soft colour per question and fades between them.
+const ACCENT = "bg-[#f26b4f]";
 const PANEL_COLOURS = ["#f6c453", "#9fcbf2", "#a9dfc0", "#f7ab95", "#c9b7f1", "#d8e88a"];
-
-
 
 function load(key: string | null): Answers {
   if (!key) return {};
@@ -72,29 +59,23 @@ function load(key: string | null): Answers {
 }
 
 function save(key: string | null, a: Answers) {
-  if (!key) return; // editing a child: nothing is saved until "Save changes"
+  if (!key) return;
   try {
     sessionStorage.setItem(key, JSON.stringify(a));
-  } catch {
-    /* private mode etc. — answers still live in memory */
-  }
+  } catch {}
 }
 
 function clear(key: string | null) {
   try {
     if (key) sessionStorage.removeItem(key);
-  } catch {
-    /* ignore */
-  }
+  } catch {}
 }
 
-/** Reads the mode from the URL, or where to go instead when that mode can't be used. */
 function modeFromUrl(): Mode | { redirect: string } {
   const q = new URLSearchParams(window.location.search);
   const next = q.get("next") ? safeNext(q.get("next")) : null;
   const here = window.location.pathname + window.location.search;
   if (q.get("new") === "1" || q.has("child")) {
-    // Children belong to the account: sign in first (C8). A first child's draft is saved now.
     if (!isSignedIn()) return { redirect: `/sign-in?next=${encodeURIComponent(here)}` };
     commitDraft();
   }
@@ -109,20 +90,16 @@ function modeFromUrl(): Mode | { redirect: string } {
   return { kind: "first" };
 }
 
-/* -------------------------------------------------------------------------- */
-
 export function Questionnaire({ questions }: { questions: Question[] }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode | null>(null);
   const [siblings, setSiblings] = useState<ChildProfile[]>([]);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
-  // True when a question was opened from the summary: finishing it returns there.
   const [editing, setEditing] = useState(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  // Set up from the URL; again on Back/Forward and when "Add another child" switches mode here.
   const init = () => {
     const m = modeFromUrl();
     if ("redirect" in m) {
@@ -134,7 +111,7 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
     setEditing(false);
     if (m.kind === "edit") {
       setAnswers(m.child.answers);
-      setStep(questions.length); // open on the summary
+      setStep(questions.length);
     } else {
       setAnswers(load(storageKey(m)));
       setStep(0);
@@ -152,7 +129,6 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  /** Same page, another mode (e.g. ?new=1): no reload, and Back returns here. */
   const switchTo = (url: string) => {
     window.history.pushState(null, "", url);
     init();
@@ -166,16 +142,11 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
     headingRef.current?.focus();
   }, [step]);
 
-  // On phones the on-screen keyboard resizes the viewport, which makes the
-  // browser abort an in-flight view transition. The content still updates; the
-  // browser just reports the skipped animation as an unhandled rejection, so we
-  // swallow only that specific case.
   useEffect(() => {
     const onRejection = (e: PromiseRejectionEvent) => {
       const r = e.reason as { name?: string; message?: string } | undefined;
       if (/transition was aborted/i.test(r?.message ?? "")) e.preventDefault();
     };
-    // React may also surface it via reportError() → window "error" event.
     const onError = (e: ErrorEvent) => {
       const r = e.error as { name?: string; message?: string } | undefined;
       if (/transition was aborted/i.test(r?.message ?? e.message ?? "")) e.preventDefault();
@@ -196,14 +167,10 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
   const followUpOpen =
     !!followUp && (Array.isArray(value) ? value.includes(followUp.whenValue) : value === followUp.whenValue);
   const followUpItems = followUp && Array.isArray(answers[followUp.id]) ? (answers[followUp.id] as string[]) : [];
-  // A revealed follow-up (e.g. "Something else…" or "Yes, I'll add some")
-  // must be filled in or switched off before moving on — even on optional questions.
   const followUpPending = followUpOpen && followUpItems.length === 0;
   const key = mode ? storageKey(mode) : null;
-  // Another child in the account already has this name: their boxes would get mixed up.
   const editId = mode?.kind === "edit" ? mode.child.id : undefined;
   const nameClash = mode !== null && mode.kind !== "first" && q.id === "name" && typeof value === "string" && nameTaken(value, editId);
-  // A brother or sister's picks as a starting point (interests, no-go topics): editable afterwards.
   const copyFrom = mode?.kind === "new" && COPYABLE.has(q.id) ? siblings.filter((c) => hasAnswer(c.answers, q.id)) : [];
 
   const answered =
@@ -214,17 +181,13 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
         : typeof value === "string" && value.trim() !== "") && !followUpPending;
   const canContinue = !followUpPending && (answered || q.optional) && !nameClash;
 
-  // The child's name (question 1) personalises every later question.
-  // Capitalised for display; the saved answer stays exactly as typed.
   const childName = displayName(answers.name);
   const fill = (t: string) => t.split(NAME_TOKEN).join(childName || "your child");
   const others = siblings.map((c) => displayName(c.name));
-  // A new child's first question speaks to the family.
   const newName = mode?.kind === "new" && q.id === "name";
   const questionText = newName ? "Who's the next reader?" : fill(q.question);
   const whyText = newName ? `A first name or nickname. They'll get their own books, next to ${listOf(others)}'s.` : fill(q.why);
 
-  /** Start from a brother or sister's answer (and its "something else" extras). */
   const copyAnswer = (c: ChildProfile) => {
     const v = c.answers[q.id];
     update(q.id, Array.isArray(v) ? [...v] : v);
@@ -238,8 +201,6 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
       return next;
     });
 
-  // Step changes run inside a transition so <ViewTransition> can crossfade
-  // the outgoing and incoming question instead of swapping them abruptly.
   const go = (fn: (s: number) => number) => startTransition(() => setStep(fn));
   const toSummary = () => {
     setEditing(false);
@@ -250,8 +211,6 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
     setEditing(true);
     go(() => i);
   };
-  // /editions is on hold, so there is nowhere to go back to from question 1;
-  // the back buttons are hidden on the first step.
   const back = () => (editing ? toSummary() : go((s) => Math.max(s - 1, 0)));
 
   const choose = (opt: string) => {
@@ -259,24 +218,18 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
       update(q.id, opt);
       if (advanceTimer.current) clearTimeout(advanceTimer.current);
       if (q.followUp) {
-        if (opt === q.followUp.whenValue) return; // stay: reveal the follow-up input
-        update(q.followUp.id, []); // switching away clears it
+        if (opt === q.followUp.whenValue) return;
+        update(q.followUp.id, []);
       }
-      // Let the selection sweep finish before the next question rises in.
       advanceTimer.current = setTimeout(next, 520);
     } else if (q.kind === "multi") {
       const cur = Array.isArray(value) ? value : [];
       const removing = cur.includes(opt);
       update(q.id, removing ? cur.filter((v) => v !== opt) : [...cur, opt]);
-      // Unticking the follow-up option clears what was typed for it.
       if (removing && q.followUp && opt === q.followUp.whenValue) update(q.followUp.id, []);
     }
   };
 
-
-  /* ------------------------------- Summary ------------------------------- */
-
-  /** Saves this child, or returns false (name now taken / account full). */
   const saveChild = (): boolean => {
     if (!mode || mode.kind === "first") return true;
     if (mode.kind === "edit") {
@@ -287,7 +240,7 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
     const child = addChild(answers);
     if (!child) return false;
     clear(key);
-    setFor(displayName(child.name)); // the new child is the one books go to now (B1)
+    setFor(displayName(child.name));
     if (mode.add) addToBox(mode.add, displayName(child.name), "book");
     return true;
   };
@@ -299,11 +252,10 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
       commitDraft();
       return router.push("/curation");
     }
-    if (!saveChild()) return editFromSummary(0); // back to the name
+    if (!saveChild()) return editFromSummary(0);
     router.push(mode.next ?? "/curation");
   };
 
-  /** "Got another reader?": keep this one, then start the next. */
   const addAnother = () => {
     if (!mode) return;
     const url = "/reading-preferences?new=1";
@@ -323,8 +275,7 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
   return (
     <div className="mx-auto flex w-full max-w-[1920px] flex-1 flex-col p-2.5 sm:p-3">
 
-      <div className="grid flex-1 gap-2.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-3">
-        {/* ---------------- Left column: context + back ---------------- */}
+      <div className="grid flex-1 grid-rows-[auto_1fr] gap-2.5 lg:grid-rows-none lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-3">
         <aside className="flex flex-col gap-2.5 lg:gap-3">
           <div style={{ backgroundColor: done ? PANEL_COLOURS[0] : PANEL_COLOURS[step % PANEL_COLOURS.length] }}
             className="relative flex flex-col rounded-[28px] p-5 transition-colors sm:rounded-[36px] sm:p-6 duration-700 ease-out sm:rounded-[48px] sm:p-8 lg:min-h-[min(560px,calc(100dvh-14rem))]">
@@ -340,7 +291,6 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
 
             <div className="mt-5 sm:mt-8 lg:mt-auto">
               <PickedArt questions={questions} answers={answers} />
-              {/* Progress: counter + bar. The bar shows questions completed (3/7 on question 4). */}
               <div
                 role="progressbar"
                 aria-label="Questionnaire progress"
@@ -365,7 +315,6 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
 
         </aside>
 
-        {/* ---------------- Right panel: the question ---------------- */}
         <main className="flex flex-col rounded-[36px] bg-[#fffdf8] px-page-inset pb-6 pt-8 sm:rounded-[56px] sm:pt-12 lg:rounded-b-none lg:rounded-t-[64px] lg:pt-16">
           <ViewTransition key={done ? "done" : step} name="q-content" share="q-swap" enter="q-swap" exit="q-swap" default="none">
           <div className="flex flex-1 flex-col">
@@ -458,14 +407,12 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
                     <div className="mt-6 flex flex-wrap items-center gap-2" role="group" aria-label="Start from a brother or sister's answers">
                       <span className="type-caption text-[#1d2838]/60">Start from</span>
                       {copyFrom.map((c) => (
-                        <button
+                        <Button variant="ghost" size="sm"
                           key={c.id}
-                          type="button"
                           onClick={() => copyAnswer(c)}
-                          className="h-10 rounded-full border-2 border-[#1d2838]/15 px-4 type-label transition-colors hover:border-[#1d2838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
                         >
                           {displayName(c.name)}&apos;s picks
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   ) : null}
@@ -489,7 +436,6 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
                               e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
                             }}
                             onKeyDown={(e) => {
-                              // keyboard selection grows from the centre
                               e.currentTarget.style.removeProperty("--x");
                               e.currentTarget.style.removeProperty("--y");
                             }}
@@ -498,7 +444,6 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
                               selected ? "" : "hover:bg-[#ece3d3]"
                             }`}
                           >
-                            {/* Selection fill: grows as a circle from where the option was pressed */}
                             <span
                               aria-hidden
                               className={`absolute inset-0 rounded-[24px] bg-[#1d2838] transition-[clip-path] duration-[520ms] motion-reduce:transition-none ${selected ? "ease-[cubic-bezier(0.22,1,0.36,1)]" : "ease-[cubic-bezier(0.64,0,0.78,0)]"}`}
@@ -532,7 +477,6 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
                               </svg>
                             </span>
                           </button>
-                          {/* Follow-up field opens attached under the option that reveals it */}
                           {followUp && followUpOpen && o.value === followUp.whenValue ? (
                             <div className="mt-1.5 animate-q-in">
                               <ChipInput
@@ -551,19 +495,15 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
                 )}
               </fieldset>
 
-              {/* Actions */}
-              {/* Actions: Back sits right beside Continue (bottom-right) so the
-                  pointer travels the least distance between them (Fitts's law). */}
               <div className="sticky bottom-0 z-10 -mx-2 mt-10 flex min-h-[80px] items-center justify-end gap-1.5 rounded-t-[24px] bg-[#fffdf8]/90 px-2 pb-3 pt-3 backdrop-blur">
                 {step > 0 || editing ? (
-                  <OutlineButton onClick={back} label={editing ? "Back to summary" : "Previous question"}>
-                    <ArrowIcon dir="left" />
+                  <Button variant="secondary" arrow="left" onClick={back} label={editing ? "Back to summary" : "Previous question"}>
                     {editing ? "Back to summary" : "Back"}
-                  </OutlineButton>
+                  </Button>
                 ) : mode?.kind === "new" ? (
-                  <OutlineButton onClick={() => router.back()} label="Cancel adding a child">
+                  <Button variant="secondary" onClick={() => router.back()} label="Cancel adding a child">
                     Cancel
-                  </OutlineButton>
+                  </Button>
                 ) : null}
 
                 {q.kind !== "single" || q.optional || followUpOpen ? (
@@ -581,8 +521,6 @@ export function Questionnaire({ questions }: { questions: Question[] }) {
     </div>
   );
 }
-
-/* -------------------------------------------------------------------------- */
 
 function Summary({
   questions,
@@ -613,13 +551,11 @@ function Summary({
 }) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [choosing, setChoosing] = useState(false);
-  // Profile picture (C8, Netflix-style): a book character. A new child gets a free one to start.
   const editId = mode?.kind === "edit" ? mode.child.id : undefined;
   const avatar = typeof answers.avatar === "string" && answers.avatar ? answers.avatar : freeAvatar(editId);
   const taken = Object.fromEntries(siblings.map((c) => [c.answers.avatar as string, displayName(c.name)]));
   const kind = mode?.kind ?? "first";
   const signedIn = isSignedIn();
-  // Room for one more after this child is saved (a new child takes a place too).
   const roomForAnother = readChildren().list.length + (kind === "new" ? 1 : 0) < MAX_CHILDREN;
   const display = (q: Question): string | null => {
     const v = answers[q.id];
@@ -645,7 +581,6 @@ function Summary({
   };
   const who = childName || "your child";
 
-  // Only answered questions are listed — skipped optional ones are left out.
   const rows = questions.map((q, i) => ({ q, i, text: display(q) })).filter((r) => r.text !== null);
 
   return (
@@ -708,17 +643,16 @@ function Summary({
         ))}
       </ul>
 
-      {/* Quiet secondary actions: another reader; removing this one (edit). */}
       <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
         {roomForAnother ? (
-          <button type="button" onClick={onAddAnother} className="type-label link-underline-on hover:text-[#1d2838]/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]">
+          <Button variant="link" onClick={onAddAnother}>
             Got another reader? Add them
-          </button>
+          </Button>
         ) : null}
         {kind === "edit" && !confirmRemove ? (
-          <button type="button" onClick={() => setConfirmRemove(true)} className="type-label text-[#b3402a] link-underline-on focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]">
+          <Button variant="link" tone="danger" onClick={() => setConfirmRemove(true)}>
             Remove {who}
-          </button>
+          </Button>
         ) : null}
       </div>
       {kind === "edit" && confirmRemove ? (
@@ -726,27 +660,25 @@ function Summary({
           <p id="remove-title" className="type-body font-semibold">Remove {who} and their answers?</p>
           <p className="mt-1 type-body-sm text-[#1d2838]/70">Books already in your box stay there, under &ldquo;Just browsing&rdquo;.</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" onClick={onRemove} className="h-11 rounded-full bg-[#b3402a] px-5 type-label text-white hover:bg-[#9a3522] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]">
+            <Button variant="ghost" tone="danger" onClick={onRemove}>
               Remove {who}
-            </button>
-            <button type="button" onClick={() => setConfirmRemove(false)} className="h-11 rounded-full border-2 border-[#1d2838]/15 px-5 type-label hover:border-[#1d2838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]">
+            </Button>
+            <Button variant="ghost" onClick={() => setConfirmRemove(false)}>
               Keep
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}
 
-      {/* Pinned to the bottom of the viewport so the main CTA is always visible. */}
       <div className="sticky bottom-0 z-10 -mx-2 mt-auto flex items-center justify-end gap-1.5 rounded-t-[24px] bg-[#fffdf8]/90 px-2 pb-3 pt-6 backdrop-blur">
         {kind === "edit" ? (
           <Button variant="secondary" href="/children">
             Cancel
           </Button>
         ) : (
-          <OutlineButton onClick={onBack} label="Previous question">
-            <ArrowIcon dir="left" />
+          <Button variant="secondary" arrow="left" onClick={onBack} label="Previous question">
             Back
-          </OutlineButton>
+          </Button>
         )}
         <Button onClick={onFinish} variant="primary" arrow="right">
           {kind === "edit" ? "Save changes" : childName ? `See ${childName}'s books` : "See the books"}
@@ -755,10 +687,6 @@ function Summary({
     </div>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/* Number-tile grid (exact age). Same press + fill-from-tap as the list rows.  */
-/* -------------------------------------------------------------------------- */
 
 function TileGrid({
   label,
@@ -773,11 +701,8 @@ function TileGrid({
   options: Option[];
   value?: string;
   onChoose: (v: string) => void;
-  /** Grid columns / spacing (default: the age-style 5 → 8 column grid). */
   gridClass?: string;
-  /** Tile shape (default square). */
   tileClass?: string;
-  /** Tiles that can't be picked (e.g. months still to come). */
   isDisabled?: (v: string) => boolean;
 }) {
   return (
@@ -832,10 +757,6 @@ function TileGrid({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Chip input — type a title, press Enter (or Add) to turn it into a chip.     */
-/* -------------------------------------------------------------------------- */
-
 function ChipInput({
   label,
   placeholder,
@@ -851,8 +772,6 @@ function ChipInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  // When revealed, bring the field fully into view (clear of the pinned
-  // Back/Continue bar) and put the cursor in it.
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
       boxRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -904,7 +823,7 @@ function ChipInput({
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === ",") {
-              e.preventDefault(); // don't submit the form
+              e.preventDefault();
               add();
             } else if (e.key === "Backspace" && !draft && items.length) {
               onChange(items.slice(0, -1));
@@ -912,37 +831,24 @@ function ChipInput({
           }}
           className="h-12 min-w-0 flex-1 rounded-[18px] bg-transparent px-3 type-body-lg tracking-[-0.02em] outline-none placeholder:text-[#1d2838]/35"
         />
-        <button
-          type="button"
+        <Button variant="ghost" tone="ink" size="lg"
           onClick={add}
           disabled={!draft.trim()}
-          className="h-12 shrink-0 rounded-[16px] bg-[#1d2838] px-4 font-medium text-white transition-opacity disabled:opacity-25"
         >
           Add
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Left-panel collection: illustrations for every answer picked so far, across */
-/* all questions. Tiles are keyed by question+answer, so earlier picks stay put */
-/* (no re-animation) and only new picks pop in. Dislikes get a no-sign badge.   */
-/* -------------------------------------------------------------------------- */
-
 const ART_TILTS = ["-rotate-6", "rotate-3", "-rotate-2", "rotate-6", "-rotate-3", "rotate-2"];
 const MAX_TILES = 10;
-
-/* -------------------------------------------------------------------------- */
-/* Date of birth: month + year required, day optional ("birthday surprise").   */
-/* -------------------------------------------------------------------------- */
 
 const SHORT_MONTHS = MONTHS.map((m) => m.slice(0, 3));
 const pad = (n: number) => String(n).padStart(2, "0");
 const daysIn = (y: number, m: number) => new Date(y, m, 0).getDate();
 
-/** Small label above each tile group. */
 function Step({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
     <p className="mt-8 flex items-baseline gap-2 type-label first:mt-6">
@@ -952,10 +858,6 @@ function Step({ children, hint }: { children: React.ReactNode; hint?: string }) 
   );
 }
 
-/**
- * Date of birth as tiles, like the rest of the questions: year → month (appears once a year is
- * picked) → optional day ("Add the day for a birthday surprise"). Dates still to come are greyed.
- */
 function DobPicker({ value, name, onChange }: { value: string; name: string; onChange: (v: string) => void }) {
   const { y, m, d } = dobParts(value);
   const [withDay, setWithDay] = useState(Boolean(d));
@@ -964,7 +866,6 @@ function DobPicker({ value, name, onChange }: { value: string; name: string; onC
   const who = name || "your child";
 
   const set = (next: { y: string; m: string; d: string }) => {
-    // Keep the parts consistent: no month in the future, no 31st in a 30-day month.
     if (next.y && next.m && Number(next.y) === thisYear && Number(next.m) > today.getMonth() + 1) next.m = "";
     if (next.y && next.m && next.d && Number(next.d) > daysIn(Number(next.y), Number(next.m))) next.d = "";
     onChange(`${next.y}-${next.m}-${next.d}`);
@@ -1016,25 +917,23 @@ function DobPicker({ value, name, onChange }: { value: string; name: string; onC
               gridClass="mt-3 grid max-w-[440px] grid-cols-7 gap-1 sm:gap-1.5"
               tileClass="h-11 rounded-[14px]! sm:h-12 [&>span:last-child]:text-base sm:[&>span:last-child]:text-lg"
             />
-            <button
-              type="button"
+            <Button variant="link" size="sm"
               onClick={() => {
                 setWithDay(false);
                 set({ y, m, d: "" });
               }}
-              className="mt-3 rounded type-caption text-[#1d2838]/60 link-underline-on focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
+              tone="outline" className="mt-3"
             >
               Skip the day
-            </button>
+            </Button>
           </div>
         ) : (
-          <button
-            type="button"
+          <Button variant="ghost"
             onClick={() => setWithDay(true)}
-            className="mt-6 inline-flex animate-q-in items-center gap-2 rounded-full border-2 border-dashed border-[#1d2838]/25 px-4 py-2.5 type-label transition-colors hover:border-[#1d2838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d2838]"
+            className="mt-6 animate-q-in border-dashed"
           >
             <span aria-hidden>🎂</span> Add the day for a birthday surprise
-          </button>
+          </Button>
         )
       ) : null}
 
